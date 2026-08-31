@@ -1,0 +1,18 @@
+# Behaviour-test image for Billing-Cycle. Same image and same entry point locally and in CI.
+# Built as aire-behavior:local, per .evals/config.json -> behavior.image
+FROM docker.io/python:3.13-slim
+
+WORKDIR /work
+
+# Runtime deps of the app under test, plus the behaviour runner.
+# pytest-bdd runs the Gherkin; these are TEST-only and never enter
+# src/backend/requirements.txt (constraint ARCH-05).
+COPY src/backend/requirements.txt /tmp/app-requirements.txt
+RUN pip install --no-cache-dir -r /tmp/app-requirements.txt \
+ && pip install --no-cache-dir pytest==8.3.4 pytest-bdd==8.1.0 httpx==0.28.1
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/work/src/backend
+
+ENTRYPOINT ["bash", "/work/.evals/behavior/run.sh"]

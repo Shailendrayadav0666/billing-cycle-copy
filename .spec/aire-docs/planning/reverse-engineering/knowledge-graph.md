@@ -5,8 +5,8 @@
 > **Fetched**: 2026-08-31T11:05Z
 > **Freshness**: Atlas reports document updated_at 2026-08-25T11:22:52Z; repo ingested at commit bcec649
 >
-> **PATH MAPPING**: Atlas documents the upstream layout (`backend/`, `frontend/`). This workspace has
-> the backend at `src/backend/` and the frontend at `frontend/`. Paths below are given in **this
+> **PATH MAPPING**: Atlas documents the upstream layout (`backend/`, `src/frontend/`). This workspace has
+> the backend at `src/backend/` and the frontend at `src/frontend/`. Paths below are given in **this
 > workspace's** real form; Atlas content is otherwise unaltered.
 
 # Knowledge Graph — Billing-Cycle
@@ -20,13 +20,13 @@
 | Component | Path (this workspace) | Responsibility | Complexity | Key Dependencies | Known Issues |
 |---|---|---|---|---|---|
 | **FastAPI App** | `src/backend/main.py` | All backend: routes, data, models, static serving | Medium (God module) | FastAPI, Pydantic, uvicorn | God module, no tests, plain-text passwords, email-as-token |
-| **App** | `frontend/src/App.jsx` | Router setup, Layout shell, ProtectedRoute guard | Simple | react-router-dom, AuthContext | Route `/` goes to Login (no redirect for logged-in users) |
-| **AuthContext** | `frontend/src/context/AuthContext.jsx` | Auth state, login/register/logout API calls, session persistence | Medium | React Context, fetch, localStorage | Token = email, no refresh, logout on any fetch error |
-| **Login** | `frontend/src/pages/Login.jsx` | Login + Sign-up forms, split-screen marketing panel | Medium | AuthContext | Hard-coded demo credentials in state defaults |
-| **Billing** | `frontend/src/pages/Billing.jsx` | Billing dashboard: plan card, usage bars, included/on-demand tiles | Medium | AuthContext, fetch | No error handling on fetch, no loading skeleton |
-| **Tasks** | `frontend/src/pages/Tasks.jsx` | Task list display + add-task form | Simple | AuthContext, fetch | No error handling, no delete/toggle, no optimistic updates |
-| **Vite Config** | `frontend/vite.config.js` | Build config + `/api` dev proxy to `:8000` | Trivial | Vite, @vitejs/plugin-react | None |
-| **main (entry)** | `frontend/src/main.jsx` | React DOM mount, bootstraps `<App>` in StrictMode | Trivial | App.jsx | None |
+| **App** | `src/frontend/src/App.jsx` | Router setup, Layout shell, ProtectedRoute guard | Simple | react-router-dom, AuthContext | Route `/` goes to Login (no redirect for logged-in users) |
+| **AuthContext** | `src/frontend/src/context/AuthContext.jsx` | Auth state, login/register/logout API calls, session persistence | Medium | React Context, fetch, localStorage | Token = email, no refresh, logout on any fetch error |
+| **Login** | `src/frontend/src/pages/Login.jsx` | Login + Sign-up forms, split-screen marketing panel | Medium | AuthContext | Hard-coded demo credentials in state defaults |
+| **Billing** | `src/frontend/src/pages/Billing.jsx` | Billing dashboard: plan card, usage bars, included/on-demand tiles | Medium | AuthContext, fetch | No error handling on fetch, no loading skeleton |
+| **Tasks** | `src/frontend/src/pages/Tasks.jsx` | Task list display + add-task form | Simple | AuthContext, fetch | No error handling, no delete/toggle, no optimistic updates |
+| **Vite Config** | `src/frontend/vite.config.js` | Build config + `/api` dev proxy to `:8000` | Trivial | Vite, @vitejs/plugin-react | None |
+| **main (entry)** | `src/frontend/src/main.jsx` | React DOM mount, bootstraps `<App>` in StrictMode | Trivial | App.jsx | None |
 
 ---
 
@@ -79,7 +79,7 @@ graph TB
     subgraph Backend["Backend (FastAPI - src/backend/main.py)"]
         API["REST API Routes"]
         Store["In-Memory Store: users, billing_data, tasks_data"]
-        Static["Static File Mount (frontend/dist if exists)"]
+        Static["Static File Mount (src/frontend/dist if exists)"]
     end
 
     Main --> App
@@ -98,7 +98,7 @@ graph TB
 
 **Full-Stack Monolith (POC/Demo tier)** — single Python module backend + single-page React frontend.
 
-**Patterns present**: Context Provider (React) · Protected Route · Vite dev proxy for `/api/*` · conditional static-file serving of `frontend/dist` · Pydantic request validation at the API boundary · in-memory mock store (3 dicts).
+**Patterns present**: Context Provider (React) · Protected Route · Vite dev proxy for `/api/*` · conditional static-file serving of `src/frontend/dist` · Pydantic request validation at the API boundary · in-memory mock store (3 dicts).
 
 **Anti-patterns present**: God module (`src/backend/main.py`) · email-as-token · wildcard CORS with `allow_credentials=True` · plain-text passwords · no `.catch()` on frontend fetches · hard-coded demo credentials in the Login form.
 
@@ -131,7 +131,7 @@ Query pattern: direct `dict.get(email)` — O(1), reset on every process restart
 | GET | `/api/tasks?email=` | Fetch task list |
 | POST | `/api/tasks` | Add new task |
 
-**Entry points**: `frontend/src/main.jsx` (React mount) · `src/backend/main.py` (`uvicorn main:app --port 8000`).
+**Entry points**: `src/frontend/src/main.jsx` (React mount) · `src/backend/main.py` (`uvicorn main:app --port 8000`).
 **No CLI, no background jobs, no scheduled tasks, no external service integrations.**
 
 ---
@@ -178,8 +178,8 @@ Query pattern: direct `dict.get(email)` — O(1), reset on every process restart
 
 Per Section 4.1, the components the Mid-Cycle Subscription Upgrade Epic touches:
 
-1. **Named in the Epic**: `src/backend/main.py`, `frontend/src/pages/Billing.jsx`
-2. **Direct dependencies / dependents (one hop)**: `frontend/src/context/AuthContext.jsx` (supplies `token`), `frontend/src/App.jsx` (routes to Billing)
+1. **Named in the Epic**: `src/backend/main.py`, `src/frontend/src/pages/Billing.jsx`
+2. **Direct dependencies / dependents (one hop)**: `src/frontend/src/context/AuthContext.jsx` (supplies `token`), `src/frontend/src/App.jsx` (routes to Billing)
 3. **Owns a data store the work writes**: `src/backend/main.py` — owns `users` and `billing_data`
 
 **Incremental extension note**: Atlas document 3155 has 1179 lines. Lines 1–600 (executive summary, reconnaissance, architecture, flows, dependencies) were pulled and are transcribed above. Lines 601–1179 (code quality & technical debt, test coverage, security considerations, performance, documentation audit, recommendations, appendices) remain in Atlas and are pulled **incrementally** when a stage needs them — the Security Baseline review and the design stages will pull the security and quality sections. Each extension is noted here when it happens.

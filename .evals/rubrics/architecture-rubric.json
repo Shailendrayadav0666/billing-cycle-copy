@@ -1,0 +1,49 @@
+{
+  "rubricName": "Architectural Alignment — Billing-Cycle",
+  "rubricVersion": "1.0.0",
+  "derivedFrom": [".spec/architecture.md#10-verifiable-constraints"],
+  "evalCriteria": [
+    {
+      "id": "ARCH-01",
+      "metric": "Charge before write, single write site",
+      "weight": 0.28,
+      "prompt": "In the changed diff, no assignment to users[...] or billing_data[...] appears before the charge_card(...) call, and the declined branch returns or raises before reaching any assignment. Score 0 if any state write precedes the gateway call, is reachable from the declined branch, or is separated from the other writes by a call that can raise.",
+      "source": "implementation/design/nfr-design/nfr-design-patterns.md P-2; functional-design/business-logic-model.md D-2"
+    },
+    {
+      "id": "ARCH-02",
+      "metric": "Monetary values are computed server-side only",
+      "weight": 0.22,
+      "prompt": "No request model in the diff declares an amount, price, charge, or total field. No changed frontend file applies *, /, + or - to a price or quota value — .toFixed() formatting is permitted. Score 0 for any such request field or any pricing arithmetic in a changed frontend file.",
+      "source": "nfr-design/nfr-design-patterns.md P-4, P-6; nfr-requirements.md NFR-S3, NFR-S6"
+    },
+    {
+      "id": "ARCH-03",
+      "metric": "Data access is scoped to the calling identity",
+      "weight": 0.18,
+      "prompt": "No changed code path passes a fallback value to a users or billing_data lookup (the .get(email, <default>) shape), and no lookup is keyed by an email other than the caller's. A missing billing record raises 404. Score 0 for any fallback-record lookup or any cross-email access in the diff.",
+      "source": "nfr-requirements.md NFR-S2; requirements.md finding F-3; functional-design/business-rules.md BR-8"
+    },
+    {
+      "id": "ARCH-04",
+      "metric": "One implementation of the guard chain and the pricing formula",
+      "weight": 0.14,
+      "prompt": "The diff contains exactly one definition of the shared resolver, and no handler re-implements a 401/404/409 check or the proration arithmetic. Score 0 if a second implementation of any guard or of the formula appears in a handler.",
+      "source": "nfr-design/nfr-design-patterns.md P-1; nfr-requirements.md NFR-M3"
+    },
+    {
+      "id": "ARCH-05",
+      "metric": "No new runtime dependency",
+      "weight": 0.1,
+      "prompt": "src/backend/requirements.txt and src/frontend/package.json have zero added lines in the diff, and no changed source file imports a third-party module the pre-change file did not already import. Test-only dependencies on a separate dev/test path do not count. Score 0 for any added runtime dependency line or any new third-party import in application code.",
+      "source": "requirements.md NFR-1; nfr-requirements/tech-stack-decisions.md Section 2"
+    },
+    {
+      "id": "ARCH-06",
+      "metric": "No secrets, credentials or personal data reach a log or an error body",
+      "weight": 0.08,
+      "prompt": "The changed code contains no logging call and no print. No error response body in the diff is built with string interpolation or carries an exception message, dict content, or a field belonging to another user. Score 0 on any occurrence.",
+      "source": "nfr-requirements.md NFR-S4, NFR-S5; functional-design/business-rules.md BR-10"
+    }
+  ]
+}

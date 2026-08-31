@@ -1,0 +1,82 @@
+{
+  "rubricName": "Security Review — OWASP Top 10:2025",
+  "rubricVersion": "1.0.0",
+  "derivedFrom": ["OWASP Top 10:2025", "extensions/security/baseline/security-baseline.md"],
+  "stack": {
+    "languages": ["python", "javascript"],
+    "frameworks": ["fastapi", "pydantic", "react", "vite"],
+    "dataStores": ["in-memory-dict"],
+    "authMechanisms": ["email-as-bearer-token"]
+  },
+  "scope": "changed-files",
+  "evalCriteria": [
+    {
+      "id": "SEC-A01",
+      "metric": "Broken Access Control",
+      "weight": 0.25,
+      "prompt": "Every changed endpoint authenticates the caller before any other check, and operates only on the caller's own records. No changed lookup substitutes another user's record as a fallback, and no endpoint accepts a target identity other than the caller's. Score 0 for any missing authentication check, any cross-identity read or write, or any fallback to a different user's data.",
+      "source": "OWASP A01:2025; nfr-requirements.md NFR-S1, NFR-S2"
+    },
+    {
+      "id": "SEC-A03",
+      "metric": "Injection and Input Validation",
+      "weight": 0.15,
+      "prompt": "Every changed request body is validated by a typed model, and no user-supplied value is interpolated into a query, command, path, or template. Score 0 for any untyped request surface or any interpolation of caller input into an execution sink.",
+      "source": "OWASP A03:2025; nfr-requirements.md NFR-S3"
+    },
+    {
+      "id": "SEC-A04",
+      "metric": "Insecure Design — business logic integrity",
+      "weight": 0.2,
+      "prompt": "Security-relevant values, monetary amounts above all, are computed server-side and cannot be supplied or influenced by the client. State transitions guarding money are refused rather than repeated. Score 0 if a changed request model exposes an amount or price field, if a charged value derives from client input, or if a state transition can be applied twice without a guard.",
+      "source": "OWASP A04:2025; nfr-requirements.md NFR-S6; architecture.md ARCH-02"
+    },
+    {
+      "id": "SEC-A05",
+      "metric": "Security Misconfiguration",
+      "weight": 0.1,
+      "prompt": "The change introduces no permissive CORS policy, no debug mode, no disabled verification, and no new default credential. Pre-existing misconfiguration outside the diff is out of scope but must not be widened. Score 0 for any newly introduced or widened permissive configuration.",
+      "source": "OWASP A05:2025; nfr-requirements.md NFR-S7"
+    },
+    {
+      "id": "SEC-A07",
+      "metric": "Authentication Failures",
+      "weight": 0.1,
+      "prompt": "The change does not weaken the existing authentication path, does not add a route that bypasses it, and does not broaden what an unauthenticated caller can learn. Error responses must not disclose whether an identity exists or what plan it holds before authentication succeeds. Score 0 for any bypass, weakening, or pre-authentication information disclosure.",
+      "source": "OWASP A07:2025; nfr-requirements.md NFR-S1; architecture.md Section 5 error taxonomy"
+    },
+    {
+      "id": "SEC-A09",
+      "metric": "Logging and Monitoring Failures — sensitive data exposure",
+      "weight": 0.12,
+      "prompt": "No credential, token, payment value, or personal datum reaches a log statement, standard output, or an error response body. Error bodies are fixed literals carrying no exception text, no internal state, and no other user's data. Score 0 on any occurrence.",
+      "source": "OWASP A09:2025; nfr-requirements.md NFR-S4, NFR-S5"
+    },
+    {
+      "id": "SEC-A02",
+      "metric": "Cryptographic Failures",
+      "weight": 0.05,
+      "prompt": "The change stores or transmits no new secret, and introduces no weak or hand-rolled cryptography. Where no secret is handled at all, this criterion is satisfied. Score 0 for any new plaintext secret at rest or any non-standard cryptographic primitive.",
+      "source": "OWASP A02:2025; nfr-requirements.md NFR-S4"
+    },
+    {
+      "id": "SEC-A06",
+      "metric": "Vulnerable and Outdated Components",
+      "weight": 0.03,
+      "prompt": "The change adds no dependency carrying a known critical or high vulnerability, and adds no unpinned dependency. Score 0 for any added dependency above the configured vulnerability threshold.",
+      "source": "OWASP A06:2025; requirements.md NFR-1"
+    }
+  ],
+  "notApplicable": [
+    {
+      "id": "SEC-A08",
+      "metric": "Software and Data Integrity Failures",
+      "reason": "No deserialization of untrusted data, no plugin or update mechanism, and no CI artifact signing surface in the changed scope."
+    },
+    {
+      "id": "SEC-A10",
+      "metric": "Server-Side Request Forgery",
+      "reason": "The changed code makes no outbound request of any kind. The payment gateway is an in-process pure function with no URL, host, or network call."
+    }
+  ]
+}

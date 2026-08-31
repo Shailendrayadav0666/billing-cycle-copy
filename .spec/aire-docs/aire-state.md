@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Brownfield
 - **Start Date**: 2026-08-31T11:07:03Z
-- **Current Stage**: PLANNING - Requirements Analysis
+- **Current Stage**: IMPLEMENTATION - STOP CHECKPOINT (Design complete — awaiting dev-implement)
 - **AIRE Version**: 1.0
 - **Workflow Type**: Epic
 
@@ -18,12 +18,19 @@
 
 ## Code Root
 - **Backend**: src/backend/ (FastAPI — main.py, requirements.txt)
-- **Frontend**: frontend/ (React 19 + Vite SPA — pre-existing location, NOT moved)
-- **Note**: This brownfield repo keeps the frontend outside src/. Both roots are treated as the code root for this cycle. No tree is moved.
+- **Frontend**: src/frontend/ (React 19 + Vite SPA)
+- **Note**: At Workspace Detection the frontend sat at repo-root `frontend/`, outside `src/`, and was
+  recorded as such with no intention to move it. It was **relocated to `src/frontend/` externally,
+  mid-cycle** (detected at the STOP CHECKPOINT, before any code was generated). The move was complete
+  and clean: all 19 tracked files byte-identical, `src/backend/main.py` untouched. AIRE did not perform
+  the move; it adopted it, since `src/` is where `common/directory-structure.md` requires application
+  code to live. The rename is staged in git as 19 renames. Every artifact path was corrected, and
+  finding F-4 is resolved as a side effect.
 - **Recorded**: 2026-08-31T11:07:03Z
+- **Code Root revised**: 2026-08-31T12:35:00Z (frontend relocation adopted)
 
 ## Code Location Rules
-- **Application Code**: src/backend/ and frontend/ (NEVER in .spec/aire-docs/)
+- **Application Code**: src/backend/ and src/frontend/ (NEVER in .spec/aire-docs/)
 - **Documentation**: .spec/ only
 - **Tests**: tests/unit/, tests/behavior/, tests/e2e/
 
@@ -72,17 +79,52 @@
 ### Reconciliations
 | Point | Reference says | Decision taken | Why |
 |---|---|---|---|
-| Repo layout | `backend/` + `frontend/` at repo root | Mapped to `src/backend/` + `frontend/` | Atlas describes the upstream Billing-Cycle repo; this workspace is an AIRE-restructured copy. Atlas remains the truth for architecture and contracts; only paths are remapped. |
+| Repo layout | `backend/` + `frontend/` at repo root | Mapped to `src/backend/` + `src/frontend/` | Atlas describes the upstream Billing-Cycle repo; this workspace is an AIRE-restructured copy. Atlas remains the truth for architecture and contracts; only paths are remapped. The frontend half of this mapping changed mid-cycle when the tree was relocated from `frontend/` to `src/frontend/` — see `## Code Root`. |
 | `renew_at` value | Hardcoded string "Sep 09, 2025" | Treated as dynamic (`today + 30 days`) | Verified in `src/backend/main.py` lines 27, 35, 125, 130 - `renew_at` is computed at runtime. The Epic's "$10.00 at 15 days" is an illustrative example, not a fixture. |
 
 ## Story Tracker
 | Story | Title | Requires | Tracker ID | Status | PR | Merged | Start | End | Recorded |
 |---|---|---|---|---|---|---|---|---|---|
-| (to be populated by the User Stories stage) | | | | | | | | | |
+| 1.1 | Mid-Cycle Subscription Upgrade (Standard to Premium) | none | LOCAL | 🟢 Ready for Development | - | - | - | - | 2026-08-31T11:55:34Z |
+
+## Dependency Graph
+Generated automatically (no approval gate) - `.spec/aire-docs/planning/dependency-graph.yml`
+
+```mermaid
+graph TD
+    S11["Story 1.1<br/>Mid-Cycle Subscription Upgrade<br/>(no prerequisites)"]
+    style S11 fill:#dcfce7,stroke:#16a34a
+```
+
+**Inferred edges**: none. With `target_story_count = 1` there is no second story for an edge to
+point at, so nothing was inferred and nothing is blocked.
+
+**Ready-stories summary**
+| Story | Requires | Startable now | Blocked by |
+|---|---|---|---|
+| 1.1 | none | Yes | - |
+
+- Total stories: 1
+- Immediately startable: 1
+- team_size: 2
+- **R5 parallelism target NOT met** - only one story exists, so fewer than `team_size` independent
+  stories are available. This follows directly from the accepted story-sizing deviation above; it is
+  not an inference error. The second developer's capacity is available for the parallel **ve track**
+  (`/ve-implement 1.1`), which needs no dev branch, PR or merge and can start immediately.
+- **shared_files**: none. A single story has no cross-story merge-conflict surface.
+- Files in scope for the baseline capture: `src/backend/main.py`, `src/frontend/src/pages/Billing.jsx`
 
 ## Team Configuration
 - team_size: 2 (fixed default - never asked)
 - story_creation_mode: all-at-once (fixed default - never asked)
+- target_story_count: 1 (USER OVERRIDE of the recommended 10, explicitly confirmed after the full trade-off was presented - see audit.md Entries 10-11)
+
+### Accepted deviation - story sizing
+The single story breaches the Step 1.5 hard sizing ceilings by design, at the user's explicit
+direction: 31 acceptance criteria against a ceiling of 5; both architectural layers newly touched;
+all four scenario classes in one story; parallelism rule broken (1 story < team_size 2). Step 18.6
+would normally split the story here - it is NOT run in split mode, because the user was shown each
+of these consequences and chose this shape anyway. Recorded rather than silently corrected.
 
 ## Extension Configuration
 | Extension | Enabled | Source |
@@ -95,8 +137,16 @@
 ## Stage Progress
 - [x] Workspace Detection — COMPLETE
 - [x] Reverse Engineering — SKIPPED (Atlas full coverage, Source: atlas)
-- [ ] Requirements Analysis — in progress
-- [ ] User Stories
-- [ ] Dependency Graph
-- [ ] Workflow Planning
-- [ ] Application Design
+- [x] Requirements Analysis — COMPLETE (approved, committed 7093b85, pushed)
+- [x] User Stories — COMPLETE (GATE 1 approved; Part 3 no-op, LOCAL)
+- [x] Dependency Graph — COMPLETE (auto-approved)
+- [x] Workflow Planning — COMPLETE (auto-approved)
+- [x] Application Design — SKIPPED (no new components/services; the needed method + business-rule definition moves to Functional Design)
+
+### 🟢 IMPLEMENTATION PHASE
+- [x] Functional Design — COMPLETE (Standard depth, approved; D-1/D-2/D-3 resolved)
+- [x] NFR Requirements — COMPLETE (Minimal depth, approved)
+- [x] NFR Design — COMPLETE (Minimal depth, approved; P-1..P-7 defined)
+- [x] Infrastructure Design — SKIPPED (zero infrastructure delta)
+- [x] architecture.md v1.0.0 + rubrics + CI pipeline — COMPLETE (dry-run verified)
+- [ ] 🛑 STOP — **Design complete — awaiting dev-implement** (SonarQube setup gate open)

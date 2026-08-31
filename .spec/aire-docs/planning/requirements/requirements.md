@@ -16,7 +16,7 @@
 |---|---|---|
 | **Epic brief** | `.spec/aire-docs/planning/requirements/epic-brief.md` (Atlas doc 3157) | **Primary** — defines WHAT to build: 5 stories, proration spec, gateway spec, epic-level ACs |
 | **Knowledge graph** | `.spec/aire-docs/planning/reverse-engineering/knowledge-graph.md` (Atlas doc 3155) | Existing architecture, flows, data stores, API surface — the **starting state** |
-| **Live code** | `src/backend/main.py`, `frontend/src/pages/Billing.jsx`, `frontend/src/context/AuthContext.jsx` | Verification of the Epic's stated assumptions |
+| **Live code** | `src/backend/main.py`, `src/frontend/src/pages/Billing.jsx`, `src/frontend/src/context/AuthContext.jsx` | Verification of the Epic's stated assumptions |
 | **Context Project** | — | Not used. User answered "no" to both existing-knowledge and new-references. |
 
 **Design references consulted**: Atlas documents 3157 and 3155, both read in full (3155 lines 1–600; remainder pulled incrementally). See `aire-state.md` → `## Design References` for the reconciliation record.
@@ -59,7 +59,7 @@ Everything below was checked against the real files, not inferred.
 | **F-1** | `renew_at` is **dynamic**, not the fixture `"Sep 09, 2025"`. It is `(datetime.today() + timedelta(days=30)).strftime("%b %d, %Y")`, recomputed at module import and at registration. | Requirements must not depend on a fixed date. |
 | **F-2** | Because the parsed `renew_at` is midnight and `datetime.today()` carries a time, `days_remaining` evaluates to **29**, so the prorated charge is **$19.33**, not $10.00. | **The Epic's "$10.00" is an illustrative example of the formula, not an expected value.** Tests, Gherkin and UI assertions must assert *the formula*, not a literal amount. Captured as **NFR-4**. |
 | **F-3** | `GET /api/billing` line 188 is `billing_data.get(email, billing_data["tpg@example.com"])` — a user with no billing record is served the **seed user's** record. | The two new endpoints must **not** inherit this fallback. Captured as **FR-9** and **SEC-2**. |
-| **F-4** | `dist_dir` (line 210) resolves to `src/frontend/dist`, but the frontend is at repo-root `frontend/`. Pre-existing, caused by the AIRE restructure. | **Out of scope.** Flagged only; the Epic scopes out unrelated changes. |
+| **F-4** | `dist_dir` (line 210) resolves to `src/frontend/dist`. When raised, the frontend sat at repo-root `frontend/`, so the path was wrong and production static serving was broken. | ✅ **RESOLVED mid-cycle by a repository relocation**, not by this Epic: the frontend tree was moved to `src/frontend/`, making the existing expression correct with no code change. Still out of scope — nothing to do. |
 | **F-5** | The billing fetch (lines 105–107) has no `.catch()`; a failure leaves "Loading billing..." on screen forever. | New calls must handle errors (**FR-10**). The existing fetch is adjacent pre-existing debt — noted, not silently rewritten. |
 | **F-6** | `TokenRequest` (lines 97–98) is dead code. | Out of scope. |
 
@@ -85,7 +85,7 @@ Everything below was checked against the real files, not inferred.
 
 ### 4.1 Explicitly out of scope
 
-Downgrades · refunds/credits · Enterprise tier · real payment providers · email receipts/notifications · any change to auth, tasks, login or registration flows · the pre-existing defects F-4, F-5 (existing fetch), F-6.
+Downgrades · refunds/credits · Enterprise tier · real payment providers · email receipts/notifications · any change to auth, tasks, login or registration flows · the pre-existing defects F-5 (existing fetch) and F-6. (F-4 was resolved mid-cycle by the frontend relocation — see Section 3.2.)
 
 ---
 

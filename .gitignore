@@ -1,0 +1,7 @@
+# Eval run output. Regenerated on every run by .evals/scripts/run-evals.sh and
+# uploaded as a CI artifact, so it is never committed.
+.evals/evidence/
+
+# Python bytecode outside the self-ignoring venv
+__pycache__/
+*.pyc

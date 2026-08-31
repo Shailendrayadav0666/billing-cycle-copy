@@ -1,0 +1,30 @@
+version: 1
+generated_at: 2026-08-31
+team_size: 2
+
+# Files touched by 2+ stories - potential merge-conflict surface.
+# With a single story there is no cross-story conflict surface at all.
+shared_files: []
+
+stories:
+  - id: "1.1"
+    title: Mid-Cycle Subscription Upgrade (Standard to Premium)
+    tracker_id: LOCAL
+    requires: []
+    enables: []
+
+# Notes
+# -----
+# target_story_count was set to 1 by explicit user override (recommended was 10).
+# With one story the graph is a single unconnected node: no edges to infer, nothing
+# blocked, and Story 1.1 is immediately startable.
+#
+# R5 (parallelism target: >= team_size independent stories available) CANNOT be met -
+# there is only one story. This is a consequence of the accepted story-sizing deviation
+# recorded in aire-state.md, not an inference error. Second developer capacity is
+# available for the parallel ve track (/ve-implement on story 1.1), which needs no
+# dev branch, PR or merge and can start immediately.
+#
+# Files Story 1.1 touches (single-story scope, listed for the baseline capture):
+#   - src/backend/main.py
+#   - src/frontend/src/pages/Billing.jsx
