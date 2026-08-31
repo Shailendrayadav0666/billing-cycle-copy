@@ -87,46 +87,54 @@ jobs:
           path: ".evals/${{ env.EVAL_KEY }}/static"
           if-no-files-found: warn
 
-  stage-1b-sonarqube:
-    name: "Stage 1b: SonarQube quality gate"
-    runs-on: ubuntu-latest
-    # SonarQube is additive to D3's semgrep scan, never a replacement. The job skips
-    # itself cleanly when the secrets are absent, so the pipeline is fully gated with
-    # or without a Sonar server.
-    steps:
-      - name: "Checkout with full history"
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+# --------------------------------------------------------------------------------
+# SonarQube DISABLED at the user's request (answered 'skip' at the CI setup gate).
+# To enable: add the GitHub Actions secrets SONAR_TOKEN and SONAR_HOST_URL, set
+# sonar.organization in sonar-project.properties, uncomment the job below, and set
+# sonarqube.enabled to true in .evals/config.json.
+# sonar-project.properties is deliberately KEPT, so re-enabling needs only the secrets.
+# semgrep (D3) and the 16-rule Security Baseline review still run and still block.
+# --------------------------------------------------------------------------------
+#  stage-1b-sonarqube:
+#    name: "Stage 1b: SonarQube quality gate"
+#    runs-on: ubuntu-latest
+#    # SonarQube is additive to D3's semgrep scan, never a replacement. The job skips
+#    # itself cleanly when the secrets are absent, so the pipeline is fully gated with
+#    # or without a Sonar server.
+#    steps:
+#      - name: "Checkout with full history"
+#        uses: actions/checkout@v4
+#        with:
+#          fetch-depth: 0
 
-      - name: "Check whether SonarQube is configured"
-        id: check
-        env:
-          SONAR_TOKEN: "${{ secrets.SONAR_TOKEN }}"
-          SONAR_HOST_URL: "${{ secrets.SONAR_HOST_URL }}"
-        run: |
-          if [ -n "$SONAR_TOKEN" ] && [ -n "$SONAR_HOST_URL" ]; then
-            echo "configured=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "SONAR_TOKEN or SONAR_HOST_URL is not set. Skipping the SonarQube scan."
-            echo "semgrep (D3) and the Security Baseline review still run and still block."
-          fi
+#      - name: "Check whether SonarQube is configured"
+#        id: check
+#        env:
+#          SONAR_TOKEN: "${{ secrets.SONAR_TOKEN }}"
+#          SONAR_HOST_URL: "${{ secrets.SONAR_HOST_URL }}"
+#        run: |
+#          if [ -n "$SONAR_TOKEN" ] && [ -n "$SONAR_HOST_URL" ]; then
+#            echo "configured=true" >> "$GITHUB_OUTPUT"
+#          else
+#            echo "configured=false" >> "$GITHUB_OUTPUT"
+#            echo "SONAR_TOKEN or SONAR_HOST_URL is not set. Skipping the SonarQube scan."
+#            echo "semgrep (D3) and the Security Baseline review still run and still block."
+#          fi
 
-      - name: "SonarQube scan"
-        if: steps.check.outputs.configured == 'true'
-        uses: SonarSource/sonarqube-scan-action@v4
-        env:
-          SONAR_TOKEN: "${{ secrets.SONAR_TOKEN }}"
-          SONAR_HOST_URL: "${{ secrets.SONAR_HOST_URL }}"
+#      - name: "SonarQube scan"
+#        if: steps.check.outputs.configured == 'true'
+#        uses: SonarSource/sonarqube-scan-action@v4
+#        env:
+#          SONAR_TOKEN: "${{ secrets.SONAR_TOKEN }}"
+#          SONAR_HOST_URL: "${{ secrets.SONAR_HOST_URL }}"
 
-      - name: "SonarQube quality gate"
-        if: steps.check.outputs.configured == 'true'
-        uses: SonarSource/sonarqube-quality-gate-action@v1
-        timeout-minutes: 5
-        env:
-          SONAR_TOKEN: "${{ secrets.SONAR_TOKEN }}"
-          SONAR_HOST_URL: "${{ secrets.SONAR_HOST_URL }}"
+#      - name: "SonarQube quality gate"
+#        if: steps.check.outputs.configured == 'true'
+#        uses: SonarSource/sonarqube-quality-gate-action@v1
+#        timeout-minutes: 5
+#        env:
+#          SONAR_TOKEN: "${{ secrets.SONAR_TOKEN }}"
+#          SONAR_HOST_URL: "${{ secrets.SONAR_HOST_URL }}"
 
   stage-2-tests-and-behaviour:
     name: "Stage 2: unit tests, coverage and behaviour tiers"

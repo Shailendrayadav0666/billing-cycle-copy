@@ -701,3 +701,33 @@ Gate results on the current diff, which is documentation-only so far: D1 PASS (0
 **SonarQube setup gate presented verbatim** per Section 4.1.2, then the workflow HALTS for `proceed` or `skip`. No token was written into any file. `sonarqube.enabled` remains `false` in `.evals/config.json` until the answer is `proceed`.
 
 ---
+
+## Entry 26 - SonarQube setup gate: user answered SKIP
+
+**Timestamp**: 2026-08-31T13:29:43Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**AIRE VERSION**: 1.0
+**TRACKER ITEM**: EPIC-1
+**Stage**: IMPLEMENTATION - STOP CHECKPOINT (Step 1.6, Section 4.1.3)
+
+**Gate presented verbatim** per `common/ci-pipeline-generation.md` Section 4.1.2 - plain text, no emoji, real substituted values (project key `billing-cycle`, sources `src/backend,src/frontend/src`, tests `tests`).
+
+**User response (COMPLETE RAW INPUT)**:
+
+```
+skip
+```
+
+**Actions taken per Section 4.1.3, `skip` row** - a first-class answer, not argued with:
+1. The `stage-1b-sonarqube` job, containing both scan steps (`SonarSource/sonarqube-scan-action` and `SonarSource/sonarqube-quality-gate-action`), is **commented out** in `.github/workflows/agentic-eval-pipeline.yml`, behind a header naming exactly what re-enables it: the `SONAR_TOKEN` and `SONAR_HOST_URL` secrets, `sonar.organization` in the properties file, uncommenting the job, and `sonarqube.enabled: true`.
+2. `sonarqube.enabled` remains **false** in `.evals/config.json` - no change needed, it was never set true.
+3. `sonar-project.properties` is **KEPT** deliberately, so a later `proceed` needs only the secrets and nothing regenerated.
+4. **No token was written into any file**, at any point.
+
+**Verification after the edit**: the workflow still parses; 5 live jobs remain (stage-1 deterministic gates, stage-2 tests and behaviour, stage-3 frontend build, stage-4 verdict, self-repair); no live `needs:` reference to the commented job remains.
+
+**Security enforcement is NOT reduced to zero by this choice.** The floor is intact and still blocking: semgrep plus the stack SAST at D3, and the 16-rule Security Baseline diff-scoped review in Code Review Phase 2.5, plus the J2 security judge gate against `security-rubric.json`. SonarQube would have raised the ceiling; its absence does not lower the floor.
+
+**This skip is recorded and will NOT be re-asked on a later run.**
+
+---
