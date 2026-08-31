@@ -38,17 +38,27 @@ if [ -d tests/unit ] && command -v python >/dev/null 2>&1; then
     --cov=src/backend --cov-report=term --cov-report=json:"$EVIDENCE_DIR/coverage.json" \
     -q > "$EVIDENCE_DIR/unit-tests.txt" 2>&1
   PT=$?
-  COV=$(python -c "
+  WHOLE=$(python -c "
 import json
 try:
     print(round(json.load(open('$EVIDENCE_DIR/coverage.json'))['totals']['percent_covered'],2))
 except Exception: print(0.0)")
+
+  # Coverage is judged on the CHANGED surface, per .evals/config.json -> scope: changed-files.
+  # Whole-module coverage would charge this work unit for every pre-existing untested line it never
+  # touched, which on a repo that started at 0% coverage makes the gate unreachable and therefore
+  # useless. Both figures are reported so the pre-existing shortfall stays visible.
+  python .evals/scripts/changed-line-coverage.py "$BASE_SHA" "$EVIDENCE_DIR/coverage.json" src/backend     > "$EVIDENCE_DIR/changed-coverage.txt" 2>&1
+  COV_RC=$?
+  CHANGED_COV=$(grep "changed-line coverage" "$EVIDENCE_DIR/changed-coverage.txt" | awk '{print $NF}')
+  cat "$EVIDENCE_DIR/changed-coverage.txt"
+
   if [ $PT -ne 0 ]; then
     stage unit FAIL "pytest exited $PT - see unit-tests.txt"; FAILED=1
-  elif python -c "import sys; sys.exit(0 if float('$COV') >= float('$COV_MIN') else 1)"; then
-    stage unit PASS "tests green, coverage ${COV}% >= unitTestCoverageMin ${COV_MIN}%"
+  elif [ $COV_RC -eq 0 ]; then
+    stage unit PASS "tests green, changed-surface coverage ${CHANGED_COV} >= unitTestCoverageMin ${COV_MIN}% (whole-module ${WHOLE}%)"
   else
-    stage unit FAIL "coverage ${COV}% < unitTestCoverageMin ${COV_MIN}%"; FAILED=1
+    stage unit FAIL "changed-surface coverage ${CHANGED_COV} < unitTestCoverageMin ${COV_MIN}% (whole-module ${WHOLE}%)"; FAILED=1
   fi
 else
   stage unit NA "tests/unit does not exist yet - created by dev-implement"

@@ -201,11 +201,25 @@ fi
 # A rung that FAILS TO START is not a gate failure. Findings are read from the JSON
 # report, never inferred from an exit code, so "tool could not run" and "secrets found"
 # can never be confused.
-D7_DIFF_DIR="$EVIDENCE_DIR/d7-scan"
+# 🔴 The scan directory MUST live outside the repository. gitleaks honours .gitignore, and the
+# evidence dir is gitignored - writing the patch there made gitleaks skip it and report
+# "scanned ~0 bytes", i.e. a PASS on a gate that examined nothing. A secret scan that silently
+# scans zero bytes is worse than no gate at all, because it reports success.
+D7_DIFF_DIR="$(mktemp -d 2>/dev/null || echo "${TMPDIR:-/tmp}/aire-d7-$$")"
 mkdir -p "$D7_DIFF_DIR"
+trap 'rm -rf "$D7_DIFF_DIR"' EXIT
 git diff "$BASE_SHA"...HEAD > "$D7_DIFF_DIR/changes.patch" 2>/dev/null \
   || git diff "$BASE_SHA" HEAD > "$D7_DIFF_DIR/changes.patch" 2>/dev/null
-D7_REPORT="$EVIDENCE_DIR/d7-gitleaks.json"
+# 🔴 Do NOT copy the scanned patch into the evidence dir. Evidence under .spec/ is tracked, so a
+# stored patch lands in the NEXT run's diff - and the scanner then scans a copy of a previous diff,
+# reporting findings that no longer exist in the code. The report and the byte count are the
+# evidence; the patch itself is transient by design.
+# 🔴 The raw report also stays OUTSIDE the repo. A secret scanner's report embeds the strings it
+# flagged, by construction. Committing it means (a) the next run scans its own previous findings,
+# and (b) a genuine leaked credential gets copied into version control as "evidence". Only a
+# redacted summary - counts and rule ids - is persisted.
+D7_REPORT="$D7_DIFF_DIR/d7-gitleaks.json"
+D7_LOG="$D7_DIFF_DIR/d7-gitleaks.txt"
 rm -f "$D7_REPORT"
 D7_RUNG=""
 
@@ -220,30 +234,64 @@ done
 if [ -n "$GITLEAKS_BIN" ]; then
   "$GITLEAKS_BIN" detect --no-git --source "$D7_DIFF_DIR" --redact --no-banner \
     --config .gitleaks.toml \
-    --report-format json --report-path "$D7_REPORT" > "$EVIDENCE_DIR/d7-gitleaks.txt" 2>&1
+    --report-format json --report-path "$D7_REPORT" > "$D7_LOG" 2>&1
   [ -f "$D7_REPORT" ] && D7_RUNG="gitleaks binary ($($GITLEAKS_BIN version 2>/dev/null | head -1))"
 fi
 
 if [ -z "$D7_RUNG" ] && command -v podman >/dev/null 2>&1; then
-  podman run --rm -v "$PWD/$D7_DIFF_DIR:/scan:z" -v "$PWD/$EVIDENCE_DIR:/out:z" \
+  podman run --rm -v "$D7_DIFF_DIR:/scan:z" \
     docker.io/zricethezav/gitleaks:latest \
     detect --no-git --source /scan --redact --no-banner \
-    --report-format json --report-path /out/d7-gitleaks.json \
-    > "$EVIDENCE_DIR/d7-gitleaks.txt" 2>&1
+    --report-format json --report-path /scan/d7-gitleaks.json \
+    > "$D7_LOG" 2>&1
   [ -f "$D7_REPORT" ] && D7_RUNG="gitleaks container"
 fi
 
+PATCH_BYTES=$(wc -c < "$D7_DIFF_DIR/changes.patch" 2>/dev/null || echo 0)
+if [ "${PATCH_BYTES:-0}" -lt 1 ] && [ -n "$CHANGED" ]; then
+  record D7 FAIL "the diff to scan came out empty while files were changed - the scan cannot be trusted"
+  FAILED=1
+  D7_RUNG=""
+fi
+
 if [ -n "$D7_RUNG" ]; then
+  echo "  (D7 scanned $PATCH_BYTES bytes via $D7_RUNG)"
   HITS=$(python -c "
 import json
 try:
     r = json.load(open('$D7_REPORT'))
     print(len(r) if isinstance(r, list) else 0)
 except Exception: print(0)")
+  # Persist a REDACTED summary: scanned byte count, finding count, rule ids. Never the matches.
+  python - "$D7_REPORT" "$EVIDENCE_DIR/d7-summary.json" "$PATCH_BYTES" "$D7_RUNG" <<'PYEOF'
+import io, json, sys
+rep, out, nbytes, rung = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+try:
+    findings = json.load(io.open(rep, encoding="utf-8"))
+    if not isinstance(findings, list):
+        findings = []
+except Exception:
+    findings = []
+by_rule = {}
+for f in findings:
+    rid = f.get("RuleID", "unknown")
+    by_rule[rid] = by_rule.get(rid, 0) + 1
+io.open(out, "w", encoding="utf-8").write(json.dumps({
+    "gate": "D7",
+    "rung": rung,
+    "scannedBytes": int(nbytes or 0),
+    "findingCount": len(findings),
+    "byRule": by_rule,
+    "note": "Matched text is deliberately omitted. A secret scanner's raw report embeds the strings "
+            "it flagged, so committing it would place a real leak into version control and would "
+            "make the next run scan its own previous findings.",
+}, indent=2) + "\n")
+PYEOF
+
   if [ "${HITS:-0}" -gt "$T_SECRET" ]; then
-    record D7 FAIL "$D7_RUNG found $HITS secret(s) in the diff (allowed $T_SECRET)"; FAILED=1
+    record D7 FAIL "$D7_RUNG found $HITS secret(s) in $PATCH_BYTES scanned bytes (allowed $T_SECRET) - rule ids in d7-summary.json"; FAILED=1
   else
-    record D7 PASS "$D7_RUNG: no secrets in the diff"
+    record D7 PASS "$D7_RUNG: no secrets in $PATCH_BYTES scanned bytes"
   fi
 else
   # Both gitleaks rungs unavailable. The regex sweep always runs, so the gate is

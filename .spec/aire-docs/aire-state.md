@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Brownfield
 - **Start Date**: 2026-08-31T11:07:03Z
-- **Current Stage**: IMPLEMENTATION - Code Generation (Story 1.1, dev-implement)
+- **Current Stage**: IMPLEMENTATION - Story 1.1 PR raised, awaiting merge + ve sign-off
 - **AIRE Version**: 1.0
 - **Workflow Type**: Epic
 
@@ -86,7 +86,7 @@
 ## Story Tracker
 | Story | Title | Requires | Tracker ID | Status | PR | Merged | Start | End | Recorded |
 |---|---|---|---|---|---|---|---|---|---|
-| 1.1 | Mid-Cycle Subscription Upgrade (Standard to Premium) | none | LOCAL | 🔵 In Development | - | - | 2026-08-31T13:32:01Z | - | 2026-08-31T13:32:01Z |
+| 1.1 | Mid-Cycle Subscription Upgrade (Standard to Premium) | none | LOCAL | 🔵 In Development | [#1](https://github.com/Shailendrayadav0666/billing-cycle-copy/pull/1) | no | 2026-08-31T13:32:01Z | - | 2026-08-31T14:10:04Z |
 
 ## Dependency Graph
 Generated automatically (no approval gate) - `.spec/aire-docs/planning/dependency-graph.yml`

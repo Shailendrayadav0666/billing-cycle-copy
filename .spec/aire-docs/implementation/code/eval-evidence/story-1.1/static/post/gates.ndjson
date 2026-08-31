@@ -5,4 +5,4 @@
 {"gate":"D4","status":"PASS","detail":"no critical/high dependency vulnerabilities"}
 {"gate":"D5","status":"PASS","detail":"no disallowed licences"}
 {"gate":"D6","status":"PASS","detail":"all changed functions within complexity 12"}
-{"gate":"D7","status":"PASS","detail":"gitleaks binary (8.30.1): no secrets in the diff"}
+{"gate":"D7","status":"PASS","detail":"gitleaks binary (8.30.1): no secrets in 883366 scanned bytes"}

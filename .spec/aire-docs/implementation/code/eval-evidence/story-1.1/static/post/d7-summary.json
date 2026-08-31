@@ -1,0 +1,10 @@
+{
+  "gate": "D7",
+  "rung": "gitleaks binary (8.30.1)",
+  "scannedBytes": 883366,
+  "findingCount": 1,
+  "byRule": {
+    "generic-api-key": 1
+  },
+  "note": "Matched text is deliberately omitted. A secret scanner's raw report embeds the strings it flagged, so committing it would place a real leak into version control and would make the next run scan its own previous findings."
+}

@@ -158,6 +158,21 @@ jobs:
           pip install -r src/backend/requirements.txt
           pip install pytest pytest-cov pytest-bdd httpx
 
+      - name: "Install CI analysis tools"
+        # run-evals.sh re-runs the D1-D7 static gate, so this job needs the same tools Stage 1 has.
+        # Without them D1, D2, D3 and D6 report N/A for tool absence - a false pass on gates that
+        # never executed.
+        run: |
+          pip install ruff mypy bandit semgrep pip-audit pip-licenses radon
+
+      - name: "Set up Node for the frontend lint step inside the gate"
+        uses: actions/setup-node@v4
+        with:
+          node-version: "${{ env.NODE_VERSION }}"
+
+      - name: "Install frontend dependencies"
+        run: npm --prefix src/frontend install
+
       - name: "Resolve base SHA"
         id: base
         run: |

@@ -12,3 +12,11 @@ __pycache__/
 # coverage.py data file - run output, regenerated every run
 .coverage
 coverage.xml
+
+# Transient secret-scan patches. Storing a diff makes the NEXT scan scan a previous diff.
+**/d7-scan/
+**/d7-scanned.patch
+
+# Raw secret-scanner output embeds the strings it flagged - never commit it.
+**/d7-gitleaks.json
+**/d7-gitleaks.txt
