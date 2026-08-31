@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Brownfield
 - **Start Date**: 2026-08-31T11:07:03Z
-- **Current Stage**: IMPLEMENTATION - STOP CHECKPOINT (Design complete — awaiting dev-implement)
+- **Current Stage**: 🛑 HALTED — Design complete — awaiting `dev-implement`
 - **AIRE Version**: 1.0
 - **Workflow Type**: Epic
 
@@ -149,4 +149,4 @@ of these consequences and chose this shape anyway. Recorded rather than silently
 - [x] NFR Design — COMPLETE (Minimal depth, approved; P-1..P-7 defined)
 - [x] Infrastructure Design — SKIPPED (zero infrastructure delta)
 - [x] architecture.md v1.0.0 + rubrics + CI pipeline — COMPLETE (dry-run verified)
-- [ ] 🛑 STOP — **Design complete — awaiting dev-implement** (SonarQube setup gate open)
+- [x] 🛑 STOP — **Design complete — awaiting dev-implement** (handoff presented at commit 5b0dddc)
