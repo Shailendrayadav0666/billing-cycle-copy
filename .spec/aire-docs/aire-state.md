@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Brownfield
 - **Start Date**: 2026-08-31T11:07:03Z
-- **Current Stage**: IMPLEMENTATION - Story 1.1 PR raised, awaiting merge + ve sign-off
+- **Current Stage**: IMPLEMENTATION - Story 1.1 PR #1 open and CI-green, awaiting merge + ve sign-off
 - **AIRE Version**: 1.0
 - **Workflow Type**: Epic
 

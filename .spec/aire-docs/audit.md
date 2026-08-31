@@ -1057,3 +1057,23 @@ Honest note on the gate-versus-code split: all five defects were in the GATE MAC
 **Context**: dev-implement post-PR CI re-verification. PR #1 updated with the fixes.
 
 ---
+
+## CI GREEN after the fixes — PR #1 (Story 1.1)
+**Timestamp**: 2026-08-31T14:31:37Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "dev-implement"
+**TRACKER ITEM**: "1.1 (LOCAL)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "The generated pipeline re-ran on PR #1 after the five gate fixes and PASSED. Conclusion: success. Job outcomes: Stage 1 deterministic gates D1-D7 success; Stage 2 unit tests, coverage and behaviour success; Stage 3 frontend lint and build success; Stage 4 verdict success; Self-repair SKIPPED, which is correct - it is conditioned on failure and there was nothing to repair.
+
+CI gate results, read from the run log rather than assumed: D1 PASS 0 lint errors; D2 PASS 0 mypy errors; D3 PASS semgrep 0 critical / 0 high / 1 medium within threshold; D4 PASS; D5 PASS; D6 PASS all changed functions within complexity 12; D7 PASS via the gitleaks CONTAINER rung, 277,339 scanned bytes - a non-zero byte count, which is the specific thing that was silently broken before; static PASS; changed-line coverage 100.0 percent; VERDICT PASS.
+
+Note the D7 rung differs by environment and both now work: the local run used the bootstrapped gitleaks binary (883,366 bytes against the epic base), CI used the container image (277,339 bytes - a smaller diff because CI checks out the merge ref). Byte counts are now printed on every run precisely so a zero-byte scan can never again pass unnoticed.
+
+The 1 remaining medium finding is the PRE-EXISTING wildcard-CORS at main.py, within the allowed threshold and documented as out of scope. NEW findings attributable to this story: 0.
+
+Story 1.1 remains 🔵 In Development. Raising a PR does NOT promote it. It moves to 🧪 Ready for Testing only when PR #1 MERGES into the epic branch AND ve signs it off via ve-list-work. dev-implement never promotes tracker status."
+**Context**: dev-implement post-PR CI re-verification, second run. PR #1 is green and merge-ready.
+
+---
