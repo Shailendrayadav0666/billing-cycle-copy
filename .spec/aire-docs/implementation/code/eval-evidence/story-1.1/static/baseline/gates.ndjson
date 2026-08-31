@@ -1,0 +1,7 @@
+{"gate":"D1","status":"PASS","detail":"lint errors 0 <= 0"}
+{"gate":"D2","status":"NA","detail":"no changed python; frontend is plain JSX with no tsconfig, so no type system to check"}
+{"gate":"D3","status":"PASS","detail":"semgrep crit=0 high=0 med=0 within threshold"}
+{"gate":"D4","status":"PASS","detail":"no critical/high dependency vulnerabilities"}
+{"gate":"D5","status":"PASS","detail":"no disallowed licences"}
+{"gate":"D6","status":"NA","detail":"radon unavailable or no changed python"}
+{"gate":"D7","status":"PASS","detail":"gitleaks binary (8.30.1): no secrets in the diff"}

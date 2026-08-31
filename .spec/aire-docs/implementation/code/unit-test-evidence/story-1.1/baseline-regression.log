@@ -1,0 +1,10 @@
+BASELINE REGRESSION — Story 1.1
+Branch: story/1.1-mid-cycle-subscription-upgrade
+Commit: a0d2aa8166dcdeb4208c5e19bdd3ed6e2c7bc578
+Timestamp: 2026-08-31T13:36:10Z
+Command: python -m pytest tests -q
+----------------------------------------------------------------
+
+no tests ran in 0.01s
+----------------------------------------------------------------
+pytest exit code: 0

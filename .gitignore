@@ -5,3 +5,10 @@
 # Python bytecode outside the self-ignoring venv
 __pycache__/
 *.pyc
+
+# Downloaded tool binaries (gitleaks). Not project source; never committed.
+.evals/tools/
+
+# coverage.py data file - run output, regenerated every run
+.coverage
+coverage.xml

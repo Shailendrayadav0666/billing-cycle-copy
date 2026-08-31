@@ -1,0 +1,17 @@
+# D1 lint config for the Python backend. Bootstrapped by AIRE at the Story 1.1
+# baseline checkpoint because the repository had no Python linter config.
+#
+# RECOMMENDED preset, deliberately not strict, and it pre-suppresses nothing:
+# no seeded rule-offs and no source-tree excludes. Bootstrap makes the check
+# runnable; it never makes the check pass.
+
+line-length = 120
+target-version = "py313"
+
+# Vendored / generated trees only. No application source is excluded.
+extend-exclude = ["src/backend/venv", "src/frontend/node_modules", "**/__pycache__"]
+
+[lint]
+# Ruff's own recommended default set (pycodestyle errors + pyflakes), plus
+# import sorting. Nothing is ignored.
+select = ["E4", "E7", "E9", "F", "I"]

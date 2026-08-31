@@ -1,0 +1,32 @@
+API & CONTRACT TEST RUN — Story 1.1 (SH-LOOP-2 attempt 1 re-verification)
+Branch: story/1.1-mid-cycle-subscription-upgrade
+Timestamp: 2026-08-31T13:56:18Z
+Endpoints in scope: GET /api/billing/upgrade-preview, POST /api/billing/upgrade
+Command: python -m pytest tests/unit/test_api_contract.py -v
+--------------------------------------------------------
+============================= test session starts =============================
+platform win32 -- Python 3.13.3, pytest-9.1.1, pluggy-1.6.0 -- C:\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\shailendra.yadav\Desktop\projects\helix-aire-v1-demo2
+configfile: pytest.ini
+plugins: anyio-4.14.2, bdd-8.1.0, cov-7.1.0
+collecting ... collected 16 items
+
+tests/unit/test_api_contract.py::test_preview_functional_behaviour PASSED [  6%]
+tests/unit/test_api_contract.py::test_upgrade_functional_behaviour PASSED [ 12%]
+tests/unit/test_api_contract.py::test_preview_response_codes PASSED      [ 18%]
+tests/unit/test_api_contract.py::test_upgrade_response_codes PASSED      [ 25%]
+tests/unit/test_api_contract.py::test_wrong_method_is_rejected PASSED    [ 31%]
+tests/unit/test_api_contract.py::test_both_endpoints_require_authentication PASSED [ 37%]
+tests/unit/test_api_contract.py::test_a_caller_cannot_act_on_another_identity PASSED [ 43%]
+tests/unit/test_api_contract.py::test_error_bodies_match_the_documented_shapes PASSED [ 50%]
+tests/unit/test_api_contract.py::test_no_error_body_leaks_internal_detail PASSED [ 56%]
+tests/unit/test_api_contract.py::test_upgrade_rejects_a_malformed_body PASSED [ 62%]
+tests/unit/test_api_contract.py::test_upgrade_ignores_unknown_fields_rather_than_trusting_them PASSED [ 68%]
+tests/unit/test_api_contract.py::test_preview_requires_the_email_parameter PASSED [ 75%]
+tests/unit/test_api_contract.py::test_preview_response_matches_its_contract PASSED [ 81%]
+tests/unit/test_api_contract.py::test_upgrade_response_matches_its_contract PASSED [ 87%]
+tests/unit/test_api_contract.py::test_the_upgraded_billing_payload_keeps_its_existing_contract PASSED [ 93%]
+tests/unit/test_api_contract.py::test_the_endpoints_are_documented_in_the_openapi_schema PASSED [100%]
+
+============================= 16 passed in 0.36s ==============================

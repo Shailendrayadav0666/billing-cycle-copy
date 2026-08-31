@@ -1,0 +1,21 @@
+# D7 secret-scan config. Bootstrapped by AIRE at the Story 1.1 baseline checkpoint
+# because the repository had no gitleaks config.
+#
+# It EXTENDS the full default rule set rather than replacing it, and defines NO
+# allowlist of findings. Vendored trees are excluded by path only - that reduces
+# noise from third-party code, it does not hide a finding in this project's source.
+
+title = "Billing-Cycle secret scan"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Vendored and generated trees only. No project source path, and no secret pattern, is allowlisted."
+paths = [
+  '''src/backend/venv/''',
+  '''src/frontend/node_modules/''',
+  '''src/frontend/dist/''',
+  '''\.evals/tools/''',
+  '''\.evals/evidence/''',
+]

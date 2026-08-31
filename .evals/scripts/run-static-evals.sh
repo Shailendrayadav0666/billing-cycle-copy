@@ -39,7 +39,16 @@ T_SECRET=$(jqv "d['thresholds']['secretFindingsAllowed']")
 echo "=== Static eval gate: base=$BASE_SHA scope=changed-files ==="
 
 # ---------------------------------------------------------------- changed files
-CHANGED=$(git diff --name-only --diff-filter=ACMR "$BASE_SHA"...HEAD 2>/dev/null || git diff --name-only --diff-filter=ACMR "$BASE_SHA" HEAD)
+# Diff against the WORKING TREE, not BASE...HEAD. Locally the gate runs before the commit, so a
+# HEAD-only diff would report "no changed files" and every gate would go N/A for the wrong reason -
+# a false pass. `git diff <base>` covers committed, staged and unstaged changes alike, which is the
+# set the gate is supposed to measure. Untracked files are added explicitly, since git diff omits them.
+CHANGED=$(
+  {
+    git diff --name-only --diff-filter=ACMR "$BASE_SHA" 2>/dev/null
+    git ls-files --others --exclude-standard 2>/dev/null
+  } | sort -u
+)
 echo "$CHANGED" > "$EVIDENCE_DIR/changed-files.txt"
 
 CHANGED_PY=$(echo "$CHANGED"  | grep -E '^src/backend/.*\.py$'        | grep -v '/venv/' | grep -v '__pycache__' || true)
@@ -57,7 +66,10 @@ D1_ERRORS=0
 if [ -n "$CHANGED_PY" ]; then
   if command -v ruff >/dev/null 2>&1; then
     ruff check $CHANGED_PY --output-format=concise > "$EVIDENCE_DIR/d1-ruff.txt" 2>&1
-    D1_ERRORS=$(( D1_ERRORS + $(grep -c . "$EVIDENCE_DIR/d1-ruff.txt" || true) ))
+    # Count only real diagnostics (file:line:col: CODE ...). Counting every non-empty line also
+    # counted ruff's own summary lines ("Found 1 error.", "[*] 1 fixable..."), inflating one
+    # finding into three.
+    D1_ERRORS=$(( D1_ERRORS + $(grep -cE '^[^ ].*:[0-9]+:[0-9]+: ' "$EVIDENCE_DIR/d1-ruff.txt" || true) ))
   else
     record D1 NA "ruff unavailable for backend lint"
   fi
@@ -145,11 +157,14 @@ if command -v pip-licenses >/dev/null 2>&1; then
   pip-licenses --format=json > "$EVIDENCE_DIR/d5-pip-licenses.json" 2>/dev/null
 fi
 ( cd src/frontend && npx --yes license-checker --json ) > "$EVIDENCE_DIR/d5-npm-licenses.json" 2>/dev/null
-D5=$(python - <<'PYEOF'
-import json, os
+D5=$(python - "$EVIDENCE_DIR" <<'PYEOF'
+import json, os, sys
+# Read from the evidence dir actually in use. A hardcoded path would find nothing whenever the
+# caller passes a custom dir - reporting 0 disallowed licences without having looked at anything.
+d = sys.argv[1]
 bad = {"GPL-2.0","GPL-3.0","AGPL-3.0","SSPL-1.0"}
 hits = 0
-for p in (".evals/evidence/static/d5-npm-licenses.json", ".evals/evidence/static/d5-pip-licenses.json"):
+for p in (os.path.join(d, "d5-npm-licenses.json"), os.path.join(d, "d5-pip-licenses.json")):
     if not os.path.exists(p): continue
     try: data = json.load(open(p))
     except Exception: continue
@@ -194,10 +209,19 @@ D7_REPORT="$EVIDENCE_DIR/d7-gitleaks.json"
 rm -f "$D7_REPORT"
 D7_RUNG=""
 
-if command -v gitleaks >/dev/null 2>&1; then
-  gitleaks detect --no-git --source "$D7_DIFF_DIR" --redact --no-banner \
+# Rung 1a: a gitleaks binary bootstrapped into .evals/tools/ (gitignored, not project source).
+GITLEAKS_BIN=""
+for cand in .evals/tools/gitleaks.exe .evals/tools/gitleaks; do
+  [ -x "$cand" ] && GITLEAKS_BIN="$cand" && break
+done
+# Rung 1b: a gitleaks already on PATH.
+[ -z "$GITLEAKS_BIN" ] && command -v gitleaks >/dev/null 2>&1 && GITLEAKS_BIN="gitleaks"
+
+if [ -n "$GITLEAKS_BIN" ]; then
+  "$GITLEAKS_BIN" detect --no-git --source "$D7_DIFF_DIR" --redact --no-banner \
+    --config .gitleaks.toml \
     --report-format json --report-path "$D7_REPORT" > "$EVIDENCE_DIR/d7-gitleaks.txt" 2>&1
-  [ -f "$D7_REPORT" ] && D7_RUNG="gitleaks binary"
+  [ -f "$D7_REPORT" ] && D7_RUNG="gitleaks binary ($($GITLEAKS_BIN version 2>/dev/null | head -1))"
 fi
 
 if [ -z "$D7_RUNG" ] && command -v podman >/dev/null 2>&1; then

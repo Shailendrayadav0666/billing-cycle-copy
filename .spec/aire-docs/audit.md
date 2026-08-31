@@ -760,3 +760,268 @@ skip
 - `tests/` does not exist yet; the eval scripts correctly report `unit` and `behavior` as `NA` rather than falsely passing.
 
 ---
+
+## Story Selection + Doability Gate (Story 1.1)
+**Timestamp**: 2026-08-31T13:38:40Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "dev-implement"
+**TRACKER ITEM**: "1.1 (LOCAL - Mid-Cycle Subscription Upgrade (Standard to Premium))"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "Displayed the mandatory sequential-development banner verbatim. Read `## Branching` from aire-state.md (Base `main`, Epic `epic/EPIC-1-mid-cycle-subscription-upgrade`). Selected Story 1.1 - the Story Tracker holds exactly one story, so there was nothing to disambiguate and no question was asked. Ran the Doability Gate: `requires: []` in dependency-graph.yml, so there is no prerequisite to verify and no PR to check. Gate PASSED. Moved Story 1.1 from `🟢 Ready for Development` to `🔵 In Development` automatically - picking the story IS the claim. Tracker Type is LOCAL, so the Story Tracker in aire-state.md was the only thing updated: **zero external calls**, no tracker transition to verify, and no assignee lookup (LOCAL has no assignable issue). Set Start and Recorded."
+**Context**: dev-implement Step 1 / Step 1.75 / Step 2. No bulk status reconciliation performed (by design). No story was promoted to `🧪 Ready for Testing` - that is `ve-list-work`'s job alone.
+
+---
+
+## Story Branch Checkpoint (Story 1.1)
+**Timestamp**: 2026-08-31T13:38:40Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "dev-implement"
+**TRACKER ITEM**: "1.1 (LOCAL)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "Refreshed the epic branch (`git fetch origin`, `git checkout epic/EPIC-1-mid-cycle-subscription-upgrade`, `git pull --ff-only`) - already current at `a0d2aa8`. Ran the dependency-merge check: Story 1.1 has no `requires`, so Case A applies and the branch was cut from the EPIC branch, never from `main`. Created `story/1.1-mid-cycle-subscription-upgrade` automatically - the name is fully determined by the story ID and title, so no confirmation was asked and no override was offered. No name collision. Verified active via `git branch --show-current`. Tracker ID is LOCAL, so no Tracker-ID prefix was added to the branch name."
+**Context**: dev-implement Step 1.5 items 1-4. Story branch is the target for the later commit/push/PR.
+
+---
+
+## Bootstrap: tool install chain + missing configs (Story 1.1)
+**Timestamp**: 2026-08-31T13:38:40Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "dev-implement"
+**TRACKER ITEM**: "1.1 (LOCAL)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "Ran the eval-framework.md Section 2.4.1 install chain BEFORE the baseline, so no gate is recorded N/A for a missing tool.
+
+**Rung 1 - already present, verified by version command**: ruff 0.16.4, mypy 2.3.1, bandit 1.9.4, pip-audit 2.10.1, pip-licenses 5.5.5, radon 6.0.1, pytest 9.1.1. Used as-is.
+
+**Rung 2 - package manager (pip)**: semgrep absent -> `pip install semgrep`, attempt 1 of 3 succeeded, verified **semgrep 1.175.0**. Also installed the test-only deps pytest-cov, pytest-bdd and httpx (test-only; NEVER added to src/backend/requirements.txt, per NFR-1 / constraint ARCH-05).
+
+**gitleaks - the full chain was worked, 3 rungs, and it did NOT need to fall through to Podman**:
+  - Rung 2 (npm), attempt 1: `npm install -g gitleaks` reported 'added 1 package' but installed **no binary** - the package contains only package.json and README.md. `gitleaks version` -> command not found. Rung recorded as FAILED, not as a success.
+  - Rung 3 (direct release binary), attempt 1: FAILED. Downloaded 9 bytes containing the text 'Not Found'. **Root cause diagnosed before spending another attempt (SH-7)**: both the version and the file extension were wrong - I guessed v8.28.0 and `.tar.gz`, but the GitHub API shows the current tag is v8.30.1 and the Windows asset is a `.zip`.
+  - Rung 3, attempt 2: resolved the real asset name from the GitHub releases API, downloaded `gitleaks_8.30.1_windows_x64.zip` (8,438,883 bytes), extracted `gitleaks.exe`, verified **gitleaks 8.30.1**. SUCCESS.
+  - Rung 4 (OCI image via Podman) was therefore **not needed**. Noted for the record that it would not have worked as-is locally: `podman machine list` shows `podman-machine-default` with LAST UP 'Never', so the machine would have had to be started first. In CI (ubuntu runner) podman works natively.
+  - The binary lives at `.evals/tools/gitleaks.exe` and `.evals/tools/` was added to `.gitignore` - it is a 22 MB downloaded tool, not project source, and is never committed.
+
+**All 8 gate tools are now installed and version-verified. No gate is recorded N/A for tool absence, and the Podman rung never had to be reported as exhausted.**
+
+**Config bootstrap - created ONLY where the repo had none; existing config used AS-IS**:
+  - `src/frontend/.oxlintrc.json` **EXISTS -> reused untouched.** The repo's own standard wins; not overridden and not 'upgraded'.
+  - `ruff.toml` **CREATED** - D1 had no Python linter config. Recommended preset (ruff's default E4/E7/E9/F plus import sorting), line-length 120, target py313. Excludes only `venv`, `node_modules` and `__pycache__` - **no application source is excluded and no rule is pre-disabled**.
+  - `mypy.ini` **CREATED** - D2 had no type-checker config. Recommended, NOT `--strict`. `ignore_missing_imports` is on because FastAPI and Pydantic ship no stubs for some internals; nothing about the project's own code is suppressed. `mypy_path = src/backend` because the backend is imported by bare name.
+  - `.gitleaks.toml` **CREATED** - D7 had no config. `[extend] useDefault = true`, so it EXTENDS the full default rule set rather than replacing it. The allowlist contains **paths only** (vendored/generated trees) and **no secret pattern and no project source path** - it reduces third-party noise, it cannot hide a finding in this project's code.
+  - `pytest.ini` **CREATED** - the repo had no test config because it had no tests. `pythonpath = src/backend` is the load-bearing line: the backend is run as `uvicorn main:app`, so tests import `main` by bare name; without it every test would fail on import rather than on behaviour.
+
+All five created files are announced here and commit with this story. None pre-suppresses a finding: bootstrap makes each check runnable, it never makes a check pass."
+**Context**: dev-implement Step 1.5 item 4.6, bootstrap-first. Order honoured: bootstrap -> baseline -> generate -> Step 6.6 -> diff. No config was created after the baseline, so both runs measure under identical rules.
+
+---
+
+## BASELINE Regression Run (Story 1.1)
+**Timestamp**: 2026-08-31T13:38:40Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "dev-implement"
+**TRACKER ITEM**: "1.1 (LOCAL)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "Ran the entire repo test suite on the freshly cut story branch, before any code was generated. Command: `python -m pytest tests -q`. Result: **'no tests ran in 0.01s', exit code 0**.
+
+**Recorded explicitly per Step 1.5 item 4.5: this repository has NO test suite at all.** Atlas doc 3155 rates zero test coverage as a critical finding, and it is confirmed empirically here. The consequence is stated plainly: the post-implementation regression gate at Step 6.5 therefore covers **only this story's new tests** - there is no pre-existing suite for it to diff against, so 'zero NEW failures versus baseline' is trivially satisfiable and the real protection comes from the new tests plus the D1-D7 diff, not from regression.
+
+Zero pre-existing failures to catalogue, so nothing here is 'already broken'. Saved to `.spec/aire-docs/implementation/code/unit-test-evidence/story-1.1/baseline-regression.log` with branch, commit, timestamp and the exact command."
+**Context**: dev-implement Step 1.5 item 4.5. No attempt made to fix anything; baselines are recorded, never repaired.
+
+---
+
+## BASELINE Static Eval Run D1-D7 (Story 1.1)
+**Timestamp**: 2026-08-31T13:38:40Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "dev-implement"
+**TRACKER ITEM**: "1.1 (LOCAL)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "Ran D1-D7 on the story branch before any code was generated, scope changed-files against `origin/main` (`37afbae`). Saved to `.spec/aire-docs/implementation/code/eval-evidence/story-1.1/static/baseline/`.
+
+Changed-file counts at baseline: 0 Python, 6 JS/JSX (the 6 JSX files appear in the diff because of the 19 frontend renames adopted at the STOP CHECKPOINT).
+
+| Gate | Result | Detail |
+|---|---|---|
+| D1 lint | PASS | 0 errors. oxlint reports 4 pre-existing WARNINGS (exhaustive-deps in Tasks.jsx, immutability + only-export-components + exhaustive-deps in AuthContext.jsx) - warnings, not errors, exit 0. **These are pre-existing debt on the epic branch and are NOT this story's.** Recorded, not fixed. |
+| D2 type check | N/A | Closed-list reason: inapplicable to this work unit at baseline - 0 changed Python files. The frontend is plain JSX with no tsconfig, so it has no type system to check at all. Will genuinely run at Step 6.6 once backend code exists. |
+| D3 SAST | PASS | semgrep 1.175.0 actually executed: 0 critical, 0 high, 0 medium. Not an N/A - the tool ran. |
+| D4 dependency vulns | PASS | Real output: 8 prod / 64 dev / 46 optional npm packages, 0 critical, 0 high. pip-audit clean. |
+| D5 licences | PASS | Real output, ~12 KB of licence data, no GPL-2.0/GPL-3.0/AGPL-3.0/SSPL-1.0. |
+| D6 complexity | N/A | Closed-list reason: inapplicable to this work unit at baseline - 0 changed Python files. radon 6.0.1 IS installed, so this is not a tool-absence N/A. Will run at Step 6.6. |
+| D7 secrets | PASS | **gitleaks 8.30.1 binary actually executed** on the diff only (not the whole repo), using `.gitleaks.toml`. 0 findings. Not a regex-fallback rung and not an N/A. |
+
+**Every finding above is pre-existing debt on the epic branch, not this story's.** It exists solely to define 'already broken' so Step 6.6 can attribute new findings correctly. Nothing was fixed and nothing blocked. **No gate was recorded N/A for a missing tool**, and no gate was phrased as deferred work."
+**Context**: dev-implement Step 1.5 item 4.6. Order honoured: bootstrap -> baseline -> generate code -> Step 6.6 -> diff.
+
+---
+
+## Code Generation Part 1 — Plan Finalized (auto-approved, no gate)
+**Timestamp**: 2026-08-31T14:07:34Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "dev-implement"
+**TRACKER ITEM**: "1.1 (LOCAL)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "Plan written to `.spec/aire-docs/implementation/code/plans/story-1.1-code-generation-plan.md` - 34 steps across 5 parts, announced and executed immediately with no approval prompt. Grounded in stories.md, requirements.md, epic-brief.md, the 8 design artifacts, architecture.md Section 10 and the Atlas knowledge graph; no scope, file or behaviour invented. DR-5 grounding done per component, with the Reconciliations table read first (DR-8): repo layout and the dynamic renew_at are settled and were not reopened. Trace self-check PASSED before announcing: all 26 requirement IDs and all 31 ACs appear in at least one step."
+**Context**: dev-implement Part 1. No GATE 2 - the plan is not an approval point.
+
+---
+
+## Code Generation Part 2 — Done (Story 1.1)
+**Timestamp**: 2026-08-31T14:07:34Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "dev-implement"
+**TRACKER ITEM**: "1.1 (LOCAL)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "Gherkin contract written FIRST, before any implementation, to story-1.1.feature - 25 scenarios tagged with AC ids. Then backend, then frontend, then tests.
+
+Backend src/backend/main.py 212 to 385 lines: 4 constants (PLANS, PREMIUM_QUOTA_TOTALS as an id-to-total map per decision D-3, DAYS_IN_CYCLE, PREMIUM_ON_DEMAND_NOTICE), UpgradeRequest with exactly one field, charge_card (pure), _resolve_upgrade_context (the single guard chain plus formula), _premium_usages (pure transform), and the two endpoints. POST implements the D-2 three-zone discipline.
+
+Frontend src/frontend/src/pages/Billing.jsx 181 to 375 lines: the hardcoded Standard badge at line 128 replaced with data.plan_name, conditional CTA on strict equality, UpgradeModal (role=dialog, Escape, focus, role=alert, Cancel enabled during a request), UpgradeSuccessBanner (role=status), openUpgrade and confirmUpgrade in try/catch/finally. 8 new CSS classes, none redefined. No pricing arithmetic anywhere - toFixed(2) formatting only.
+
+Tests: 9 unit files plus 1 behaviour file - 184 tests, the repository's first."
+**Context**: dev-implement Part 2. Verified by execution: 8 API routes registered, days_remaining=29 and prorated_charge=19.33, exactly as finding F-2 predicted.
+
+---
+
+## Unit Test and Coverage Gate — SH-LOOP-1 (Story 1.1)
+**Timestamp**: 2026-08-31T14:07:34Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "dev-implement"
+**TRACKER ITEM**: "1.1 (LOCAL)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "SH-LOOP-1 attempt 1 of 3. Attempt 0 found 1 failure of 140 and whole-module coverage of 79 percent.
+
+Root cause 1, stated before changing anything per SH-7: my own test test_the_gateway_performs_no_io_and_no_logging scanned inspect.getsource(), which includes the docstring - and the docstring legitimately contains the word logging while describing its absence. Fix: strip the docstring before scanning, and extend the check across all five new units.
+
+Root cause 2: coverage was measured whole-module. Every uncovered line belongs to a PRE-EXISTING endpoint this story never touched. SH-LOOP-1 exit criterion is coverage on new/changed code and .evals/config.json declares scope changed-files, so the measurement - not the threshold - was wrong. Wrote .evals/scripts/changed-line-coverage.py, which intersects git-diff added lines with coverage.py per-line data and reports BOTH figures so the pre-existing shortfall stays visible.
+
+Verification: python -m pytest tests/unit -q --cov=src/backend. Result: 141 passed, changed-surface coverage 100.0 percent (56 of 56) which is above 90.0. GATE PASSED on attempt 1. No threshold was lowered."
+**Context**: dev-implement Step 6.
+
+---
+
+## Behaviour Gate B1 plus B2 — SH-LOOP-7 (Story 1.1)
+**Timestamp**: 2026-08-31T14:07:34Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "dev-implement"
+**TRACKER ITEM**: "1.1 (LOCAL)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "SH-LOOP-7 attempt 1 of 3. Attempt 0 found 1 scenario failing of 25 with StepDefinitionNotFoundError.
+
+Root cause: my step used a number-format parser which cannot match the bare integer in the feature phrase greater than 0 - only a decimal like 0.0. Fix: capture those numeric tokens as text and cast, so the feature can write integers or decimals naturally. Also registered AC-1 through AC-31 as pytest markers so the AC tags stop emitting 31 unknown-marker warnings - the tags are the AC trace, so they are meaningful metadata.
+
+Verification: python -m pytest tests/behavior -q. Result: 25 scenarios passed. GATE PASSED on attempt 1.
+
+B3 / SH-LOOP-8: N/A. .spec/behavior.feature is deliberately scenario-free because this cycle has one work unit, so B3 reduces to B2. Recorded in that file, not silently skipped.
+
+Tag coverage stated honestly: the feature covers 25 of 31 ACs. AC-12, AC-13, AC-14, AC-15, AC-29 and AC-30 are frontend-presentation criteria that no API-level test can prove; the feature deliberately carries no tag for them rather than claiming coverage that does not exist. They are verified by static review now and by playwright-implement after both PRs merge."
+**Context**: dev-implement Step 6.1.
+
+---
+
+## API and Contract Testing Gate — SH-LOOP-2 (Story 1.1)
+**Timestamp**: 2026-08-31T14:07:34Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "dev-implement"
+**TRACKER ITEM**: "1.1 (LOCAL)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "APPLICABLE - the story adds two endpoints. Wrote tests/unit/test_api_contract.py covering all six checklist items on both endpoints.
+
+SH-LOOP-2 attempt 1 of 3. Attempt 0 found 1 failure of 16: GET /api/billing/upgrade returned 404 where I asserted 405.
+
+Root cause: main.py conditionally mounts the built SPA at / when src/frontend/dist exists. I had run npm run build earlier in this session, so the mount is active and intercepts unmatched GETs, turning a would-be 405 into a 404. My assertion encoded a contract that depends on deployment state rather than on this feature - it would pass or fail depending on whether anyone had run a build. Per the gate own guidance this is an obsolete expectation, so the ASSERTION was corrected (accept either refusal, and additionally assert no mutation occurred through the wrong verb) rather than the code.
+
+Verification: python -m pytest tests/unit/test_api_contract.py -v. Result: 16 passed. GATE PASSED on attempt 1.
+
+Role-based authorization recorded honestly: 401 is covered on both endpoints; there is no 403 case to test because this system has no roles and no endpoint an authenticated user is forbidden to call on their own account. Written down explicitly rather than left as an untested gap, with a test proving one subscriber cannot act on another record."
+**Context**: dev-implement Step 6.2.
+
+---
+
+## Full Regression Gate — SH-LOOP-3 (Story 1.1)
+**Timestamp**: 2026-08-31T14:07:34Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "dev-implement"
+**TRACKER ITEM**: "1.1 (LOCAL)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "Ran the ENTIRE repo suite and diffed against baseline-regression.log. Baseline: 0 tests, 0 failures (the repo had no test suite). Post-change: 184 passed, 0 failed. NEW failures vs baseline: 0. GATE PASSED with 0 of 3 attempts used.
+
+Consequence recorded rather than glossed: because the baseline had no tests, zero new failures is trivially satisfiable here. The real protection for this story comes from its own 184 new tests plus the D1-D7 diff, not from regression. Saved to full-regression.log."
+**Context**: dev-implement Step 6.5.
+
+---
+
+## Static Eval Gate D1-D7 — SH-LOOP-4 (Story 1.1)
+**Timestamp**: 2026-08-31T14:07:34Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "dev-implement"
+**TRACKER ITEM**: "1.1 (LOCAL)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "SH-LOOP-4 used 2 of 3 attempts.
+
+Attempt 1 - two false-pass defects in the gate itself. Attempt 0 reported changed python: 0 even though src/backend/main.py had clearly changed, sending D2 and D6 to N/A. Root cause: the gate diffed BASE...HEAD, i.e. committed history only, so uncommitted work was invisible to it - every gate would have gone N/A for the wrong reason and the story would have passed a gate that measured nothing. This is precisely the false N/A the framework forbids. Fixed to diff the working tree plus untracked files. While there, found a second false-pass: D5 read a hardcoded evidence path, so it silently found no licence data whenever a custom evidence dir was passed - it would have reported no disallowed licences without having looked. Fixed to read the evidence dir in use.
+
+Attempt 2 - the real findings the fixed gate then surfaced. D1: 1 ruff error I001, import block unsorted, caused by my JSONResponse import. Fixed by sorting. D2: 4 mypy errors. Two were mine (billing_data unannotated, so record renew_at inferred as Collection not str); two were PRE-EXISTING in add_task, surfacing for the first time because D2 had nothing to measure at baseline. Fixed all four by annotating the three module-level stores and PLANS - Any is the accurate element type for genuinely heterogeneous dicts, not a suppression, and it is a non-behavioural change. A TypedDict per store would be more precise and is noted in the code as the right move if the store ever becomes real persistence. Also fixed my D1 error counter, which counted ruff own summary lines and inflated one finding into three.
+
+Verification: full D1-D7 re-run. Result: D1 PASS (0), D2 PASS (0), D3 PASS (0 crit / 0 high / 1 medium), D3b bandit PASS, D4 PASS, D5 PASS, D6 PASS, D7 PASS (gitleaks 8.30.1). GATE PASSED on attempt 2.
+
+The 1 remaining medium is the PRE-EXISTING wildcard-CORS finding at main.py line 34, within the allowed 5, already documented as out of scope. NEW findings attributable to this story: 0. No finding was suppressed - no nosec, no type ignore, no ignore-list entry, no threshold change."
+**Context**: dev-implement Step 6.6.
+
+---
+
+## Automated Code Review v1 — findings (Story 1.1)
+**Timestamp**: 2026-08-31T14:07:34Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "dev-implement"
+**TRACKER ITEM**: "1.1 (LOCAL)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "Read-only review, no source edited. Report at .spec/aire-docs/implementation/reviews/story-1.1-code-review-v1.md. Cited the captured gate evidence rather than re-running any test.
+
+F1 - BLOCKER, a real defect in my own code, confirmed by execution. Zone C ended with a NESTED SUBSCRIPT on record on_demand_usage notice, which raises KeyError if the key is absent, AFTER the five preceding writes have landed. Zone C is documented as containing only operations that cannot raise, and that claim is the entire basis for NFR-C5 and constraint ARCH-01 holding without a transaction. Probed it directly: a record with on_demand_usage removed produced status 500 with plan_name Premium and users plan Premium while quotas and notice stayed Standard. PARTIAL WRITE OCCURRED: True. The subscriber would be billed as Premium with Standard entitlements. Violates the explicit ARCH-01 scoring rule.
+
+F2 - nit: loadBilling defined but the mount effect re-implements the same fetch inline.
+F3 - nit: success never cleared - correct in practice, no change required.
+
+J1 = 0.72 (ARCH-01 scored 0.00, weight 0.28) against threshold 0.85, so FAIL and blocking.
+J2 = 1.00 against 0.85, PASS.
+Security Baseline diff review: 0 new violations, none widened.
+
+Verdict routed AUTOMATICALLY to Remediate - no GATE 3, no user decision."
+**Context**: dev-implement Section A plus B.
+
+---
+
+## Auto-Remediate — SH-LOOP-5 round 1 of 3 (Story 1.1)
+**Timestamp**: 2026-08-31T14:07:34Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "dev-implement"
+**TRACKER ITEM**: "1.1 (LOCAL)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "F1 FIXED. users payload email and record on_demand_usage are now resolved in Zone B, so any KeyError happens before the first write. Zone C contains six plain assignments on already-resolved objects. Added two regression tests pinning the invariant. Re-ran the exact probe that found the defect: status still 500 for a malformed record (correct), but plan_name stays Standard, users plan stays Standard, and both records compare byte-identical to their snapshots. PARTIAL WRITE OCCURRED: False.
+
+F2 addressed, but NOT as the review suggested - and this is the part worth recording. I first implemented the suggested fix (call loadBilling from the effect) and added an eslint-disable-next-line comment to keep the dependency list at token. I then REMOVED that suppression, because SH-6 explicitly forbids suppressions as a way to satisfy a check, and adding one to tidy a cosmetic nit is exactly the shortcut the rule exists to prevent. The effect keeps its own direct fetch with an honest token dependency list, and gained a catch - a genuine improvement over the pre-existing pattern. The reversal is recorded in code review v2 rather than hidden.
+
+F3: no change, as recommended.
+
+Re-verification of every gate after remediation (SH-2: counters continue, they are not reset): 184 tests passed; changed-surface coverage 100 percent (62 of 62); 25 behaviour scenarios passed; 16 of 16 API contract; D1-D7 all PASS; frontend lint 4 warnings (the same pre-existing 4, none new); build succeeds.
+
+J1 recomputed = 1.00 (ARCH-01 now 1.00). J2 = 1.00. Both above the 0.85 threshold. Review v2 verdict: CLEAN - zero blockers, zero issues."
+**Context**: dev-implement Section C. 1 of 3 rounds used; no loop exhausted; no Retry-Limit Report needed.
+
+---

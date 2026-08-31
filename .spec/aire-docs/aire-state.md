@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Brownfield
 - **Start Date**: 2026-08-31T11:07:03Z
-- **Current Stage**: 🛑 HALTED — Design complete — awaiting `dev-implement`
+- **Current Stage**: IMPLEMENTATION - Code Generation (Story 1.1, dev-implement)
 - **AIRE Version**: 1.0
 - **Workflow Type**: Epic
 
@@ -62,6 +62,7 @@
 - Base Branch: main
 - Epic Branch: epic/EPIC-1-mid-cycle-subscription-upgrade
 - Epic PR: (not raised - raised manually at cycle end via pr-generator)
+- Story Branch (1.1): story/1.1-mid-cycle-subscription-upgrade (cut from the Epic Branch)
 
 ## Context Project
 - **Existing Knowledge**: No
@@ -85,7 +86,7 @@
 ## Story Tracker
 | Story | Title | Requires | Tracker ID | Status | PR | Merged | Start | End | Recorded |
 |---|---|---|---|---|---|---|---|---|---|
-| 1.1 | Mid-Cycle Subscription Upgrade (Standard to Premium) | none | LOCAL | 🟢 Ready for Development | - | - | - | - | 2026-08-31T11:55:34Z |
+| 1.1 | Mid-Cycle Subscription Upgrade (Standard to Premium) | none | LOCAL | 🔵 In Development | - | - | 2026-08-31T13:32:01Z | - | 2026-08-31T13:32:01Z |
 
 ## Dependency Graph
 Generated automatically (no approval gate) - `.spec/aire-docs/planning/dependency-graph.yml`
