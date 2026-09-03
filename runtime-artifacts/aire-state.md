@@ -66,7 +66,7 @@
 ## Story Tracker
 | Story | Title | Requires | Tracker ID | Status | PR | Merged | Start | End | Recorded |
 |-------|-------|----------|------------|--------|----|--------|-------|-----|----------|
-| 1 | Mid-Cycle Subscription Upgrade (Standard -> Premium) | none | LOCAL | 🟢 Ready for Development | — | — | | | 2026-09-03T08:13:09Z |
+| 1 | Mid-Cycle Subscription Upgrade (Standard -> Premium) | none | LOCAL | 🔵 In Development | https://github.com/Shailendrayadav0666/billing-cycle-copy/pull/6 | no | 2026-09-03 | | 2026-09-03T17:03:40Z |
 
 ## Dependency Graph
 

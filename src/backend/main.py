@@ -1,9 +1,11 @@
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from pathlib import Path
 from datetime import datetime, timedelta
+from typing import Any
 
 app = FastAPI(title="Billing & Tasks POC")
 
@@ -15,8 +17,40 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mid-Cycle Subscription Upgrade (Standard -> Premium) — Story 1
+PLANS: dict[str, dict[str, Any]] = {
+    "Standard": {"price": 20.0, "label": "$20/month"},
+    "Premium": {"price": 40.0, "label": "$40/month"},
+}
+PREMIUM_QUOTAS = {
+    "usages": [
+        {
+            "id": "chat-credits",
+            "label": "Chat credits",
+            "used": 0,
+            "total": 10000,
+            "help": "Messages used this billing cycle.",
+        },
+        {
+            "id": "chatbots",
+            "label": "Chatbots",
+            "used": 0,
+            "total": 10,
+            "help": "Active chatbot agents out of the included limit.",
+        },
+        {
+            "id": "documents-pages",
+            "label": "Documents pages",
+            "used": 0,
+            "total": 5000,
+            "help": "You can add 5000 more pages of your documents.",
+        },
+    ]
+}
+DAYS_IN_CYCLE = 30
+
 # In-memory mock store (no database)
-users = {
+users: dict[str, dict[str, Any]] = {
     "tpg@example.com": {
         "id": 1,
         "name": "TPG",
@@ -28,7 +62,7 @@ users = {
     }
 }
 
-billing_data = {
+billing_data: dict[str, dict[str, Any]] = {
     "tpg@example.com": {
         "plan_name": "Standard",
         "price": "$20/month",
@@ -101,6 +135,26 @@ class TokenRequest(BaseModel):
 class TaskCreateRequest(BaseModel):
     email: str
     title: str
+
+
+class UpgradeRequest(BaseModel):
+    email: str
+
+
+def charge_card(email: str, amount: float) -> dict:
+    """Deterministic dummy payment gateway (Story 1 — no external service, no SDK, no secret)."""
+    if email.startswith("fail"):
+        return {"status": "card_declined", "message": "Your card was declined."}
+    return {"status": "success"}
+
+
+def _compute_prorated_charge(renew_at: str) -> tuple[int, float]:
+    """Server-side-only proration math (REQ-NF-01, ARCH-01)."""
+    renew_at_date = datetime.strptime(renew_at, "%b %d, %Y").date()
+    days_remaining = max(1, (renew_at_date - datetime.today().date()).days)
+    daily_delta = (PLANS["Premium"]["price"] - PLANS["Standard"]["price"]) / DAYS_IN_CYCLE
+    prorated_charge = round(daily_delta * days_remaining, 2)
+    return days_remaining, prorated_charge
 
 
 @app.post("/api/auth/login")
@@ -204,6 +258,52 @@ def add_task(payload: TaskCreateRequest):
     new_task = {"id": new_id, "title": payload.title, "status": "pending", "due": "Today"}
     user_tasks.append(new_task)
     return new_task
+
+
+@app.get("/api/billing/upgrade-preview")
+def upgrade_preview(email: str):
+    if email not in users:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+    account = billing_data.get(email, billing_data["tpg@example.com"])
+    if account["plan_name"] == "Premium":
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="already_premium")
+    days_remaining, prorated_charge = _compute_prorated_charge(account["renew_at"])
+    return {
+        "current_plan": "Standard",
+        "new_plan": "Premium",
+        "days_remaining": days_remaining,
+        "prorated_charge": prorated_charge,
+        "next_renewal_price": PLANS["Premium"]["price"],
+        "renew_at": account["renew_at"],
+    }
+
+
+@app.post("/api/billing/upgrade")
+def upgrade(payload: UpgradeRequest):
+    email = payload.email
+    if email not in users:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+    account = billing_data.get(email, billing_data["tpg@example.com"])
+    if account["plan_name"] == "Premium":
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="already_premium")
+
+    _, prorated_charge = _compute_prorated_charge(account["renew_at"])
+
+    charge_result = charge_card(email, prorated_charge)
+    if charge_result["status"] != "success":
+        return JSONResponse(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            content={"detail": "card_declined", "message": charge_result["message"]},
+        )
+
+    users[email]["plan"] = "Premium"
+    users[email]["price"] = PLANS["Premium"]["label"]
+    account["plan_name"] = "Premium"
+    account["price"] = PLANS["Premium"]["label"]
+    account["usages"] = [dict(u) for u in PREMIUM_QUOTAS["usages"]]
+    account["on_demand_usage"]["notice"] = "On-demand credit is available on your Premium plan."
+
+    return {"status": "success", "plan": "Premium", "charge": prorated_charge}
 
 
 # Serve the built frontend if it exists (production build)

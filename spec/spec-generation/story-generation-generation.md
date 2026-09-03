@@ -1,7 +1,5 @@
 # Story Generation Plan — Mid-Cycle Subscription Upgrade
 
-**Status**: Auto-approved and announced (Step 12 — the story PLAN itself has no approval gate). The generated STORY SET below is subject to GATE 1 in `stories.md`.
-
 ## Approach
 - **Breakdown approach**: Epic-Based (single story mirroring the Epic 1:1), per explicit user override — see `runtime-artifacts/audit.md` "User Stories — Story Count Question & Override".
 - **team_size**: 2 (fixed default, Step 1)

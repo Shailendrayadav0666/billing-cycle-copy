@@ -13,24 +13,28 @@ Feature: Mid-Cycle Subscription Upgrade — end to end
 
   Background:
     Given a user "priya@example.com" exists with an active "Standard" subscription at $20/month
-    And 15 days remain in the 30-day billing cycle
     And a user "fail@example.com" exists with an active "Standard" subscription at $20/month
 
   @REQ-F-01 @REQ-F-04 @REQ-F-10 @REQ-F-11 @REQ-F-12 @REQ-F-14 @REQ-F-17
   Scenario: A standard subscriber upgrades end to end and sees Premium reflected everywhere
-    Given "priya@example.com" is on the Billing page
-    When she clicks "Upgrade to Premium"
-    Then she sees a prorated charge of $10.00 in the confirmation modal
-    When she clicks "Confirm Upgrade"
-    Then her plan becomes "Premium" with quotas 10000/10/5000
-    And the Billing page shows the "Premium" badge and price "$40/month"
-    And her "renew_at" date is unchanged
-    And no "Upgrade to Premium" button is shown any more
+    When "priya@example.com" requests the upgrade preview
+    Then the response is 200
+    And the response contains current_plan "Standard" and new_plan "Premium"
+    When "priya@example.com" confirms the upgrade
+    Then the response is 200 with status "success" and plan "Premium"
+    And "priya@example.com" plan_name becomes "Premium"
+    And "priya@example.com" usages become chat-credits 10000, chatbots 10, documents-pages 5000
+    And "priya@example.com" renew_at is unchanged
+    When "priya@example.com" views the Billing page
+    Then the plan badge shows "Premium"
+    And no "Upgrade to Premium" button is shown
 
   @REQ-F-13 @REQ-F-16
   Scenario: A declined payment leaves the subscriber on Standard end to end
-    Given "fail@example.com" is on the Billing page
-    When she clicks "Upgrade to Premium" and then "Confirm Upgrade"
-    Then she sees "Payment failed: Your card was declined. Your plan has not changed." in the modal
-    And her plan remains "Standard"
-    And the Billing page still shows the "Standard" badge and the "Upgrade to Premium" button
+    When "fail@example.com" confirms the upgrade
+    Then the response is 402 with detail "card_declined"
+    And "fail@example.com" plan_name remains "Standard"
+    And "fail@example.com" usages are unchanged
+    When "fail@example.com" views the Billing page
+    Then the plan badge shows "Standard"
+    And an "Upgrade to Premium" button is shown

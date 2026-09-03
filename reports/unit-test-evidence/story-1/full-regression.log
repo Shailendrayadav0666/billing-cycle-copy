@@ -1,0 +1,136 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.3, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1
+plugins: anyio-4.15.0, bdd-8.1.0, cov-7.1.0
+collecting ... collected 36 items
+
+tests/behavior/test_cycle_epic_local_1.py::test_a_standard_subscriber_upgrades_end_to_end_and_sees_premium_reflected_everywhere PASSED [  2%]
+tests/behavior/test_cycle_epic_local_1.py::test_a_declined_payment_leaves_the_subscriber_on_standard_end_to_end PASSED [  5%]
+tests/behavior/test_story_1.py::test_standard_subscriber_sees_the_upgrade_to_premium_cta_and_dynamic_plan_badge PASSED [  8%]
+tests/behavior/test_story_1.py::test_premium_subscriber_sees_no_upgrade_to_premium_cta PASSED [ 11%]
+tests/behavior/test_story_1.py::test_proration_preview_returns_the_exact_servercomputed_charge PASSED [ 13%]
+tests/behavior/test_story_1.py::test_successful_upgrade_flips_the_plan_and_updates_quotas PASSED [ 16%]
+tests/behavior/test_story_1.py::test_billing_page_reflects_the_successful_upgrade PASSED [ 19%]
+tests/behavior/test_story_1.py::test_declined_payment_leaves_standard_plan_untouched PASSED [ 22%]
+tests/behavior/test_story_1.py::test_alreadypremium_guard_on_the_preview_endpoint PASSED [ 25%]
+tests/behavior/test_story_1.py::test_alreadypremium_guard_on_the_upgrade_endpoint PASSED [ 27%]
+tests/behavior/test_story_1.py::test_auth_tasks_login_and_registration_endpoints_are_unaffected PASSED [ 30%]
+tests/unit/test_billing_upgrade.py::test_charge_card_succeeds_for_normal_email PASSED [ 33%]
+tests/unit/test_billing_upgrade.py::test_charge_card_declines_for_fail_prefixed_email PASSED [ 36%]
+tests/unit/test_billing_upgrade.py::test_charge_card_is_deterministic PASSED [ 38%]
+tests/unit/test_billing_upgrade.py::test_prorated_charge_matches_epic_example PASSED [ 41%]
+tests/unit/test_billing_upgrade.py::test_prorated_charge_floors_at_one_day PASSED [ 44%]
+tests/unit/test_billing_upgrade.py::test_upgrade_preview_returns_server_computed_values PASSED [ 47%]
+tests/unit/test_billing_upgrade.py::test_upgrade_preview_already_premium_returns_409 PASSED [ 50%]
+tests/unit/test_billing_upgrade.py::test_upgrade_preview_unauthenticated_returns_401 PASSED [ 52%]
+tests/unit/test_billing_upgrade.py::test_upgrade_success_flips_plan_and_quotas PASSED [ 55%]
+tests/unit/test_billing_upgrade.py::test_upgrade_declined_mutates_nothing_and_returns_402 PASSED [ 58%]
+tests/unit/test_billing_upgrade.py::test_upgrade_already_premium_returns_409_and_does_not_charge PASSED [ 61%]
+tests/unit/test_billing_upgrade.py::test_upgrade_unauthenticated_returns_401 PASSED [ 63%]
+tests/unit/test_billing_upgrade.py::test_existing_endpoints_unaffected PASSED [ 66%]
+tests/unit/test_billing_upgrade_contract.py::test_preview_functional_and_response_code PASSED [ 69%]
+tests/unit/test_billing_upgrade_contract.py::test_upgrade_functional_and_response_code PASSED [ 72%]
+tests/unit/test_billing_upgrade_contract.py::test_preview_401_when_unauthenticated PASSED [ 75%]
+tests/unit/test_billing_upgrade_contract.py::test_upgrade_401_when_unauthenticated PASSED [ 77%]
+tests/unit/test_billing_upgrade_contract.py::test_preview_409_error_shape PASSED [ 80%]
+tests/unit/test_billing_upgrade_contract.py::test_upgrade_409_error_shape PASSED [ 83%]
+tests/unit/test_billing_upgrade_contract.py::test_upgrade_402_error_shape PASSED [ 86%]
+tests/unit/test_billing_upgrade_contract.py::test_preview_missing_required_email_returns_422 PASSED [ 88%]
+tests/unit/test_billing_upgrade_contract.py::test_upgrade_missing_required_email_returns_422 PASSED [ 91%]
+tests/unit/test_billing_upgrade_contract.py::test_upgrade_wrong_type_for_email_returns_422 PASSED [ 94%]
+tests/unit/test_billing_upgrade_contract.py::test_preview_response_schema PASSED [ 97%]
+tests/unit/test_billing_upgrade_contract.py::test_upgrade_success_response_schema PASSED [100%]
+
+============================== warnings summary ===============================
+src\backend\venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+src\backend\venv\Lib\site-packages\starlette\testclient.py:53
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+src\backend\venv\Lib\site-packages\gherkin\gherkin_line.py:79: 23 warnings
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\gherkin\gherkin_line.py:79: DeprecationWarning: 'maxsplit' is passed as positional argument
+    uncommented_line = re.split(r"\s#", self._trimmed_line_text.strip(), 2)[0]
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.REQ-F-01 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.REQ-F-14 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.REQ-F-12 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.REQ-F-17 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.REQ-F-04 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.REQ-F-10 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.REQ-F-11 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.REQ-F-16 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.REQ-F-13 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC-1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC-3 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC-2 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC-5 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC-6 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC-7 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC-8 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC-9 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.13.3-final-0 _______________
+
+Name                  Stmts   Miss  Cover   Missing
+---------------------------------------------------
+src\backend\main.py     110     20    82%   164, 170-227, 232-235, 241, 248, 254-260
+---------------------------------------------------
+TOTAL                   110     20    82%
+Coverage XML written to file coverage.xml
+======================= 36 passed, 42 warnings in 1.35s =======================
