@@ -260,3 +260,12 @@
 **Context**: IMPLEMENTATION - STOP CHECKPOINT Step 4 — 3rd real generation defect found and fixed (set -e trap); genuine user-account blocker identified (Sonar org key) and handed back to the user rather than looped on
 
 ---
+
+## STOP CHECKPOINT — Sonar Org Key Corrected by User; Re-running Smoke Test
+**Timestamp**: 2026-09-03T10:36:15Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "I'll fix the org key on SonarCloud and confirm" (per-question answer), then "re run the smoke test"
+**AI Response**: "Detected the user directly edited sonar-project.properties on disk: sonar.projectKey/sonar.organization changed to lowercase shailendrayadav0666_billing-cycle-copy / shailendrayadav0666 (presumably matching what SonarCloud actually provisioned via Import from GitHub). Stripped a trailing space after the organization value (properties-file hygiene) before committing. Closing the stale PR #4 / deleting its scratch branch, committing the corrected sonar-project.properties on the epic branch, and re-running smoke-test-epic.sh."
+**Context**: IMPLEMENTATION - STOP CHECKPOINT Step 4 — user-supplied fix for the SonarCloud org-key blocker, re-attempting the smoke test
+
+---
