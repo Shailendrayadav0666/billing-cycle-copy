@@ -99,10 +99,16 @@ graph TD
 - [ ] NFR Requirements — SKIP (tech stack fixed; NFRs already fully captured in requirements.md)
 - [ ] NFR Design — SKIP (NFR Requirements skipped)
 - [ ] Infrastructure Design — SKIP (no infrastructure changes)
-- [x] STOP CHECKPOINT — architecture.md v1.0.0, behavior.feature, rubrics, CI pipeline generated 2026-09-03T08:32:39Z
+- [x] STOP CHECKPOINT — architecture.md v1.0.0, behavior.feature, rubrics, CI pipeline generated 2026-09-03T08:32:39Z; epic-level smoke test PASSED 2026-09-03T10:40:22Z (PR #5 merged)
 - [ ] Code Generation (dev-implement, per story)
 
 ## CI Setup Gate (Section 4.1.2)
 - **Answer**: proceed (2026-09-03T09:59:44Z)
-- **SonarQube**: enabled — sonar.organization set by user to `Shailendrayadav0666` in sonar-project.properties
-- **Required GitHub secrets (not verified — user's responsibility)**: CLAUDE_CODE_OAUTH_TOKEN (or ANTHROPIC_API_KEY), SONAR_TOKEN, SONAR_HOST_URL
+- **SonarQube**: enabled — sonar.organization=shailendrayadav0666, sonar.projectKey=shailendrayadav0666_billing-cycle-copy (corrected by user after SonarCloud rejected the initial guessed values)
+- **Required GitHub secrets (confirmed present via `gh secret list`; values not read)**: CLAUDE_CODE_OAUTH_TOKEN, SONAR_TOKEN, SONAR_HOST_URL — all three exercised successfully by the epic-level smoke test
+
+## Epic-Level Smoke Test (Section 4.0.6)
+- **Status**: PASSED (2026-09-03T10:40:22Z) — PR #5 (https://github.com/Shailendrayadav0666/billing-cycle-copy/pull/5), run 33745286732, merged into the epic branch
+- **Real defects found and fixed during this validation**: (1) pytest/pytest-cov never installed in the verify job; (2) `tests/unit` existed locally but was never committed (empty dirs aren't tracked by git), breaking SonarQube's `sonar.tests` path; (3) the coverage step's "no tests collected" tolerance never executed under GitHub Actions' default `bash -e`; (4) the SonarCloud `sonar.organization`/`sonar.projectKey` values were guessed from the GitHub display name and didn't match the user's real SonarCloud-provisioned keys (user-corrected)
+- **Proves**: dependency installs resolve cleanly, the (empty) test suite runs, self-repair works end-to-end, SonarCloud analysis succeeds
+- **Does NOT prove**: delta-scoped D1-D7 accuracy, unitCoverage's real file-matching, or J1/J2 judge scoring on a real diff (zero-diff scratch PR) — Story 1's own PR via `dev-implement` is what exercises that for the first time
