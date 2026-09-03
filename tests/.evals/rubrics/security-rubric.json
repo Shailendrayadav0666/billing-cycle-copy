@@ -1,0 +1,55 @@
+{
+  "rubricName": "Security — OWASP Top 10:2025 — Billing-Cycle Mid-Cycle Subscription Upgrade",
+  "rubricVersion": "1.0.0",
+  "derivedFrom": ["OWASP Top 10:2025", "spec/plans/architecture.md"],
+  "evalCriteria": [
+    {
+      "id": "SEC-01",
+      "owasp": "A01:2025",
+      "metric": "Broken access control",
+      "weight": 0.25,
+      "prompt": "Review the two new endpoints (GET /api/billing/upgrade-preview, POST /api/billing/upgrade) in the diff. Score 0 if either endpoint reads or mutates billing_data/users for an email value without any check that the caller is authenticated as that email under the app's existing email-as-token convention (i.e. it must use the same identity-derivation pattern already used by GET /api/billing, never trust an arbitrary email query/body param as if it were independently authorized). Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A01_2025-Broken_Access_Control/"
+    },
+    {
+      "id": "SEC-02",
+      "owasp": "A06:2025",
+      "metric": "Insecure design",
+      "weight": 0.20,
+      "prompt": "Check the proration and payment-execution diff for a design-level control gap: score 0 if the prorated amount used in the actual charge is ever read from a client-supplied value (query/body) rather than recomputed server-side at charge time, or if the already-Premium guard (ARCH-04) is missing on either endpoint. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A06_2025-Insecure_Design/"
+    },
+    {
+      "id": "SEC-03",
+      "owasp": "A07:2025",
+      "metric": "Authentication failures",
+      "weight": 0.20,
+      "prompt": "Check whether the new endpoints introduce any NEW authentication weakness beyond the pre-existing email-as-token pattern (e.g. accepting a second, unauthenticated identity parameter, or a new endpoint that bypasses the token check entirely). Score 0 if a new endpoint is reachable with no identity check at all. Do not flag the pre-existing email-as-token design itself (out of scope for this epic) — only a NEW weakening introduced by this diff. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A07_2025-Authentication_Failures/"
+    },
+    {
+      "id": "SEC-04",
+      "owasp": "A08:2025",
+      "metric": "Software or data integrity failures",
+      "weight": 0.15,
+      "prompt": "Review .github/workflows/agentic-eval-pipeline.yml for the self-repair job. Score 0 if it runs on a pull_request from a fork (github.event.pull_request.head.repo.full_name != github.repository) with write permissions or secret access, or if any step passes an untrusted PR input directly into a shell command without quoting. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A08_2025-Software_or_Data_Integrity_Failures/"
+    },
+    {
+      "id": "SEC-05",
+      "owasp": "A10:2025",
+      "metric": "Mishandling of exceptional conditions",
+      "weight": 0.10,
+      "prompt": "Check every new error response (402 card_declined, 409 already_premium) in the diff. Score 0 if any error response body includes internal state beyond what the Epic specifies (e.g. stack traces, internal dict contents, other users' data) or if an exception path leaves billing_data/users partially mutated. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A10_2025-Mishandling_of_Exceptional_Conditions/"
+    },
+    {
+      "id": "SEC-06",
+      "owasp": "A03:2025",
+      "metric": "Software supply chain failures",
+      "weight": 0.10,
+      "prompt": "Check the diff for any new pip/npm dependency added to support this epic. Score 0 if a new dependency was added (REQ-NF-03 requires zero new dependencies) or if any CI step installs a tool without a pinned version. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A03_2025-Software_Supply_Chain_Failures/"
+    }
+  ]
+}

@@ -58,6 +58,27 @@
 - Epic Branch: epic/EPIC-LOCAL-1-mid-cycle-subscription-upgrade
 - Epic PR: (not raised — raised manually at cycle end via pr-generator)
 
+## team_size / story_creation_mode
+- team_size: 2
+- story_creation_mode: all-at-once
+- target_story_count: 1 (user override — see runtime-artifacts/audit.md "User Stories — Story Count Question & Override")
+
+## Story Tracker
+| Story | Title | Requires | Tracker ID | Status | PR | Merged | Start | End | Recorded |
+|-------|-------|----------|------------|--------|----|--------|-------|-----|----------|
+| 1 | Mid-Cycle Subscription Upgrade (Standard -> Premium) | none | LOCAL | 🟢 Ready for Development | — | — | | | 2026-09-03T08:13:09Z |
+
+## Dependency Graph
+
+```mermaid
+graph TD
+    S1["Story 1: Mid-Cycle Subscription Upgrade"]
+```
+
+- **Total stories**: 1 | **Immediately startable (no prerequisites)**: 1
+- **team_size**: 2 (target: >= 2 independent stories available at a time — NOT met; a single story provides no parallelism, per the user's explicit override of the recommended 9-story SPIDR split)
+- **Inferred edges**: none — Story 1 requires nothing (it is the only story; there is nothing else in the set to depend on)
+
 ## Extension Configuration
 | Extension | Enabled | Decided At |
 |---|---|---|
@@ -70,10 +91,18 @@
 - [x] Workspace Detection
 - [x] Reverse Engineering — SKIPPED (Full Atlas coverage via Helix MCP; Deep Dive pulled into spec/plans/deep-dive.md)
 - [x] Requirements Analysis — APPROVED 2026-09-03T08:06:54Z
-- [ ] User Stories
-- [ ] Dependency Graph
-- [ ] Workflow Planning
-- [ ] Application Design
-- [ ] System-Level Design stages
-- [ ] STOP CHECKPOINT
+- [x] User Stories — APPROVED (GATE 1) 2026-09-03T08:13:09Z
+- [x] Dependency Graph — 2026-09-03T08:13:43Z
+- [x] Workflow Planning — 2026-09-03T08:15:39Z
+- [ ] Application Design — SKIP (no new components/services; work stays within existing component boundaries)
+- [ ] Functional Design — SKIP (proration logic already fully specified)
+- [ ] NFR Requirements — SKIP (tech stack fixed; NFRs already fully captured in requirements.md)
+- [ ] NFR Design — SKIP (NFR Requirements skipped)
+- [ ] Infrastructure Design — SKIP (no infrastructure changes)
+- [x] STOP CHECKPOINT — architecture.md v1.0.0, behavior.feature, rubrics, CI pipeline generated 2026-09-03T08:32:39Z
 - [ ] Code Generation (dev-implement, per story)
+
+## CI Setup Gate (Section 4.1.2)
+- **Answer**: proceed (2026-09-03T09:59:44Z)
+- **SonarQube**: enabled — sonar.organization set by user to `Shailendrayadav0666` in sonar-project.properties
+- **Required GitHub secrets (not verified — user's responsibility)**: CLAUDE_CODE_OAUTH_TOKEN (or ANTHROPIC_API_KEY), SONAR_TOKEN, SONAR_HOST_URL

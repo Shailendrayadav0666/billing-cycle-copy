@@ -1,0 +1,42 @@
+{
+  "rubricName": "Architectural Alignment — Billing-Cycle Mid-Cycle Subscription Upgrade",
+  "rubricVersion": "1.0.0",
+  "derivedFrom": ["spec/plans/architecture.md#10-verifiable-constraints"],
+  "evalCriteria": [
+    {
+      "id": "ARCH-01",
+      "metric": "Server-side-only proration",
+      "weight": 0.25,
+      "prompt": "No changed line in frontend/src/pages/Billing.jsx performs a proration calculation (subtraction/division/multiplication combining plan prices or a renew_at date). Score 0 if any such computation appears in the frontend diff.",
+      "source": "spec/plans/requirements.md REQ-NF-01"
+    },
+    {
+      "id": "ARCH-02",
+      "metric": "Deterministic gateway, no external call",
+      "weight": 0.20,
+      "prompt": "The charge_card implementation contains no requests/httpx/urllib call, no new pip dependency import, and no os.environ read. Score 0 if any of these appear.",
+      "source": "spec/plans/epic-brief.md Dummy Payment Gateway Spec; REQ-F-09, REQ-NF-02"
+    },
+    {
+      "id": "ARCH-03",
+      "metric": "Declined payment mutates nothing",
+      "weight": 0.20,
+      "prompt": "In the diff, the mutation statements for users/billing_data are reachable only in the branch where charge_card returned success. Score 0 if any mutation statement executes (or is reachable) before the success check.",
+      "source": "spec/plans/stories.md AC-7; REQ-F-13"
+    },
+    {
+      "id": "ARCH-04",
+      "metric": "Already-Premium guard on both endpoints",
+      "weight": 0.20,
+      "prompt": "Each handler's diff contains an early guard clause checking plan_name == \"Premium\" before any proration or mutation logic runs. Score 0 if either handler lacks this guard.",
+      "source": "spec/plans/stories.md AC-8; REQ-F-16"
+    },
+    {
+      "id": "ARCH-05",
+      "metric": "No scope creep into unrelated endpoints",
+      "weight": 0.15,
+      "prompt": "The diff contains no hunk inside /api/auth/login, /api/auth/register, /api/users/me, /api/tasks, or AuthContext.jsx's token logic. Score 0 if any such hunk exists.",
+      "source": "spec/plans/requirements.md REQ-F-18; epic-brief.md Out of Scope"
+    }
+  ]
+}
