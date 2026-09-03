@@ -393,3 +393,15 @@
 **AIRE VERSION**: "1.0"
 **AI Response**: "Report: reports/reviews/story-1-code-review-v2.md. Re-checked AC-6 against the fixed code: modal now auto-closes and a page-level success banner shows on successful upgrade - Met. All 9 ACs now Met. Security Baseline: unchanged, no Critical/High finding. JUDGE GATES (Section A Step 2.5, computed once): J1 architecture = 1.00 (5/5 ARCH criteria at 1.0, weights sum 1.0) - reports/eval-evidence/story-1/judge/j1-architecture.md. J2 security = 1.00 (5 scored criteria at 1.0, SEC-04 N/A/excluded and weights renormalised) - reports/eval-evidence/story-1/judge/j2-security.md. Both >= their tests/.evals/config.json minimums (0.85) - PASS, no SH-LOOP-6 needed. Verdict: 0 Blocker, 0 High, both judge gates PASS -> proceeding to Commit, Push & Raise PR."
 **Context**: IMPLEMENTATION - Auto Code Review Section A (v2) + Section B routing (clean)
+
+---
+
+## Commit, Push & Raise PR (Story 1)
+**Timestamp**: 2026-09-03T17:01:45Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(automatic)"
+**TRACKER ITEM**: "Story 1 (local — no external tracker)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "Committed on story/1-mid-cycle-subscription-upgrade, commit e12fa43fcb606378ef5fdc38b217bfdaec275cbe, AIRE-Version: 1.0 trailer. Also added __pycache__/.coverage/coverage.xml/.pytest_cache to root .gitignore (generated artifacts, never tracked). Invoking pr-generator skill in workflow mode, target branch = epic/EPIC-LOCAL-1-mid-cycle-subscription-upgrade (from ## Branching), passing reports/eval-evidence/story-1/eval-summary.md for the PR body's Eval Scorecard section."
+**Context**: IMPLEMENTATION - Section D Commit, Push & Raise PR
