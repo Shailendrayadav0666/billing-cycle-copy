@@ -108,7 +108,7 @@ jobs:
       - name: "Stage 2: unit + coverage"
         id: unit
         continue-on-error: true
-        run: pytest --cov=src/backend --cov-report=xml; ec=$?; if [ $ec -eq 5 ]; then echo pytest-no-tests-collected-yet-bootstrap-pass; exit 0; fi; exit $ec
+        run: pytest --cov=src/backend --cov-report=xml || ec=$?; ec=${ec:-0}; if [ $ec -eq 5 ]; then echo pytest-no-tests-collected-yet-bootstrap-pass; exit 0; fi; exit $ec
 
       # ── Runs AFTER "unit + coverage" so the report it produced exists. A separate step (not folded
       #    back into Stage 1) so Stage 1 keeps its normal fail-fast position instead of waiting on the

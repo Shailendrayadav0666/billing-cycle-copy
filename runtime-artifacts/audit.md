@@ -251,3 +251,12 @@
 **Context**: IMPLEMENTATION - STOP CHECKPOINT Step 4 — diagnosed and fixed 2 real generation defects (missing pytest install, untracked test directory), not infra/user-account issues as self-repair's own heuristic misclassified the Sonar symptom
 
 ---
+
+## STOP CHECKPOINT — Smoke Test Round 3 (set -e bug; tests/unit fix confirmed; new Sonar org-key finding)
+**Timestamp**: 2026-09-03T10:23:49Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(automatic — re-ran smoke-test-epic.sh after commit 9be3fa2)"
+**AI Response**: "Confirmed via gh run view --log on the genuinely-fresh run 33743543036 (BASE_SHA dc99757, i.e. after both prior fixes): the tests/unit fix WORKED (no more 'folder does not exist' error). pytest now installs and runs ('collected 0 items', exit 5) but the unit gate STILL failed because my coverageCommand had a real bug: 'pytest ...; ec=$?' under GitHub Actions' default `bash -e` aborts the whole step at the first non-zero-exit command in a `;`-separated sequence, so `ec=$?` was never reached — the exact `set -e` trap the template's own behaviour-step comments warn about elsewhere. Fixed to `pytest ... || ec=$?; ec=${ec:-0}; if [ $ec -eq 5 ]; ...` (commit pending). Separately, Sonar now fails on a NEW, different, genuinely user-account-side error: 'ERROR Organization key Shailendrayadav0666 does not exist' on SonarCloud — the org key the user set in sonar-project.properties does not match a real SonarCloud organization. This is not something I can fix from here; reporting to the user rather than burning further retries against a guaranteed-to-fail org key."
+**Context**: IMPLEMENTATION - STOP CHECKPOINT Step 4 — 3rd real generation defect found and fixed (set -e trap); genuine user-account blocker identified (Sonar org key) and handed back to the user rather than looped on
+
+---
