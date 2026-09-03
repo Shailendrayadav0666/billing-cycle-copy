@@ -1,0 +1,65 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.3, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1
+plugins: anyio-4.15.0, bdd-8.1.0, cov-7.1.0
+collecting ... collected 9 items
+
+tests/behavior/test_story_1.py::test_standard_subscriber_sees_the_upgrade_to_premium_cta_and_dynamic_plan_badge PASSED [ 11%]
+tests/behavior/test_story_1.py::test_premium_subscriber_sees_no_upgrade_to_premium_cta PASSED [ 22%]
+tests/behavior/test_story_1.py::test_proration_preview_returns_the_exact_servercomputed_charge PASSED [ 33%]
+tests/behavior/test_story_1.py::test_successful_upgrade_flips_the_plan_and_updates_quotas PASSED [ 44%]
+tests/behavior/test_story_1.py::test_billing_page_reflects_the_successful_upgrade PASSED [ 55%]
+tests/behavior/test_story_1.py::test_declined_payment_leaves_standard_plan_untouched PASSED [ 66%]
+tests/behavior/test_story_1.py::test_alreadypremium_guard_on_the_preview_endpoint PASSED [ 77%]
+tests/behavior/test_story_1.py::test_alreadypremium_guard_on_the_upgrade_endpoint PASSED [ 88%]
+tests/behavior/test_story_1.py::test_auth_tasks_login_and_registration_endpoints_are_unaffected PASSED [100%]
+
+============================== warnings summary ===============================
+src\backend\venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+src\backend\venv\Lib\site-packages\starlette\testclient.py:53
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+src\backend\venv\Lib\site-packages\gherkin\gherkin_line.py:79: 20 warnings
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\gherkin\gherkin_line.py:79: DeprecationWarning: 'maxsplit' is passed as positional argument
+    uncommented_line = re.split(r"\s#", self._trimmed_line_text.strip(), 2)[0]
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC-1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC-2 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC-3 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC-5 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC-6 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC-7 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC-8 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\src\backend\venv\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC-9 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\shailendra.yadav\Desktop\projects\helix-aire-demo-1\reports\behavior-test-evidence\story-1\b1\behavior-test-report.xml -
+======================= 9 passed, 30 warnings in 0.56s ========================

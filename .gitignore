@@ -1,1 +1,8 @@
 MIGRATION-PLAN-v1.0.md
+
+# Python test/coverage artifacts (generated, never committed)
+__pycache__/
+*.pyc
+.coverage
+coverage.xml
+.pytest_cache/

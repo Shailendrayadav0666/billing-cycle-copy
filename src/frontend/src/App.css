@@ -373,6 +373,60 @@
   margin-bottom: 0.25rem;
 }
 
+.upgrade-cta {
+  margin-top: 1rem;
+  padding: 0.6rem 1.1rem;
+  border-radius: 0.5rem;
+  border: none;
+  background: #0f766e;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.upgrade-cta:hover {
+  background: #0d5f58;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal-card {
+  background: #fff;
+  border-radius: 0.75rem;
+  padding: 1.75rem;
+  width: min(420px, 90vw);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.upgrade-error {
+  color: #b91c1c;
+  background: #fee2e2;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.9rem;
+}
+
+.upgrade-success {
+  color: #047857;
+  background: #d1fae5;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.9rem;
+}
+
 .renew-date {
   font-size: 1.25rem;
   font-weight: 700;

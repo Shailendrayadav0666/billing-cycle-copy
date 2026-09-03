@@ -1,0 +1,26 @@
+{
+  "evalKey": "story-1",
+  "workUnit": "Story 1 - Mid-Cycle Subscription Upgrade (Standard -> Premium)",
+  "scope": "changed-files",
+  "gates": {
+    "D1_lint": {"status": "PASS", "newFindings": 0, "note": "backend ruff clean; frontend oxlint 4 pre-existing warnings unchanged, none in Billing.jsx"},
+    "D2_types": {"status": "PASS", "newFindings": 0, "note": "2 pre-existing mypy errors in add_task (unrelated, unchanged)"},
+    "D3_sast": {"status": "PASS", "newFindings": 0, "note": "1 pre-existing wildcard-CORS finding, unchanged, not touched by this story"},
+    "D4_deps": {"status": "PASS", "newFindings": 0},
+    "D5_licenses": {"status": "N/A", "note": "no dependency changes"},
+    "D6_complexity": {"status": "PASS", "newFindings": 0},
+    "D7_secrets": {"status": "PASS", "newFindings": 0, "containerised": false, "reason": "podman machine failed to start on this Windows host (WSL2 VM transition error); native gitleaks binary used instead"},
+    "unitCoverage": {"status": "PASS", "coverageOnChangedCode": 100.0, "threshold": 90.0},
+    "behaviorB1": {"status": "PASS", "scenarios": "9/9", "containerised": false, "reason": "same as D7"},
+    "behaviorB2": {"status": "N/A", "reason": "no other feature file exists yet"},
+    "behaviorB3": {"status": "PASS", "scenarios": "11/11", "note": "single-unit cycle, ran immediately", "containerised": false, "reason": "same as D7"},
+    "apiContract": {"status": "PASS", "checklistItemsPassed": "12/12"},
+    "fullRegression": {"status": "PASS", "newFailures": 0, "totalTests": 36}
+  },
+  "judge": {
+    "J1_architecture": {"score": 1.0, "minimum": 0.85, "status": "PASS", "rubricVersion": "1.0.0"},
+    "J2_security": {"score": 1.0, "minimum": 0.85, "status": "PASS", "rubricVersion": "1.0.0"}
+  },
+  "codeReview": {"finalVersion": "v2", "findings": {"blocker": 0, "high": 0}, "remediateRounds": 1},
+  "overall": {"checksRun": 13, "checksTotal": 13, "verdict": "PASS"}
+}

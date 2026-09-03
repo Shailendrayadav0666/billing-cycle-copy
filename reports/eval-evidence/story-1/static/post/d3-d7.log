@@ -1,0 +1,31 @@
+=== D3 SAST: semgrep (backend) ===
+                  
+                  
+┌────────────────┐
+│ 1 Code Finding │
+└────────────────┘
+                       
+    src\backend\main.py
+    ❯❱ python.fastapi.security.wildcard-cors.wildcard-cors
+          ❰❰ Blocking ❱❱
+          CORS policy allows any origin (using wildcard '*'). This is insecure and should be avoided.
+          Details: https://sg.run/KxApY                                                              
+                                                                                                     
+           14┆ allow_origins=["*"],
+
+=== D4 Deps: pip-audit ===
+WARNING:venv:Actual environment location may have moved due to redirects, links or junctions.
+  Requested location: "C:\Users\SHAILE~1.YAD\AppData\Local\Temp\tmp3b_1dahn\Scripts\python.exe"
+  Actual location:    "C:\Users\shailendra.yadav\AppData\Local\Temp\tmp3b_1dahn\Scripts\python.exe"
+No known vulnerabilities found
+=== D6 Complexity: radon (main.py only) ===
+=== D7 Secrets: gitleaks (native binary) ===
+
+    ○
+    │╲
+    │ ○
+    ○ ░
+    ░    gitleaks
+
+[90m10:26PM[0m [32mINF[0m scan completed in 7.56s
+[90m10:26PM[0m [32mINF[0m no leaks found

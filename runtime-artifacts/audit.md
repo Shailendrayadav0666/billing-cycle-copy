@@ -287,3 +287,109 @@
 **Context**: IMPLEMENTATION - STOP CHECKPOINT Step 5-6 — Development Handoff issued, HALT
 
 ---
+
+## dev-implement — Invocation & Story Selection
+**Timestamp**: 2026-09-03T16:38:28Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "dev-implement"
+**TRACKER ITEM**: "Story 1 (local — no external tracker)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "Displayed the sequential-development banner. Presented the Story Selection prompt; only one story exists in this epic (Story 1 — Mid-Cycle Subscription Upgrade). AskUserQuestion rejected a single-option question (requires >=2 genuinely distinct choices), and the user's own explicit 'dev-implement' invocation, on an epic with exactly one candidate story, is the selection with no remaining decision to present. Proceeded with Story 1 rather than fabricating a second option or blocking on an unaskable question. Resolved Story 1 from stories.md/Story Tracker (LOCAL, no fetch needed) — Requires: none."
+**Context**: IMPLEMENTATION - dev-implement Step 1-2 (Story Selection)
+
+---
+
+## dev-implement — Story Tracker Update & Story Branch Checkpoint
+**Timestamp**: 2026-09-03T16:39:11Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(automatic)"
+**TRACKER ITEM**: "Story 1 (local — no external tracker)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "Story Tracker: Story 1 Status -> In Development, Start=2026-09-03, Recorded=2026-09-03T16:38:28Z (LOCAL, no external transition, no assignee concept). Epic status sync skipped silently (Type: LOCAL). Refreshed epic branch (git fetch + pull --ff-only, already up to date), dependency-merge check: Story 1 has no prerequisites -> trivially satisfied. Cut story/1-mid-cycle-subscription-upgrade from epic/EPIC-LOCAL-1-mid-cycle-subscription-upgrade via git checkout -b."
+**Context**: IMPLEMENTATION - dev-implement Step 1.5 (Story Branch checkpoint)
+
+---
+
+## dev-implement — Baseline Regression + Baseline Static Eval (Story 1)
+**Timestamp**: 2026-09-03T16:44:26Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(automatic — Step 1.5 Items 4.5/4.6, before any code generated)"
+**TRACKER ITEM**: "Story 1 (local — no external tracker)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "BASELINE REGRESSION: pytest --cov=src/backend --cov-report=xml on the freshly cut story branch -> 'no tests ran' (repo has zero tests, confirmed by the Deep Dive). Saved to reports/unit-test-evidence/story-1/baseline-regression.log. BOOTSTRAP: created src/backend/ruff.toml and src/backend/mypy.ini (neither existed; minimal recommended presets, not strict, no pre-suppressed findings). BASELINE STATIC EVAL D1-D7: D1 backend(ruff) PASS/frontend(oxlint) 4 pre-existing warnings; D2 mypy 2 pre-existing errors (main.py:203); D3 semgrep 1 pre-existing finding (wildcard CORS, main.py:12); D4 pip-audit PASS; D5 not run (no dependency changes planned); D6 radon PASS (main.py only, venv excluded from scan); D7 gitleaks PASS (0 leaks) via the native Windows binary fallback rung, NOT the Podman OCI-image rung -> podman machine start failed twice on this Windows host (WSL2 VM transition error, 'machine did not transition into running state'), a local-environment limitation distinct from 'Podman not installed'; the earlier epic-level smoke test already proved Podman works correctly in the real CI environment (run 33745286732). Full logs and evidence-manifest.md at reports/eval-evidence/story-1/static/baseline/. All findings above are PRE-EXISTING debt on the epic branch, not this story's — logged and will be ignored by the post-implementation diff (Step 6.6)."
+**Context**: IMPLEMENTATION - dev-implement Step 1.5 Items 4.5-4.6 (baseline capture)
+
+---
+
+## Code Generation Part 1 — Plan Finalized (auto-approved, no gate)
+**Timestamp**: 2026-09-03T16:45:07Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(automatic)"
+**TRACKER ITEM**: "Story 1 (local — no external tracker)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "Wrote spec/spec-generation/story-1-code-generation-plan.md — 11 steps, grounded in stories.md AC-1..AC-9, requirements.md REQ-F-01..18/REQ-NF-01..05, epic-brief.md Technical Design Notes, and architecture.md ARCH-01..05. REQ/AC trace completeness check PASSED (every REQ-ID and every AC appears in >=1 step). No Design References registered (user opted out) - DR-5 grounding N/A. Executing immediately, no approval gate."
+**Context**: IMPLEMENTATION - Code Generation Part 1
+
+---
+
+## Code Generation Part 2 — Implementation, Behaviour Spec, Unit Test & Coverage Gate, Behavioural Gate
+**Timestamp**: 2026-09-03T16:54:29Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(automatic)"
+**TRACKER ITEM**: "Story 1 (local — no external tracker)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "Implemented Story 1 per the plan: backend (src/backend/main.py) - PLANS/PREMIUM_QUOTAS/DAYS_IN_CYCLE constants, UpgradeRequest model, charge_card(), _compute_prorated_charge(), GET /api/billing/upgrade-preview, POST /api/billing/upgrade (JSONResponse for the 402 shape to match the epic's exact contract); frontend (Billing.jsx + App.css) - dynamic plan badge, conditional CTA, UpgradeModal component, fetchUpgradePreview/confirmUpgrade wiring. Added type annotations (users/billing_data/PLANS: dict[str, dict[str, Any]]) to prevent mypy cascade errors from the new code. Wrote spec/behavior/story-1.feature (9 scenarios, @AC-1..@AC-9) BEFORE reviewing coverage. BUG FOUND & FIXED during test-writing: _compute_prorated_charge used datetime.today() (with time-of-day) against a date-only renew_at, causing an off-by-one days_remaining after midday; fixed to compare .date() on both sides. UNIT TEST & COVERAGE GATE (SH-LOOP-1, attempt 0/none needed - passed first full run after the date-arithmetic fix): tests/unit/test_billing_upgrade.py, 13/13 passed, 100% coverage on all new/changed statements (whole-file 80% is pre-existing-endpoint debt, confirmed via git diff - none of the 22 missed lines intersect this story's diff). Evidence: reports/unit-test-evidence/story-1/{unit-test-run.log,coverage-report.xml,evidence-manifest.md}. BEHAVIOURAL GATE (SH-LOOP-7, passed first run): B1 (story-1.feature, 9/9 scenarios, tests/behavior/steps/billing_steps.py bound to FastAPI TestClient's public HTTP surface) PASS; B2 N/A (no other feature file exists yet); B3 RUN NOW per the single-unit-cycle rule (Story 1 is the whole epic) - spec/behavior.feature rewritten to the same step vocabulary as story-1.feature (2 scenarios, @REQ-tagged), 11/11 total PASS. Containerised: false for both - podman machine failed to start twice on this Windows host (WSL2 VM transition error), NOT the 'Podman not installed' exception but functionally equivalent this session; marked PASS (unverified parity); the epic-level smoke test already proved the real container path works in CI (PR #5, run 33745286732). Evidence: reports/behavior-test-evidence/story-1/{b1,b2,b3}/."
+**Context**: IMPLEMENTATION - Code Generation Part 2, Steps 6 (Unit Test & Coverage) and 6.1 (Behavioural Gate)
+
+---
+
+## Code Generation — API & Contract Gate, Full Regression Gate, Static Eval Gate
+**Timestamp**: 2026-09-03T16:57:07Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(automatic)"
+**TRACKER ITEM**: "Story 1 (local — no external tracker)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "API & CONTRACT TESTING GATE (SH-LOOP-2, applicable - 2 new endpoints, passed first run): tests/unit/test_billing_upgrade_contract.py, 12/12 passed, full checklist (functional, response-code, 401 auth [403 N/A - no roles in this app], error-response, request validation, response schema) green on both endpoints. Evidence: reports/api-contract-test-evidence/story-1/. FULL REGRESSION GATE (SH-LOOP-3, passed first run): entire tests/ suite (36 tests: 13 unit + 12 contract + 11 behavior), 36/36 passed, 0 NEW failures vs baseline (0 tests). Saved to reports/unit-test-evidence/story-1/full-regression.log. STATIC EVAL GATE (SH-LOOP-4, passed first run): re-ran D1-D7 on post-implementation code, diffed vs baseline - D1 backend PASS/frontend 4 pre-existing warnings unchanged (0 in Billing.jsx); D2 2 pre-existing mypy errors unchanged (add_task, unrelated); D3 1 pre-existing wildcard-CORS finding unchanged (line shifted 12->14, same rule+file+message); D4 PASS; D5 N/A (no dependency changes); D6 PASS; D7 PASS (native gitleaks). ZERO NEW findings on changed files across all of D1-D7. Wrote reports/eval-evidence/story-1/eval.json. No SH-LOOP triggered for any gate - everything passed on the first post-implementation run."
+**Context**: IMPLEMENTATION - Code Generation Part 2, Steps 6.2, 6.5, 6.6
+
+---
+
+## Auto Code Review v1 (Story 1)
+**Timestamp**: 2026-09-03T16:59:52Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(automatic)"
+**TRACKER ITEM**: "Story 1 (local — no external tracker)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "Report: reports/reviews/story-1-code-review-v1.md. Reviewed AC-1..AC-9 against the code and mapped REQ-IDs, plus a diff-scoped Security Baseline pass. FINDING: ISS-001 (Orange/High) - AC-6 partially met: confirmUpgrade() showed the success message INSIDE the still-open modal with an extra manual Close button, instead of auto-closing the modal and showing a page-level banner as AC-6 requires. Security Baseline: no Critical/High finding on the changed surface (advisory-only pre-existing wildcard-CORS and email-as-token noted, out of scope). Verdict: 0 Blocker, 1 High -> routes to Auto-Remediate (SH-LOOP-5, round 1 of 3)."
+**Context**: IMPLEMENTATION - Auto Code Review Section A (v1)
+
+---
+
+## Auto-Remediate Round 1 of 3 (SH-LOOP-5) — Story 1
+**Timestamp**: 2026-09-03T16:59:52Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(automatic)"
+**TRACKER ITEM**: "Story 1 (local — no external tracker)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "Root cause (SH-7): confirmUpgrade's success handler set upgradeSuccess state rendered inside UpgradeModal instead of closing the modal and banner-ing at the page level. Fix: added a page-level successBanner state; confirmUpgrade now calls setModalOpen(false) + setPreview(null) + setSuccessBanner(...) on success (src/frontend/src/pages/Billing.jsx); removed the now-unused success prop/branch from UpgradeModal; added the banner render just above the current-plan label. Re-ran frontend lint (clean, same 2 pre-existing AuthContext.jsx warnings) and npm run build (succeeds). Backend untouched by this round, so no re-run of backend unit/behavior/contract/regression tests was needed for this fix; re-review to confirm."
+**Context**: IMPLEMENTATION - Auto-Remediate Section C, round 1/3
+
+---
+
+## Auto Code Review v2 (Story 1) — Clean
+**Timestamp**: 2026-09-03T16:59:52Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(automatic)"
+**TRACKER ITEM**: "Story 1 (local — no external tracker)"
+**Epic Link**: "none"
+**AIRE VERSION**: "1.0"
+**AI Response**: "Report: reports/reviews/story-1-code-review-v2.md. Re-checked AC-6 against the fixed code: modal now auto-closes and a page-level success banner shows on successful upgrade - Met. All 9 ACs now Met. Security Baseline: unchanged, no Critical/High finding. JUDGE GATES (Section A Step 2.5, computed once): J1 architecture = 1.00 (5/5 ARCH criteria at 1.0, weights sum 1.0) - reports/eval-evidence/story-1/judge/j1-architecture.md. J2 security = 1.00 (5 scored criteria at 1.0, SEC-04 N/A/excluded and weights renormalised) - reports/eval-evidence/story-1/judge/j2-security.md. Both >= their tests/.evals/config.json minimums (0.85) - PASS, no SH-LOOP-6 needed. Verdict: 0 Blocker, 0 High, both judge gates PASS -> proceeding to Commit, Push & Raise PR."
+**Context**: IMPLEMENTATION - Auto Code Review Section A (v2) + Section B routing (clean)
