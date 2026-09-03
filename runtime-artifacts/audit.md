@@ -242,3 +242,12 @@
 **Context**: IMPLEMENTATION - STOP CHECKPOINT Step 4 (smoke test) — HALT, Retry-Limit Report presented to user
 
 ---
+
+## STOP CHECKPOINT — Smoke Test Round 2 (Real Root Causes Found)
+**Timestamp**: 2026-09-03T10:17:19Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "Fix both now" (per-question answer) then "SonarCloud (https://sonarcloud.io)" (confirming SONAR_HOST_URL)
+**AI Response**: "Commit 0b266e8's exit-5 tolerance did NOT fix the unit gate — the real failure (confirmed via gh run view --log on run 33742901941, a genuinely fresh run on PR #3) was 'pytest: command not found' (exit 127): pytest/pytest-cov were never installed in the verify job's install step, only the app's own runtime deps. Fixed by adding pip install pytest pytest-cov + a version-check to the backend install step (commit 9be3fa2). Separately, the Sonar failure's real cause (via gh run view --log) was 'ERROR Invalid value of sonar.tests ... The folder tests/unit does not exist' — tests/unit existed locally but git does not track empty directories, so it was never committed. Fixed by committing tests/unit/.gitkeep (commit 9be3fa2, same commit). Closed stale scratch PRs #2 and #3, deleted their scratch branches, re-running smoke-test-epic.sh a third time."
+**Context**: IMPLEMENTATION - STOP CHECKPOINT Step 4 — diagnosed and fixed 2 real generation defects (missing pytest install, untracked test directory), not infra/user-account issues as self-repair's own heuristic misclassified the Sonar symptom
+
+---
