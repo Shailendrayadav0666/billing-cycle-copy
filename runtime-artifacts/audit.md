@@ -233,3 +233,12 @@
 **Context**: IMPLEMENTATION - STOP CHECKPOINT Step 1.6 / Section 4.1.3 (proceed)
 
 ---
+
+## STOP CHECKPOINT — Epic-Level Pre-Handoff Smoke Test (FAILED — HALT)
+**Timestamp**: 2026-09-03T10:06:25Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(automatic — STOP CHECKPOINT Step 4, ci-pipeline-generation.md Section 4.0.6)"
+**AI Response**: "Ran tests/.evals/scripts/smoke-test-epic.sh against epic/EPIC-LOCAL-1-mid-cycle-subscription-upgrade. Cut scratch branch ci/epic-smoke-EPIC-LOCAL-1, opened draft PR #2 (https://github.com/Shailendrayadav0666/billing-cycle-copy/pull/2). Run 33742016873 FAILED: static=success, unit=FAILURE, coverage=success, behavior=success, judge=success, sonar=FAILURE. self-repair triggered but exited without pushing a fix — it classified the sonar failure as infrastructure (no reported quality-gate conditions = auth/unreachable/timeout, not a code defect) and declined to consume a retry or touch the unit failure while an infra-classified gate was present. Smoke test exhausted its fixed 1-retry budget (2 attempts total, per its own deliberately-smaller cap) and HALTED per Section 4.0.6 — PR #2 left OPEN for inspection. Development Handoff is BLOCKED until this is resolved."
+**Context**: IMPLEMENTATION - STOP CHECKPOINT Step 4 (smoke test) — HALT, Retry-Limit Report presented to user
+
+---

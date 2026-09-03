@@ -33,7 +33,8 @@
     "integrationBranchPrefixes": ["epic", "bug", "enh", "ci", "story", "ve"],
     "installCommands": ["pip install -r src/backend/requirements.txt", "cd src/frontend && npm install"],
     "_installCommandsNote": "npm install (not npm ci): src/frontend/package-lock.json exists on disk but is excluded by src/frontend/.gitignore and not committed (git ls-files confirms), so npm ci would hard-fail with EUSAGE. Installs are non-reproducible until a lockfile is committed.",
-    "coverageCommand": "pytest --cov=src/backend --cov-report=xml",
+    "coverageCommand": "pytest --cov=src/backend --cov-report=xml; ec=$?; if [ $ec -eq 5 ]; then echo pytest-no-tests-collected-yet-bootstrap-pass; exit 0; fi; exit $ec",
+    "_coverageCommandNote": "Exit 5 = pytest's own documented 'no tests were collected' code. This repo has zero tests today (Deep Dive confirmed none exist) - tolerated ONLY for that exact code, so a real test failure (exit 1) still fails the gate normally. Story 1's dev-implement adds the first real tests, after which exit 5 stops being possible.",
     "coverageReports": [
       { "path": "coverage.xml", "format": "cobertura", "sourcePaths": ["src/backend"] },
       { "path": "src/frontend/coverage/lcov.info", "format": "lcov", "sourcePaths": ["src/frontend"] }
