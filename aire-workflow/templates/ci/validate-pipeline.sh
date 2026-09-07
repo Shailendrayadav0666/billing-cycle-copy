@@ -31,7 +31,7 @@ trap cleanup EXIT
 #    ${BASE_SHA}) — those are NOT unresolved template slots. Everything else in ${UPPER_CASE} is.
 if [ ! -f "$WF" ]; then check_fail "workflow file $WF does not exist"; else
   slot_hits="$(grep -nE '\$\{[A-Z_]+\}|# GENERATE:|<[a-z][a-z-]*>|>>> [A-Z_ ]+ (START|END) <<<' "$CODEVIEW" \
-    | grep -vE '\$\{(EVAL_KEY|BASE_SHA|GITHUB_[A-Z_]+)\}' || true)"
+    | grep -vE '\$\{(EVAL_KEY|BASE_SHA|GITHUB_[A-Z_]+|SONAR_TOKEN|CE_TASK_URL|ANALYSIS_ID|SERVER_URL|REPORT_TASK)\}' || true)"
   if [ -n "$slot_hits" ]; then
     echo "$slot_hits"
     check_fail "unresolved slot/placeholder/marker remains in the committed workflow (V14)"
@@ -185,7 +185,7 @@ if [ -f "$WF" ] && [ -f "$CONFIG" ] && command -v jq >/dev/null 2>&1; then
   while read -r p; do
     [ -z "$p" ] && continue
     grep -q "'${p}/\*\*'" "$WF" || { check_fail "trigger missing integration prefix '${p}/**' (V10)"; v10_ok=0; }
-  done < <(jq -r '.ci.integrationBranchPrefixes[]?' "$CONFIG")
+  done < <(jq -r '.ci.integrationBranchPrefixes[]?' "$CONFIG" | tr -d '\r')
   [ "$v10_ok" -eq 1 ] && check_ok "trigger covers base branch + every integration prefix (V10)"
 fi
 
@@ -243,12 +243,78 @@ fi
 #    whole-tree tool invocation (Section 4.0b's whole-tree-verdict bug). ──
 if [ -f "tests/.evals/scripts/run-static-evals.sh" ]; then
   region=$(awk '/>>> STACK-RESOLVED D-GATES START <<</{flag=1; next} />>> STACK-RESOLVED D-GATES END <<</{flag=0} flag' tests/.evals/scripts/run-static-evals.sh)
-  bad=$(echo "$region" | grep -vE '^[[:space:]]*($|#|delta_diff |record )' || true)
+  # 🔴 `record_multi_root` is the construct run-static-evals.sh itself instructs the generator to emit
+  #    for an unresolvable D-gate. The old alternation matched literal `record ` + SPACE only, so it
+  #    REJECTED the correct construct - pushing generation back toward the silent-omission shape this
+  #    very check exists to prevent.
+  bad=$(echo "$region" | grep -vE '^[[:space:]]*($|#|delta_diff |record(_multi_root)? )' || true)
   if [ -n "$bad" ]; then
     check_fail "bare command in the stack-resolved D-gates region (not wrapped in delta_diff/record) — whole-tree verdict risk (V7)"
     echo "$bad"
   else
     check_ok "stack-resolved D-gates region contains only delta_diff/record calls (V7)"
+  fi
+  # 🔴 V7b - COMPLETENESS. An EMPTY region passed V7 vacuously: a pipeline covering ZERO of
+  #    D1/D2/D4/D5/D6 was reported clean. Every D-gate the manifest declares in ci.gates must actually
+  #    appear in the region, or it can never be recorded at all - and run-evals.* turns an absent gate
+  #    into N/A, which never fails the build.
+  if command -v jq >/dev/null 2>&1 && [ -f "tests/.evals/config.json" ]; then
+    missing=""
+    for g in $(jq -r '.ci.gates[]? // empty' tests/.evals/config.json 2>/dev/null | grep -E '^D[1-7]_' || true); do
+      case "$g" in
+        D3_sast|D7_secrets) continue ;;   # hard-coded in the fixed template, not in the region
+      esac
+      echo "$region" | grep -q "$g" || missing="${missing}${missing:+, }${g}"
+    done
+    if [ -n "$missing" ]; then
+      check_fail "D-gate(s) declared in ci.gates but ABSENT from the stack-resolved region: ${missing} — they can never be recorded, and an absent gate is laundered into a non-failing N/A (V7b)"
+    else
+      check_ok "every D-gate in ci.gates appears in the stack-resolved region (V7b)"
+    fi
+  fi
+  # 🔴 V35 - D5/D6 MUST REFERENCE THEIR THRESHOLD. run-static-evals.* exports
+  #    AIRE_DISALLOWED_LICENSES and AIRE_MAX_CYCLOMATIC_COMPLEXITY so the configured numbers are
+  #    REACHABLE, but reachable is not enforced: delta_diff's verdict is only "are there new findings
+  #    vs baseline", so a D5 command that does not consult the disallow-list fails on ANY newly
+  #    introduced licence, and a D6 command that does not consult the cap fails on ANY new complexity
+  #    finding. Both thresholds were previously read by no script at all; this is what stops them
+  #    sliding back into being decorative. (An earlier code comment cited this check before it
+  #    existed - it exists now.)
+  if [ -n "$region" ]; then
+    thr_missing=""
+    if echo "$region" | grep -q 'D5_licenses'; then
+      echo "$region" | grep 'D5_licenses' | grep -q 'AIRE_DISALLOWED_LICENSES' \
+        || thr_missing="${thr_missing}${thr_missing:+, }D5_licenses (AIRE_DISALLOWED_LICENSES)"
+    fi
+    if echo "$region" | grep -q 'D6_complexity'; then
+      echo "$region" | grep 'D6_complexity' | grep -q 'AIRE_MAX_CYCLOMATIC_COMPLEXITY' \
+        || thr_missing="${thr_missing}${thr_missing:+, }D6_complexity (AIRE_MAX_CYCLOMATIC_COMPLEXITY)"
+    fi
+    if [ -n "$thr_missing" ]; then
+      check_fail "gate command does not reference its configured threshold: ${thr_missing} — the number in tests/.evals/config.json is then decorative and the gate fails on ANY new finding rather than one that breaches the threshold (V35)"
+    else
+      check_ok "D5/D6 commands reference their configured thresholds (V35)"
+    fi
+  fi
+fi
+
+# 🔴 V36 - both generated Sonar steps must carry the run-time scope guard. Without it, a
+#    sonar.sources path that does not exist yet (greenfield src/ at the smoke test) fails the scan
+#    outright with "The folder 'src' does not exist" (exit 3) AND takes the quality gate down with
+#    ".scannerwork/report-task.txt does not exist" - two red steps on a PR with no code to analyse.
+#    Observed in a real run. Section 4.1.1b.
+WF=".github/workflows/agentic-eval-pipeline.yml"
+if [ -f "$WF" ] && grep -q 'sonarqube-scan-action' "$WF"; then
+  sonar_missing=""
+  grep -q 'Resolve Sonar scope' "$WF" || sonar_missing="the 'Resolve Sonar scope' step itself"
+  awk '/sonarqube-scan-action/{found=1} found && /steps\.sonarscope\.outputs\.skip/{ok=1} END{exit !ok}' "$WF"       || sonar_missing="${sonar_missing}${sonar_missing:+; }the scan step's skip guard"
+  if grep -q 'sonarqube-quality-gate-action' "$WF"; then
+    grep -B6 'sonarqube-quality-gate-action' "$WF" | grep -q 'report-task.txt'         || sonar_missing="${sonar_missing}${sonar_missing:+; }the quality-gate step's report-task.txt guard"
+  fi
+  if [ -n "$sonar_missing" ]; then
+    check_fail "SonarQube steps are missing their run-time scope guard: ${sonar_missing} — a configured source path that does not exist yet fails the scan with exit 3 and the quality gate with a missing report-task.txt (V36)"
+  else
+    check_ok "SonarQube steps carry the run-time scope guard (V36)"
   fi
 fi
 
@@ -360,34 +426,181 @@ check_invocation_resolved() {
 check_invocation_resolved "tests/.evals/scripts/auto-fix-agent.sh" "CLAUDE_REPAIR_INVOCATION"
 check_invocation_resolved "tests/.evals/scripts/run-evals.sh" "CLAUDE_JUDGE_INVOCATION"
 
-# ── Slot-equality (Section 3.1): the verify job's ${SETUP_STEPS}+${INSTALL_STEPS} must be
-#    byte-identical (mod whitespace) to the self-repair job's ${SELF_REPAIR_SETUP_STEPS} — Section
-#    3.1's "must match" rule was previously enforced only by a comment telling the model not to
-#    paraphrase, with nothing mechanical checking it.
+# ── V27: structural fidelity to templates/ci/agentic-eval-pipeline.yml.template — every FIXED job id
+#    and step name the template declares (i.e. everything OUTSIDE a ${SLOT} region — post-#7a, only
+#    ${BASE_BRANCH}/${PR_BRANCH_FILTERS}/${BEHAVIOR_IMAGE_TAG}/${SONAR_STEPS}/${CLAUDE_CODE_VERSION}
+#    remain) must appear verbatim in the committed workflow, and neither job may carry a `name:`
+#    override the template does not define — both jobs
+#    are named ONLY by their id (verify-and-evaluate, self-repair); GitHub renders the id as-is when no
+#    `name:` is given. 🔴 KEEP THIS LIST IN SYNC WITH THE TEMPLATE — update it in the same commit
+#    whenever agentic-eval-pipeline.yml.template's fixed step names change. This is what turns "the
+#    model quietly re-authored the YAML instead of copying it" (observed in the wild: job display name
+#    "Verify and evaluate", a fused "Stage 1+2" step replacing the template's separately-isolated
+#    stages, a Verdict tallying only 2 outcomes instead of 6) from an undetectable drift into a hard
+#    generation-time failure. ──
 if [ -f "$WF" ]; then
-  v_start=$(grep -n 'do not paraphrase' "$WF" | head -1 | cut -d: -f1 || true)
-  v_end=$(grep -n 'Every gate step: id + continue-on-error' "$WF" | head -1 | cut -d: -f1 || true)
-  r_start=$(grep -n 'so re-verification after the fix can actually run' "$WF" | head -1 | cut -d: -f1 || true)
-  r_end=$(grep -n 'name: "Install Claude Code CLI"' "$WF" | head -1 | cut -d: -f1 || true)
+  FIXED_JOB_IDS="verify-and-evaluate self-repair"
+  FIXED_STEP_NAMES=(
+    "Checkout (full history for delta diffs)"
+    "Resolve EVAL_KEY"
+    "Resolve base SHA"
+    "Purge inherited evidence"
+    "Read manifest"
+    "Setup Node"
+    "Setup Python"
+    "Setup Java"
+    "Setup Go"
+    "Setup .NET"
+    "Install dependencies"
+    "Compile / build"
+    "Stage 1: static evals (delta-scoped)"
+    "Stage 2: unit + coverage"
+    "Coverage gate (delta-scoped)"
+    "Stage 2: behaviour (Gherkin, Podman)"
+    "Install Claude Code CLI"
+    "Stage 3: judge gates J1 + J2"
+    "Record SonarQube gate status"
+    "Verdict"
+    "Stage 4: publish scorecard"
+    "Upload eval artifacts"
+    "Checkout PR head"
+    "Download eval artifacts"
+    "Autonomous self-repair"
+  )
 
-  if [ -z "$v_start" ] || [ -z "$v_end" ] || [ -z "$r_start" ] || [ -z "$r_end" ]; then
-    check_fail "could not locate the install-step anchors for the verify/self-repair comparison — has the fixed template text been hand-edited? (Section 3.1)"
-  else
-    verify_block="$(sed -n "$((v_start+1)),$((v_end-1))p" "$WF")"
-    repair_block="$(sed -n "$((r_start+1)),$((r_end-1))p" "$WF")"
-    # Strip full-line comments before comparing — explanatory comments are legitimately allowed to
-    # differ (or appear only once) as long as the actual commands match; that is the real intent of
-    # "must match" (Section 3.1), not byte-identical prose.
-    norm_verify="$(printf '%s\n' "$verify_block" | grep -vE '^[[:space:]]*#' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^$/d')"
-    norm_repair="$(printf '%s\n' "$repair_block" | grep -vE '^[[:space:]]*#' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^$/d')"
-    if [ "$norm_verify" = "$norm_repair" ]; then
-      check_ok "verify job and self-repair job install identical setup/tools (Section 3.1)"
-    else
-      check_fail "verify job and self-repair job install DIFFERENT setup/tools — self-repair would re-verify with a mismatched toolset (Section 3.1)"
-      diff <(printf '%s\n' "$norm_verify") <(printf '%s\n' "$norm_repair") | head -n 30
+  v27_fail=0
+
+  # Job ids: exactly 2-space-indented identifiers ending in ':', scoped to the top-level `jobs:` block
+  # only (Section 4.0.2 rule 5 mandates 2-space, spaces-only indentation, so this is a safe structural
+  # anchor — without the jobs: scope this would also match `on:`'s own 2-space-indented trigger keys).
+  actual_job_ids="$(awk '/^jobs:$/{f=1;next} f && /^[a-zA-Z]/{exit} f && /^  [a-zA-Z0-9_-]+:$/{line=$0; gsub(/^  /,"",line); gsub(/:$/,"",line); print line}' "$WF")"
+  for jid in $FIXED_JOB_IDS; do
+    echo "$actual_job_ids" | grep -qx "$jid" \
+      || { check_fail "job id '${jid}' missing from the committed workflow (V27) — has the YAML been re-authored instead of copied from the template?"; v27_fail=1; }
+  done
+  extra_jobs="$(echo "$actual_job_ids" | grep -vxF -e "verify-and-evaluate" -e "self-repair" || true)"
+  [ -n "$extra_jobs" ] && { check_fail "unexpected job id(s) not in the template: ${extra_jobs} (V27)"; v27_fail=1; }
+
+  # No job-level `name:` override — the template defines none for either job.
+  for jid in verify-and-evaluate self-repair; do
+    job_block="$(awk -v j="  ${jid}:" 'seen && /^  [a-zA-Z0-9_-]+:$/{exit} $0==j{seen=1;next} seen{print}' "$WF")"
+    if echo "$job_block" | grep -qE '^ {4}name:'; then
+      check_fail "job '${jid}' carries a name: override the template does not define (V27) — e.g. a capitalized/spaced display name is proof the YAML was hand-edited rather than copied"
+      v27_fail=1
     fi
+  done
+
+  # Every fixed step name must be present verbatim.
+  for sname in "${FIXED_STEP_NAMES[@]}"; do
+    grep -qF "name: \"${sname}\"" "$WF" \
+      || { check_fail "template step \"${sname}\" is missing from the committed workflow (V27) — steps may have been merged, renamed, or the YAML re-authored instead of copied"; v27_fail=1; }
+  done
+
+  [ "$v27_fail" -eq 0 ] \
+    && check_ok "workflow structurally matches agentic-eval-pipeline.yml.template — all fixed job ids and step names present, no unexpected name: overrides (V27)"
+fi
+
+# ── V28 + V29 (#7a): the cd/verify and diff-scope logic no longer lives in generated, per-repo YAML
+#    text — it moved into the FIXED, framework-owned tests/.evals/scripts/ci-manifest-runner.sh and
+#    lib-manifest.sh (common/ci-pipeline-generation.md Section 4.0d.1/4.0g), which the generated
+#    workflow only ever CALLS. So these checks are no longer "does this repo's generated text contain a
+#    cd for each root" (there is no such per-root generated text left to scan) — they are "does the
+#    copied runner script actually contain the resolve_and_verify_root / root_touched calls it must",
+#    a ONE-TIME structural check on the fixed script rather than a per-root check on the YAML. ──
+RUNNER="tests/.evals/scripts/ci-manifest-runner.sh"
+LIBMANIFEST="tests/.evals/scripts/lib-manifest.sh"
+if [ -f "$RUNNER" ] && [ -f "$LIBMANIFEST" ]; then
+  if grep -q 'resolve_and_verify_root' "$RUNNER" && grep -q 'resolve_and_verify_root()' "$LIBMANIFEST"; then
+    check_ok "${RUNNER} verifies each root via resolve_and_verify_root before running its command (V28)"
+  else
+    check_fail "${RUNNER} does not call resolve_and_verify_root — a root's command could run from an unverified working directory (V28, Section 4.0d.1)"
+  fi
+  if grep -q 'root_touched' "$RUNNER" && grep -q 'root_touched()' "$LIBMANIFEST"; then
+    check_ok "${RUNNER} diff-scopes each root via root_touched before running its command (V29)"
+  else
+    check_fail "${RUNNER} does not call root_touched — every root's install/build/coverage command would run unconditionally on every PR (V29, Section 4.0g)"
+  fi
+elif [ -f "$WF" ]; then
+  note "V28/V29 skipped — ${RUNNER} or ${LIBMANIFEST} not found (a legacy pre-#7a pipeline, or a variant not yet migrated)"
+fi
+
+# ── V30: no untraceable manifest value — Section 3.0.1. Pragmatic, static checks: manifestState/roots[]
+#    consistency, plus each declared root actually existing on disk with its markerFile present. This
+#    does not (and cannot, statically) prove every installCommand string names a real script — that half
+#    stays a manual V3 check, same as today — but it does catch the two most common untraceable-value
+#    defects: a "resolved" manifest whose root doesn't exist, and an "unresolved" one that was populated
+#    anyway (the exact architecture.md-derived-value failure this check exists to prevent). ──
+if [ -f "$CONFIG" ] && command -v jq >/dev/null 2>&1; then
+  manifest_state=$(jq -r '.ci.manifestState // "resolved"' "$CONFIG")
+  roots_len=$(jq -r '(.ci.roots // []) | length' "$CONFIG")
+  if [ "$manifest_state" = "unresolved" ] && [ "$roots_len" -gt 0 ]; then
+    check_fail "ci.manifestState is 'unresolved' but ci.roots[] has ${roots_len} entr(y/ies) — an unresolved manifest must have an EMPTY roots[] (V30, Section 3.0). A non-empty roots[] alongside 'unresolved' is exactly the architecture.md-derived-value defect this check exists to catch"
+  elif [ "$manifest_state" = "resolved" ] && [ "$roots_len" -eq 0 ]; then
+    note "V30: ci.manifestState is 'resolved' but ci.roots[] is empty — verify manually that this is intentional (a legacy flat manifest with no roots[] at all is a separate, valid case)"
+  else
+    check_ok "ci.manifestState ('${manifest_state}') is consistent with ci.roots[] length (${roots_len}) (V30)"
+  fi
+
+  if [ "$roots_len" -gt 0 ]; then
+    v30_fail=0
+    while IFS=$'\t' read -r root marker; do
+      [ -z "$root" ] && continue
+      if [ ! -d "$root" ]; then
+        check_fail "ci.roots[] root '${root}' does not exist in this checkout (V30) — an untraceable manifest value"
+        v30_fail=1
+      elif [ -n "$marker" ] && [ "$marker" != "null" ] && [ ! -e "${root}/${marker}" ]; then
+        check_fail "ci.roots[] root '${root}' declares markerFile '${marker}', which is not present at ${root}/${marker} (V30) — an untraceable manifest value"
+        v30_fail=1
+      fi
+    done < <(jq -r '.ci.roots[]? | [.root, (.markerFile // "")] | @tsv' "$CONFIG" | tr -d '\r')
+    [ "$v30_fail" -eq 0 ] && check_ok "every ci.roots[] entry's directory and markerFile exist in this checkout (V30)"
+  fi
+else
+  note "V30 skipped — jq not available or ${CONFIG} not found"
+fi
+
+# ── V31: CI purges inherited evidence and resolves by key, never by search — Section 4.0e. ──
+if [ -f "$WF" ]; then
+  if grep -qF 'name: "Purge inherited evidence"' "$WF"; then
+    check_ok "workflow has a 'Purge inherited evidence' step (V31)"
+  else
+    check_fail "workflow has no 'Purge inherited evidence' step — a checkout that already carries a story's own committed reports/eval-evidence/\${EVAL_KEY}/ can let a gate that fails to produce fresh output silently publish the stale local run instead (V31, Section 4.0e)"
+  fi
+
+  # The self-repair job must resolve its OWN EVAL_KEY (mirroring the verify job) — without it,
+  # auto-fix-agent.* has no key-addressed path and must fall back to searching.
+  self_repair_block="$(awk '/^  self-repair:$/{f=1} f{print}' "$WF")"
+  if echo "$self_repair_block" | grep -qF 'name: "Resolve EVAL_KEY"'; then
+    check_ok "self-repair job resolves its own EVAL_KEY (V31)"
+  else
+    check_fail "self-repair job has no 'Resolve EVAL_KEY' step of its own — auto-fix-agent.* cannot resolve its evidence by key and would have to search (V31, Section 4.0e)"
+  fi
+
+  if echo "$self_repair_block" | grep -qE 'EVAL_KEY:\s*"?\$\{\{\s*steps\.evalkey\.outputs\.key'; then
+    check_ok "self-repair passes EVAL_KEY to auto-fix-agent.* (V31)"
+  else
+    check_fail "self-repair job does not pass EVAL_KEY to the 'Autonomous self-repair' step's env (V31, Section 4.0e)"
   fi
 fi
+
+# 🔴 No script may resolve an evidence file by wildcard/recursive search — every EVAL_KEY-addressed
+#    resolution point is available (V31, Section 4.0e). find/Get-ChildItem over reports/eval-evidence/
+#    silently adopts the FIRST match across every work unit's own committed evidence.
+for f in tests/.evals/scripts/auto-fix-agent.sh tests/.evals/scripts/auto-fix-agent.ps1; do
+  [ -f "$f" ] || continue
+  hit="$(grep -nE 'find[[:space:]]+reports/eval-evidence|Get-ChildItem[^|]*reports/eval-evidence' "$f" || true)"
+  if [ -n "$hit" ]; then
+    echo "$hit"
+    check_fail "${f} resolves evidence via a wildcard/recursive search instead of an EVAL_KEY-addressed path (V31, Section 4.0e)"
+  else
+    check_ok "${f} resolves evidence by EVAL_KEY path, not by search (V31)"
+  fi
+done
+
+# ── Slot-equality (Section 3.1) is now STRUCTURAL under #7a, not a runtime check: both jobs call the
+#    SAME fixed steps (Read manifest, Setup Node/Python/Java/Go/.NET, Install dependencies) — there is
+#    no per-repo generated text left that could textually diverge between them. V27's structural-fidelity
+#    check is what still catches a step missing from either job.
 
 # ── V-dryrun: the scripts actually run on the current branch (catches path/flag/mkdir bugs) ──
 if [ -n "$BASE_SHA" ] && [ -f "tests/.evals/scripts/run-static-evals.sh" ]; then

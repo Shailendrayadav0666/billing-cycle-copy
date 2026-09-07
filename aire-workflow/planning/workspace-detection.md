@@ -30,7 +30,7 @@ Apply the **MANDATORY: Session Identity Capture** rules from the root workflow f
    - **If the tree is dirty or the branches have diverged**: do NOT clobber. Show `git status` / the divergence and ask the user how to proceed (stash, commit, or continue against the current local state). Log the choice in runtime-artifacts/audit.md.
 4. Log the sync result (fetched, fast-forwarded to `<sha>`, or the user's chosen action) in runtime-artifacts/audit.md.
 
-> 🔴 Current-system truth is NOT carried across cycles on the base branch. Each new cycle pulls fresh existing-system truth (`spec/plans/deep-dive.md` plus the flat RE docs under `spec/plans/`) from **Atlas via the Helix MCP** (`common/helix-atlas-integration.md`) — there is no delta to replay and no ledger to reconcile.
+> 🔴 Current-system truth is NOT carried across cycles on the base branch. Each new cycle pulls fresh existing-system truth (`spec/plans/atlas-deep-dive.md` plus the flat RE docs under `spec/plans/`) from **Atlas via the Helix MCP** (`common/helix-atlas-integration.md`) — there is no delta to replay and no ledger to reconcile.
 
 This step ONLY synchronizes the local base branch; it does not create the epic branch (that is Step 4.5).
 
@@ -69,8 +69,8 @@ Log the question and the complete raw answer in `runtime-artifacts/audit.md`. Th
 **IF workspace has existing code**:
 - Set flag: `brownfield = true`
 - **Search the ENTIRE repo for existing reverse engineering artifacts — they can live ANYWHERE, not only at the default path.** RE docs live FLAT in `spec/plans/`; file names are always the same, so search by name:
-  1. First check the default location: `spec/plans/` (the flat RE docs, alongside `deep-dive.md`)
-  2. If not there, glob the whole workspace for the standard artifact filenames at any depth: `business-overview.md`, `code-structure.md`, `api-documentation.md`, `component-inventory.md`, `technology-stack.md`, `dependencies.md`, `code-quality-assessment.md`, `knowledge-graph.md`, `reverse-engineering-timestamp.md`, `deep-dive.md` — a directory containing several of these IS the artifact set even if it lives elsewhere
+  1. First check the default location: `spec/plans/` (the flat RE docs, alongside `atlas-deep-dive.md`)
+  2. If not there, glob the whole workspace for the standard artifact filenames at any depth: `business-overview.md`, `code-structure.md`, `api-documentation.md`, `component-inventory.md`, `technology-stack.md`, `dependencies.md`, `code-quality-assessment.md`, `reverse-engineering-timestamp.md`, `atlas-deep-dive.md` — a directory containing several of these IS the artifact set even if it lives elsewhere
   3. If found outside the default path, record the discovered location in `runtime-artifacts/aire-state.md` (`## Workspace State` → `Reverse Engineering Artifacts: <path>`) and use THAT path everywhere the artifacts are loaded later (Requirements Analysis, User Stories, design stages)
 - **IF reverse engineering artifacts exist (at ANY location found above)** — do NOT regenerate them:
     - Current-system truth is refreshed **fresh from Atlas via the Helix MCP** at the start of each cycle (`common/helix-atlas-integration.md`), so existing artifacts from a prior cycle are treated as a starting point only. The Helix MCP gate (CLAUDE.md Step 4.5) decides whether to re-pull from Atlas or run local Reverse Engineering — there is no delta to replay and no stitch ledger to consult.
@@ -161,6 +161,29 @@ project already answered. Reuse the recorded values; do NOT re-ask.
 apply `common/question-format-guide.md`'s file-based convention here — this question is answered
 conversationally, in one turn, and only the ANSWER is persisted (to `runtime-artifacts/aire-state.md` and `runtime-artifacts/audit.md`).
 
+🔴 **EMIT THE BLOCK BELOW VERBATIM — WORD FOR WORD, BOTH PARTS, BOTH FOLDER PATHS.** This is the same
+class of rule as the Section 4.1.2 CI setup gate (`common/ci-pipeline-generation.md`): it is not a
+question to be paraphrased into your own words, because the *content* is the deliverable. The user
+cannot place a file in a folder whose name you did not tell them.
+
+**Observed failure — do not repeat it.** The block was compressed into:
+
+> *"Context folders are set up. One more quick chat-only question before I wrap up Workspace
+> Detection: Do you have any reference materials I should use for this work? (UX wireframes, design
+> mockups, API specs, architecture diagrams, or other docs defining the target state). Reply with the
+> exact path(s), or 'no'."*
+
+That paraphrase silently **deleted part 1 entirely** (existing-knowledge — the brownfield half), and
+**dropped both folder paths**, so the user was asked where to put files without being told either
+destination. A user who answers "no" to a question that never mentioned `existing-knowledge/` has not
+declined it; they were never asked.
+
+🔴 **Specifically forbidden**: rewording the two part labels, merging the two parts into one question,
+omitting `spec/context-project/existing-knowledge/` or `spec/context-project/new-references/`,
+replacing a path with a description of it, adding a preamble about folders being "set up", or
+converting it to a lettered multiple-choice prompt. The ONLY permitted edit is the bracketed greenfield
+instruction on part 1 (see the rules below).
+
 Ask both parts together, once:
 
 ```
@@ -175,7 +198,16 @@ Do you have any context I should use for this work?
    API specs, architecture diagrams, research docs. Place under
    spec/context-project/new-references/
 
-Reply with the exact path(s) to use, or "no" for either part.
+HOW TO ANSWER — give one ans per part shown above:
+
+  1) <path>        or   1) no
+  2) <path>        or   2) no
+
+Every part shown needs its own answer. Answering "no" to one part does not
+skip the other. For several paths in one part, separate them with commas.
+
+Example answer:
+  1) no 2) spec/context-project/new-references/checkout-wireframes/
 
 [Answer]:
 ```
@@ -191,10 +223,18 @@ Record the answer in `runtime-artifacts/aire-state.md`:
 ```
 
 Rules:
+- 🔴 **Both folder names appear in the asked question, spelled in full**:
+  `spec/context-project/existing-knowledge/` and `spec/context-project/new-references/`. They are the
+  two — and only two — subfolders of `spec/context-project/` (`common/directory-structure.md`), and the
+  user needs the exact name to put a file in the right one.
 - Record the paths **exactly as given**. Only those paths are ever read — there is no auto-scan of the
   rest of `spec/context-project/`.
 - If a supplied path does not exist, say so and re-ask that part.
-- On greenfield, ask part 2 only; record `Existing Knowledge: No`.
+- On greenfield, ask part 2 only — the answer is then a single line (`2) <path>` or `2) no`) — and
+  record `Existing Knowledge: No`.
+- A reply that answers only ONE of two parts shown is INCOMPLETE, not a "no" to the other. Ask again
+  for the missing part alone; never infer silence as a decline, and never record a value the user did
+  not actually give.
 - Log the prompt and the user's complete raw answer in `runtime-artifacts/audit.md`.
 - Downstream, **Requirements Analysis**, **Workflow Planning**, **Application Design**, **Functional
   Design**, **User Stories** and **Code Generation** read `## Context Project`:

@@ -29,9 +29,9 @@ B) Review a previous stage ([Show available stages])
    All runtime-artifacts/audit.md entries in this session carry `**User Email**:` with the current session email — at every approval flow this field records who approved. A different developer resuming the project automatically logs under their own email. Email only; never record a name.
 3. **Parse current status** from the workflow file to populate the prompt
 4. **MANDATORY: Load Previous Stage Artifacts** - Before resuming any stage, automatically read all relevant artifacts from previous stages:
-   - **Reverse Engineering**: Read architecture.md, code-structure.md, api-documentation.md
-   - **Requirements Analysis**: Read requirements.md, requirement-verification-questions.md
-   - **User Stories**: Read stories.md, personas.md, story-generation-generation.md, the `## Story Tracker` in runtime-artifacts/aire-state.md (statuses, requires, Tracker IDs), AND the `## Tracker` section in runtime-artifacts/aire-state.md (Type, Parent Epic ID/URL, Project Key / Repo / Org) — required so a resumed session can still link pushed stories to the Parent Epic provided at workflow start, and knows which tracker to dispatch to without re-asking
+   - **Reverse Engineering**: Read atlas-deep-dive.md, code-structure.md, api-documentation.md
+   - **Requirements Analysis**: Read requirements.md, spec/spec-generation/requirement-verification-questions.md
+   - **User Stories**: Read stories.md, personas.md, spec/spec-generation/story-generation.md, the `## Story Tracker` in runtime-artifacts/aire-state.md (statuses, requires, Tracker IDs), AND the `## Tracker` section in runtime-artifacts/aire-state.md (Type, Parent Epic ID/URL, Project Key / Repo / Org) — required so a resumed session can still link pushed stories to the Parent Epic provided at workflow start, and knows which tracker to dispatch to without re-asking
    - **Dependency Graph**: Read `spec/plans/dependency-graph.yml` (`requires`/`enables`) and the `## Dependency Graph` section in runtime-artifacts/aire-state.md
    - **Application Design**: Read application-design artifacts (components.md, component-methods.md, services.md)
    - **Implementation Design**: System-level design artifacts live under `spec/plans/` in

@@ -15,8 +15,8 @@
 ### Step 1: Load Reverse Engineering Context (if available)
 
 **IF brownfield project**:
-- Resolve the artifacts location: use `Reverse Engineering Artifacts: <path>` from `runtime-artifacts/aire-state.md` `## Workspace State` if recorded (artifacts may live anywhere in the repo); else default to `spec/plans/` (the flat RE docs, alongside `deep-dive.md`)
-- Load `<artifacts-path>/architecture.md`
+- Resolve the artifacts location: use `Reverse Engineering Artifacts: <path>` from `runtime-artifacts/aire-state.md` `## Workspace State` if recorded (artifacts may live anywhere in the repo); else default to `spec/plans/` (the flat RE docs, alongside `atlas-deep-dive.md`)
+- Load `<artifacts-path>/atlas-deep-dive.md`
 - Load `<artifacts-path>/component-inventory.md`
 - Load `<artifacts-path>/technology-stack.md`
 - Use these to understand existing system when analyzing request
@@ -153,7 +153,7 @@ After receiving answers:
 2. **Deferred Rule Loading**: For each extension the user opted IN, load the full rules file now. The rules file is derived by naming convention: strip `.opt-in.md` from the opt-in filename and append `.md` (e.g., `security-baseline.opt-in.md` → `security-baseline.md`). For extensions the user opted OUT, do NOT load the full rules file.
 
 ### Step 6: Generate Clarifying Questions (PROACTIVE APPROACH)
-   - **ALWAYS** create `spec/plans/requirement-verification-questions.md` unless requirements are exceptionally clear and complete
+   - **ALWAYS** create `spec/spec-generation/requirement-verification-questions.md` unless requirements are exceptionally clear and complete
    - Ask questions about ANY missing, unclear, or ambiguous areas
    - Focus on functional requirements, non-functional requirements, user scenarios, and business context
    - Request user to fill in all [Answer]: tags directly in the questions document
@@ -179,7 +179,7 @@ Apply **DR-1 / DR-3 / DR-4** of `common/design-reference-grounding.md` to **ever
 **No new gate**: reading a referenced document is work you do on your own after the answers arrive — it never sends the question file back to the user and never adds a `[Answer]:` tag.
 
 ### GATE: Await User Answers
-DO NOT proceed to Step 7 until all questions in requirement-verification-questions.md are answered and validated.
+DO NOT proceed to Step 7 until all questions in spec/spec-generation/requirement-verification-questions.md are answered and validated.
 Present the question file to the user and STOP.
 
 Once the answers are in, read any documents they reference (Step 6.5) and proceed to Step 7 — this reading is silent and never re-prompts the user.

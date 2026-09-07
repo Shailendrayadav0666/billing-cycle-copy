@@ -7,6 +7,10 @@ sonar.projectKey=${SONAR_PROJECT_KEY}
 sonar.projectName=${SONAR_PROJECT_NAME}
 sonar.organization=YOUR_ORG_NAME
 
+# 🔴 sonar.sources / sonar.tests below are REWRITTEN AT RUN TIME by the pipeline's
+#    "Resolve Sonar scope" step, down to the paths that actually exist in the checkout.
+#    A path here that does not exist yet (greenfield src/) would otherwise fail the scan
+#    outright with "The folder 'src' does not exist" and take the quality gate with it.
 sonar.sources=${SONAR_SOURCES}
 sonar.tests=${SONAR_TESTS}
 sonar.exclusions=${SONAR_EXCLUSIONS}

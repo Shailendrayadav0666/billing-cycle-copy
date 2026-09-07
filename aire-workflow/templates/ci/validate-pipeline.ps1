@@ -17,7 +17,7 @@ if (-not (Test-Path $wf)) { CheckFail "workflow file $wf does not exist" }
 else {
   # 🔴 Exclude legitimate RUNTIME shell vars set via step env: (${EVAL_KEY}, ${BASE_SHA}, ${GITHUB_*}).
   $hits = Select-String -Path $wf -Pattern '\$\{[A-Z_]+\}|# GENERATE:|<[a-z][a-z-]*>|>>> [A-Z_ ]+ (START|END) <<<' |
-    Where-Object { $_.Line -notmatch '\$\{(EVAL_KEY|BASE_SHA|GITHUB_[A-Z_]+)\}' }
+    Where-Object { $_.Line -notmatch '\$\{(EVAL_KEY|BASE_SHA|GITHUB_[A-Z_]+|SONAR_TOKEN|CE_TASK_URL|ANALYSIS_ID|SERVER_URL|REPORT_TASK)\}' }
   if ($hits) { $hits | ForEach-Object { Write-Host $_.Line }; CheckFail "unresolved slot/placeholder/marker remains (V14)" }
   else { CheckOk "no unresolved slots or placeholders (V14)" }
 }
@@ -313,28 +313,125 @@ function CheckInvocationResolved($file, $marker) {
 CheckInvocationResolved "tests/.evals/scripts/auto-fix-agent.ps1" "CLAUDE_REPAIR_INVOCATION"
 CheckInvocationResolved "tests/.evals/scripts/run-evals.ps1" "CLAUDE_JUDGE_INVOCATION"
 
+# ── V27: structural fidelity to templates/ci/agentic-eval-pipeline.yml.template — every FIXED job id
+#    and step name the template declares (everything OUTSIDE a ${SLOT} region) must appear verbatim in
+#    the committed workflow, and neither job may carry a `name:` override the template does not define.
+#    🔴 KEEP THIS LIST IN SYNC WITH THE TEMPLATE. See validate-pipeline.sh's matching V27 block for the
+#    full rationale. ──
 if (Test-Path $wf) {
-  $lines = Get-Content $wf
-  $vStart = ($lines | Select-String -Pattern 'do not paraphrase').LineNumber | Select-Object -First 1
-  $vEnd = ($lines | Select-String -Pattern 'Every gate step: id \+ continue-on-error').LineNumber | Select-Object -First 1
-  $rStart = ($lines | Select-String -Pattern 'so re-verification after the fix can actually run').LineNumber | Select-Object -First 1
-  $rEnd = ($lines | Select-String -Pattern 'name: "Install Claude Code CLI"').LineNumber | Select-Object -First 1
+  $fixedJobIds = @("verify-and-evaluate", "self-repair")
+  $fixedStepNames = @(
+    "Checkout (full history for delta diffs)", "Resolve EVAL_KEY", "Resolve base SHA",
+    "Purge inherited evidence", "Read manifest", "Setup Node", "Setup Python", "Setup Java",
+    "Setup Go", "Setup .NET", "Install dependencies",
+    "Compile / build", "Stage 1: static evals (delta-scoped)", "Stage 2: unit + coverage",
+    "Coverage gate (delta-scoped)", "Stage 2: behaviour (Gherkin, Podman)", "Install Claude Code CLI",
+    "Stage 3: judge gates J1 + J2", "Record SonarQube gate status", "Verdict",
+    "Stage 4: publish scorecard", "Upload eval artifacts", "Checkout PR head",
+    "Download eval artifacts", "Autonomous self-repair"
+  )
+  $wfLines = Get-Content $wf
+  $v27Fail = $false
 
-  if (-not $vStart -or -not $vEnd -or -not $rStart -or -not $rEnd) {
-    CheckFail "could not locate the install-step anchors for the verify/self-repair comparison — has the fixed template text been hand-edited? (Section 3.1)"
-  } else {
-    # Strip full-line comments before comparing — see the matching comment in validate-pipeline.sh.
-    $verifyBlock = $lines[$vStart..($vEnd-2)] | ForEach-Object { $_.Trim() } | Where-Object { $_ -and $_ -notmatch '^#' }
-    $repairBlock = $lines[$rStart..($rEnd-2)] | ForEach-Object { $_.Trim() } | Where-Object { $_ -and $_ -notmatch '^#' }
-    if (($verifyBlock -join "`n") -eq ($repairBlock -join "`n")) {
-      CheckOk "verify job and self-repair job install identical setup/tools (Section 3.1)"
-    } else {
-      CheckFail "verify job and self-repair job install DIFFERENT setup/tools — self-repair would re-verify with a mismatched toolset (Section 3.1)"
-      Compare-Object $verifyBlock $repairBlock | Select-Object -First 30
+  # Job ids: exactly 2-space-indented identifiers ending in ':', scoped to the top-level `jobs:` block.
+  $inJobs = $false
+  $actualJobIds = @()
+  foreach ($l in $wfLines) {
+    if ($l -eq "jobs:") { $inJobs = $true; continue }
+    if ($inJobs -and $l -match '^[a-zA-Z]') { break }
+    if ($inJobs -and $l -match '^  ([a-zA-Z0-9_-]+):$') { $actualJobIds += $Matches[1] }
+  }
+  foreach ($jid in $fixedJobIds) {
+    if ($actualJobIds -notcontains $jid) {
+      CheckFail "job id '$jid' missing from the committed workflow (V27) - has the YAML been re-authored instead of copied from the template?"
+      $v27Fail = $true
     }
+  }
+  $extraJobs = $actualJobIds | Where-Object { $fixedJobIds -notcontains $_ }
+  if ($extraJobs) { CheckFail "unexpected job id(s) not in the template: $($extraJobs -join ', ') (V27)"; $v27Fail = $true }
+
+  # No job-level `name:` override — the template defines none for either job.
+  foreach ($jid in $fixedJobIds) {
+    $seen = $false
+    foreach ($l in $wfLines) {
+      if ($seen -and $l -match '^  [a-zA-Z0-9_-]+:$') { break }
+      if ($seen -and $l -match '^ {4}name:') {
+        CheckFail "job '$jid' carries a name: override the template does not define (V27) - e.g. a capitalized/spaced display name is proof the YAML was hand-edited rather than copied"
+        $v27Fail = $true
+        break
+      }
+      if ($l -eq "  ${jid}:") { $seen = $true }
+    }
+  }
+
+  # Every fixed step name must be present verbatim.
+  foreach ($sname in $fixedStepNames) {
+    if (-not (Select-String -Path $wf -SimpleMatch -Pattern "name: `"$sname`"" -Quiet)) {
+      CheckFail "template step `"$sname`" is missing from the committed workflow (V27) - steps may have been merged, renamed, or the YAML re-authored instead of copied"
+      $v27Fail = $true
+    }
+  }
+
+  if (-not $v27Fail) {
+    CheckOk "workflow structurally matches agentic-eval-pipeline.yml.template - all fixed job ids and step names present, no unexpected name: overrides (V27)"
   }
 }
 
+# ── V30: no untraceable manifest value — see validate-pipeline.sh's matching V30 block for the rationale.
+if (Test-Path $config) {
+  try {
+    $cfg30 = Get-Content $config -Raw | ConvertFrom-Json
+    $manifestState = if ($cfg30.ci.manifestState) { $cfg30.ci.manifestState } else { "resolved" }
+    $roots30 = if ($cfg30.ci.roots) { @($cfg30.ci.roots) } else { @() }
+    if ($manifestState -eq "unresolved" -and $roots30.Count -gt 0) {
+      CheckFail "ci.manifestState is 'unresolved' but ci.roots[] has $($roots30.Count) entr(y/ies) - an unresolved manifest must have an EMPTY roots[] (V30, Section 3.0)"
+    } elseif ($manifestState -eq "resolved" -and $roots30.Count -eq 0) {
+      Note "V30: ci.manifestState is 'resolved' but ci.roots[] is empty - verify manually that this is intentional"
+    } else {
+      CheckOk "ci.manifestState ('$manifestState') is consistent with ci.roots[] length ($($roots30.Count)) (V30)"
+    }
+    if ($roots30.Count -gt 0) {
+      $v30Fail = $false
+      foreach ($r in $roots30) {
+        if (-not (Test-Path $r.root)) {
+          CheckFail "ci.roots[] root '$($r.root)' does not exist in this checkout (V30) - an untraceable manifest value"
+          $v30Fail = $true
+        } elseif ($r.markerFile -and -not (Test-Path (Join-Path $r.root $r.markerFile))) {
+          CheckFail "ci.roots[] root '$($r.root)' declares markerFile '$($r.markerFile)', which is not present (V30) - an untraceable manifest value"
+          $v30Fail = $true
+        }
+      }
+      if (-not $v30Fail) { CheckOk "every ci.roots[] entry's directory and markerFile exist in this checkout (V30)" }
+    }
+  } catch {
+    Note "V30 skipped - could not parse $config as JSON"
+  }
+}
+
+# ── V28 + V29 (#7a): see validate-pipeline.sh's matching block for the rationale — this is now a
+#    ONE-TIME structural check on the FIXED ci-manifest-runner.sh/lib-manifest.sh scripts, not a
+#    per-root check on generated YAML text (there is no such generated text left to scan).
+$runnerPs = "tests/.evals/scripts/ci-manifest-runner.sh"
+$libManifestPs = "tests/.evals/scripts/lib-manifest.sh"
+if ((Test-Path $runnerPs) -and (Test-Path $libManifestPs)) {
+  if ((Select-String -Path $runnerPs -Pattern 'resolve_and_verify_root' -Quiet) -and (Select-String -Path $libManifestPs -Pattern 'resolve_and_verify_root\(\)' -Quiet)) {
+    CheckOk "$runnerPs verifies each root via resolve_and_verify_root before running its command (V28)"
+  } else {
+    CheckFail "$runnerPs does not call resolve_and_verify_root - a root's command could run from an unverified working directory (V28, Section 4.0d.1)"
+  }
+  if ((Select-String -Path $runnerPs -Pattern 'root_touched' -Quiet) -and (Select-String -Path $libManifestPs -Pattern 'root_touched\(\)' -Quiet)) {
+    CheckOk "$runnerPs diff-scopes each root via root_touched before running its command (V29)"
+  } else {
+    CheckFail "$runnerPs does not call root_touched - every root's install/build/coverage command would run unconditionally on every PR (V29, Section 4.0g)"
+  }
+} elseif (Test-Path $wf) {
+  Note "V28/V29 skipped - $runnerPs or $libManifestPs not found (a legacy pre-#7a pipeline, or a variant not yet migrated)"
+}
+
+# ── Slot-equality (Section 3.1) is now STRUCTURAL under #7a, not a runtime check: both jobs call the
+#    SAME fixed steps (Read manifest, Setup Node/Python/Java/Go/.NET, Install dependencies), so there is
+#    no per-repo generated text left that could textually diverge between them — nothing to compare here
+#    anymore. V27's structural-fidelity check is what still catches a step missing from either job.
 if ($BaseSha -and (Test-Path "tests/.evals/scripts/run-static-evals.sh")) {
   Write-Host "  dry-run: run-static-evals against $BaseSha"
   bash tests/.evals/scripts/run-static-evals.sh $BaseSha 2>&1 | Out-Null

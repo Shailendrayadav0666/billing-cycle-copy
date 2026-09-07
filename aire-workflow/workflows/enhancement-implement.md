@@ -67,6 +67,7 @@ this file that describes a loop as uncapped, unbounded, or repeating "until clea
 | **SH-LOOP-4** | Static Eval D1–D7 | Step 14.5 | Zero NEW findings above the `tests/.evals/config.json` thresholds on changed files |
 | **SH-LOOP-6** | Judge Gates J1 + J2 | Step 15a Item 2.5 | `J1 ≥ llmJudgeArchitectureScoreMin` **and** `J2 ≥ llmJudgeSecurityScoreMin` (`N/A` passes) |
 | **SH-LOOP-5** | Auto-Remediate (code review + security findings) | Step 15c | Review verdict clean — zero 🔴 and zero 🟠 |
+| **SH-LOOP-9** | CI Preflight (provisioning + manifest executability) | Step 16 Item 1.5 | Every CI entrypoint runs in a clean room with zero missing tools, zero undeclared dependencies, zero Manifest defects, and no gate `N/A`/qualified pass on a root this change touched |
 
 **SH-1 — Attempt budget.** Each loop is allowed a **maximum of 3 remediation attempts**. One attempt
 is one complete `fix → re-verify` cycle. The initial verification run that first detects the failure
@@ -176,7 +177,7 @@ loop ONLY, and ONLY under option A or B; every other loop keeps the counter it a
 1. **Resume check first**: if `runtime-artifacts/aire-state.md` exists, read it. If `## Tracker` records a DIFFERENT ticket/epic, ask the user which to keep — NEVER silently overwrite. If it records this same ticket with `Workflow Type: enhancement`, resume from the recorded stage per `common/session-continuity.md`. If `## Tracker` doesn't exist yet, ask the Tracker Selection question (`common/tracker-sync.md` Section 1) first.
 2. Dispatch on `## Tracker` → `Type`, per `common/tracker-sync.md` Section 8:
    - **JIRA/ADO/GITHUB**: parse the `<TICKET-ID>` from the invocation (key/ID/number or URL). If missing, ask for it and wait. Fetch the ticket (`getJiraIssue` / `az boards work-item show` / `gh issue view`) — issue type **Story or Task** (a Bug should go through `bug-fix` instead — warn if it's a Bug and confirm before continuing). Save summary, description, and acceptance criteria to `spec/plans/enhancement-brief.md`.
-   - **LOCAL**: no ID expected. Ask ` Describe the enhancement (what should change, and why):`, capture the answer, and mint a local ID `ENH-LOCAL-N` (next unused N found by scanning `runtime-artifacts/aire-state.md`) to use as `<TICKET-ID>` for the rest of this flow. Write the captured description directly to `enhancement-brief.md`.
+   - **LOCAL**: no ID expected. Ask ` Describe the enhancement (what should change, and why):`, capture the answer, and mint a local ID `ENH-LOCAL-N` (next unused N found by scanning `runtime-artifacts/aire-state.md`) to use as `<TICKET-ID>` for the rest of this flow. Write the captured description directly to `spec/plans/enhancement-brief.md`.
    The enhancement-brief is the intake brief: it defines WHAT to enhance and is the primary input to every later stage.
 3. Record in `runtime-artifacts/aire-state.md`:
    ```markdown
@@ -213,7 +214,7 @@ Exactly per the epic flow: if RE artifacts exist anywhere in the repo (or restor
 
 ## Step 4 — Requirements Analysis (as-is, enhancement-scoped)
 
-1. Execute `planning/requirements-analysis.md` with `enhancement-brief.md` as the primary input. Depth will usually be **minimal/standard** (the ticket defines the enhancement); use comprehensive only if it is genuinely complex or high-risk. Its Step 1.5 reads the `## Context Project` answer captured by `ticket-implement` (Step 3.5) and, if `Use Artifacts: Yes`, uses **only** the recorded path as background context about the existing system — do NOT re-ask.
+1. Execute `planning/requirements-analysis.md` with `spec/plans/enhancement-brief.md` as the primary input. Depth will usually be **minimal/standard** (the ticket defines the enhancement); use comprehensive only if it is genuinely complex or high-risk. Its Step 1.5 reads the `## Context Project` answer captured by `ticket-implement` (Step 3.5) and, if `Use Artifacts: Yes`, uses **only** the recorded path as background context about the existing system — do NOT re-ask.
 2. Extension opt-ins are presented as usual; Security Baseline is always enforced.
 3. **Wait for explicit approval** of requirements.md.
 4. On approval: commit the planning artifacts on the **enhancement branch**. 🔴 **Do NOT raise a PR here** — the single `[ENH]` PR is raised at the end, after code review approval.
@@ -224,7 +225,7 @@ Exactly per the epic flow: if RE artifacts exist anywhere in the repo (or restor
 **Purpose**: Find WHERE the enhancement lands — the files/components to change and the blast radius — for an accurate implementation plan.
 
 1. Using the RE artifacts, the enhancement-brief, and code search (grep/glob/read), identify the **affected files/components**: where the new behavior plugs in, what must change, and the blast radius (callers, consumers, shared files, tests). Cite explicit **`file:line-range`** evidence per touch point.
-2. Write `spec/impact-analysis.md`:
+2. Write `spec/plans/impact-analysis.md`:
    ```markdown
    # Impact Analysis — [TICKET-ID]
    ## Change Approach
@@ -235,7 +236,7 @@ Exactly per the epic flow: if RE artifacts exist anywhere in the repo (or restor
    ## Blast Radius
    [Callers/consumers/tests that could be impacted by the change]
    ```
-3. ** AUTOMATIC — no approval gate.** Present the Impact Analysis summary as an **announcement** and proceed straight to Step 6 — do NOT ask for approval and do NOT block. The analysis is evidence-based (`file:line` citations), is re-validated against current code at Step 11.2, and is re-surfaced inside the announced implementation plan (Step 11). Log in runtime-artifacts/audit.md that it was completed and auto-approved, with the affected-file list. If the user volunteers a correction, update `impact-analysis.md`, re-announce, and continue (an interrupt, not a gate). This document is the primary planning input for the implementation phase.
+3. ** AUTOMATIC — no approval gate.** Present the Impact Analysis summary as an **announcement** and proceed straight to Step 6 — do NOT ask for approval and do NOT block. The analysis is evidence-based (`file:line` citations), is re-validated against current code at Step 11.2, and is re-surfaced inside the announced implementation plan (Step 11). Log in runtime-artifacts/audit.md that it was completed and auto-approved, with the affected-file list. If the user volunteers a correction, update `spec/plans/impact-analysis.md`, re-announce, and continue (an interrupt, not a gate). This document is the primary planning input for the implementation phase.
 
 ## Step 6 — Single Story (replaces User Stories + Dependency Graph)
 
@@ -318,7 +319,7 @@ After the design stages complete (or are all skipped), mark in `runtime-artifact
 # Enhancement Analysis Done — Design Artifacts Pushed
 
  **Ticket**: [TICKET-ID] — [title]
- **Impact**: [N] files identified in spec/impact-analysis.md
+ **Impact**: [N] files identified in spec/plans/impact-analysis.md
  Design stages: [list which ran vs were skipped]
  Branch: enhancement/[TICKET-ID]-[title] (cut from [base branch]) — analysis + design **committed and pushed** ([commit hash])
 
@@ -366,14 +367,16 @@ Same as the bug flow: discover and run the **entire repo's unit test suite** wit
 ** BASELINE STATIC EVAL RUN (MANDATORY, AUTOMATIC — same moment, before any change)**: also run the **Static Eval Gate checks D1–D7** per `common/eval-framework.md` Section 2 (lint, type check, SAST, dependency vulnerabilities, licences, complexity, secrets) and save the raw output to `reports/eval-evidence/enhancement-<TICKET-ID>/static/baseline/`. Exactly like the regression baseline: **every finding is pre-existing debt, not this enhancement's** — logged, not fixed, never blocking; it exists only so Step 14.5 can tell this change's findings apart.
 
 ** BOOTSTRAP FIRST (eval-framework.md Section 2.3, MANDATORY — same step, immediately BEFORE the baseline run)**: for every check with **no config in the repo**, create the minimal *recommended* config (eslint/ruff/golangci, tsconfig/mypy, `.gitleaks.toml`, the linter's complexity rule at the `tests/.evals/config.json` threshold) so the check is actually runnable. **A check whose config exists is used AS-IS** — the repo's own standards win, never overridden. Announce every file created and log it (`bootstrap` block of `eval.json`) — it adds files to the user's repo, so it is never silent; those files commit with the enhancement. 🔴 **AND INSTALL THE TOOLS — retried, never skipped (Section 2.4.1)**: for every gate, work the chain *already present → package manager → alternative installer → **OCI image via Podman***, 3 attempts per rung, verifying each install with a version command. Recording a gate `N/A` for a missing tool **before the Podman rung has been tried** is a bootstrap failure, not an `N/A`. If the whole chain is exhausted, **HALT with the per-rung report** — never continue with an unmeasured gate, and never phrase deferred setup as `N/A` ("not wired yet", "not installed", "not enabled yet" — all ERROR, Section 2.5.2).
+
+🔴 **A MISSING TOOL IS NEVER A QUESTION.** Observed in a real run: the workflow reached D1/D5/D6 with no linter, licence scanner or complexity tool configured for the stack, and **asked the user** *"How should I handle the remaining static-eval gaps?"* with a recommended option. That is a double violation — this workflow asks nothing after the story key, and a tooling gap already has a defined answer: **run the Section 2.4.1 bootstrap chain** (already present -> package manager -> alternative installer -> **OCI image via Podman**), 3 attempts per rung. If the whole chain is exhausted, **HALT with the per-rung report** — which is a halt, not a question, and never a proposal to skip the gate. 🔴 Never ask the user to choose between closing a gate and deferring it; deferring is not on the menu (Section 2.5.2).
 - 🔴 **ORDER MATTERS**: bootstrap → baseline → implement → Step 14.5 → diff. A config created AFTER the baseline would make both runs measure under **different rules**, blaming this change for findings on pre-existing code.
 - 🔴 Recommended presets, never strict/all, and **never a config that pre-suppresses findings**.
 - 🔴 A check is recorded `N/A` **only after the full Section 2.4.1 install chain — including the Podman image rung — has been attempted and recorded**, and only for a reason on the Section 2.5.1 closed list (inapplicable to this stack / to this work unit / no such tool exists). If the chain is exhausted, that is an **ERROR: HALT** with the per-rung report — never `N/A`, never silently skipped, and never phrased as deferred work ("not wired yet", "not installed", "not enabled yet").
 
 ## Step 11 — Implementation Plan ( announced, not gated)
 
-1. Build the plan from `impact-analysis.md` + the design artifacts, using `code-generation.md`'s Part 1 planning format (checkboxed steps), ending with the mandatory Unit Test & Coverage step, the API & Contract Testing Gate (Step 13.5, when the enhancement touches an API endpoint), and the Full Regression Gate (Step 14). ** GROUND THE PLAN in the previously generated docs** — every step MUST trace back to the ticket's acceptance criteria, `enhancement-brief.md`, `requirements.md`, the impact analysis, and any design artifacts; never invent scope, files, or behavior not backed by them. ** REQ-ID THREAD**: tag every plan step with the REQ-ID(s)/AC(s) it implements and self-check that every REQ-ID from `requirements.md` and every AC of the single story appears in ≥1 step before presenting the plan (`common/requirements-traceability.md` Rules 5 & 7).
-2. **Re-validate the impact analysis against current code.** If the plan must touch files NOT in the impact analysis, add them to `impact-analysis.md` first .
+1. Build the plan from `spec/plans/impact-analysis.md` + the design artifacts, using `code-generation.md`'s Part 1 planning format (checkboxed steps), ending with the mandatory Unit Test & Coverage step, the API & Contract Testing Gate (Step 13.5, when the enhancement touches an API endpoint), and the Full Regression Gate (Step 14). ** GROUND THE PLAN in the previously generated docs** — every step MUST trace back to the ticket's acceptance criteria, `spec/plans/enhancement-brief.md`, `requirements.md`, the impact analysis, and any design artifacts; never invent scope, files, or behavior not backed by them. ** REQ-ID THREAD**: tag every plan step with the REQ-ID(s)/AC(s) it implements and self-check that every REQ-ID from `requirements.md` and every AC of the single story appears in ≥1 step before presenting the plan (`common/requirements-traceability.md` Rules 5 & 7).
+2. **Re-validate the impact analysis against current code.** If the plan must touch files NOT in the impact analysis, add them to `spec/plans/impact-analysis.md` first .
 3. ** Announce the plan and proceed — NO approval gate**:
    1. **Log the finalized plan** in `runtime-artifacts/audit.md` (ISO 8601 timestamp) under a **plain heading** — e.g. `## Implementation Plan — Finalized (auto-approved, no gate) (Enhancement [TICKET-ID])` — with the plan path, the step count and the REQ/AC trace summary. **The word "GATE" must NOT appear in the heading.**
    2. Present the plan as an **announcement** (NOT a question):
@@ -388,13 +391,13 @@ Same as the bug flow: discover and run the **entire repo's unit test suite** wit
 
 Write `spec/behavior/enh-<TICKET-ID>.feature` per `common/behavior-spec.md` Section 2 — one Gherkin scenario per acceptance criterion, `@AC-n` tagged, failure paths included (for a bug, including the scenario that reproduces the defect). Authored **BEFORE** the implementation: it is the contract, not a description of what was built.
 
-🔴 **That is the ONLY spec file this work unit gets.** No per-unit requirements, architecture, constraints or knowledge-graph document. The agent reads the tracker item for acceptance criteria, `requirements.md` for the covered REQ-IDs, `spec/plans/architecture.md` for design constraints, and `tests/.evals/config.json` for thresholds — copying any of that per unit only creates something that can drift.
+🔴 **That is the ONLY spec file this work unit gets.** No per-unit requirements, architecture, constraints or deep-dive document. The agent reads the tracker item for acceptance criteria, `requirements.md` for the covered REQ-IDs, `spec/plans/architecture.md` for design constraints, and `tests/.evals/config.json` for thresholds — copying any of that per unit only creates something that can drift.
 
 Announce the file path and the scenario/AC counts. Log both in runtime-artifacts/audit.md.
 
 ## Step 12 — Generate the Enhancement
 
-Execute the approved plan step by step on the enhancement branch, marking each checkbox `[x]` in the same interaction it completes. ** All application code goes into `src/`** (or the recorded `## Code Root` — `common/directory-structure.md`), test code into `tests/`, and nothing into `spec/`. ** PLAN FIDELITY**: implement EXACTLY the announced plan — no unplanned files, features, refactors, or scope drift. If a deviation is genuinely needed, **revise the plan document (Step 11), announce the revision (what changed and why) in your output and in runtime-artifacts/audit.md, and continue** — never applied silently, and never via an approval prompt. Write code to the workspace root per the existing project structure. Log progress in runtime-artifacts/audit.md.
+Execute the approved plan step by step on the enhancement branch, marking each checkbox `[x]` in the same interaction it completes. ** All application code goes into `src/`** (or the recorded `## Code Root` — `common/directory-structure.md`) and nothing into `spec/`. 🔴 **TESTS GO IN THE REPO-ROOT `tests/` TREE — NEVER UNDER `src/` AND NEVER UNDER THE CODE ROOT**: unit tests -> **`tests/unit/`**, Gherkin step definitions -> **`tests/behavior/steps/`** (the tree `tests/.evals/behavior/run.sh` executes inside Podman), Playwright -> `tests/e2e/`. The `## Code Root` remapping above applies to **application code ONLY** — a brownfield repo whose code lives in `app/` or `packages/api/src` still writes its tests to the repo-root `tests/`, never `app/tests/` or `packages/api/src/tests/`. This is also what the manifest's `testPaths` records (`common/eval-framework.md` Section 1.1) and what the Podman mount and the coverage gate look at, so a test written anywhere else is invisible to both gates. ** PLAN FIDELITY**: implement EXACTLY the announced plan — no unplanned files, features, refactors, or scope drift. If a deviation is genuinely needed, **revise the plan document (Step 11), announce the revision (what changed and why) in your output and in runtime-artifacts/audit.md, and continue** — never applied silently, and never via an approval prompt. Write code to the workspace root per the existing project structure. Log progress in runtime-artifacts/audit.md.
 
 ## Step 13 — Unit Tests + Coverage Gate (threshold from `tests/.evals/config.json`)
 
@@ -410,7 +413,7 @@ Execute the tiered behavioural gate defined in `common/behavior-spec.md` Section
 2. **B2 — Cumulative scope**: every **other** feature file already in the repo — earlier work units in this cycle plus everything from prior cycles. **Verification**: all green. 🔴 A B2 failure is THIS unit's problem — it turned that scenario red, so it fixes it. "That scenario belongs to another story" is not a defence.
 3. **B3 — Epic scope** (🔴 **last work unit of the cycle ONLY**): B1 ∪ B2 **plus** the cross-unit journeys in `spec/behavior.feature`, tagged `@REQ-<id>`. 🔴 Detect "last" from **PR MERGE STATE, never the tracker status label** (`common/behavior-spec.md` Section 6.1): for every OTHER work unit read its PR from the Story Tracker and verify live with `gh pr view <n> --json state`. **All others merged → this is the last unit → RUN B3** — including the normal case where those units are still `🔵 In Development` awaiting ve sign-off, because the label lags the merge. Defer ONLY when a unit has no merged PR, recording `B3: N/A — deferred, <n> units with unmerged PRs (<list with PR state>)`. 🔴 Never defer on a status label alone, and never report a deferred B3 as a pass.
 
-**Execution** — 🔴 **every tier runs in a Podman pod** (`common/behavior-spec.md` Section 5): the image built from `tests/.evals/behavior/Containerfile`, plus a fresh ephemeral **test database** where the repo needs one, invoked through `tests/.evals/behavior/run.sh <tier>` — the same image and command a developer runs locally, so a CI-only failure is impossible by construction. 🔴 **The ONLY permitted native run is Podman not being installed** (proven by `command -v podman`), recorded as `"containerised": false, "reason": "podman not installed"`. 🔴 "No browser needed", "backend only", "no new dependency" and "faster natively" are **forbidden justifications** — a tier recorded that way is a gate violation, not a pass. Never fall back to the Docker CLI. A tier runs only once the previous is green.
+**Execution** — 🔴 **every tier runs in a Podman pod** (`common/behavior-spec.md` Section 5): the image built from `tests/.evals/behavior/Containerfile`, plus a fresh ephemeral **test database** where the repo needs one, invoked through `tests/.evals/behavior/run.sh <tier>` with **`AIRE_STORY_KEY` exported to THIS work unit's key** (e.g. `story-1.10`, the stem of its own `spec/behavior/<key>.feature`) — `podman run -e AIRE_STORY_KEY=<key> …`. 🔴 Without it B1 cannot identify which unit is under test and refuses to guess; it used to take the lexicographically last feature file, which returns `story-1.9` when `story-1.10` is the unit being built — passing B1 without ever testing it — the same image and command a developer runs locally, so a CI-only failure is impossible by construction. 🔴 **The ONLY permitted native run is Podman not being installed** (proven by `command -v podman`), recorded as `"containerised": false, "reason": "podman not installed"`. 🔴 "No browser needed", "backend only", "no new dependency" and "faster natively" are **forbidden justifications** — a tier recorded that way is a gate violation, not a pass. Never fall back to the Docker CLI. A tier runs only once the previous is green.
 
 **Evidence** — per tier, to `reports/behavior-test-evidence/enhancement-<TICKET-ID>/<b1|b2|b3>/`: `behavior-test-run.log`, the **mandatory machine-readable** `behavior-test-report.*`, and an `evidence-manifest.md` recording the image ref + digest, the exact command, whether it ran containerised, the tier's feature-file set, and every scenario with its tag and result. A raw log alone does NOT satisfy the gate.
 
@@ -471,7 +474,7 @@ The review's own verdict decides what happens next. **Do NOT present an A/B choi
       Verdict: [clean — all ACs Met / findings: 🔴 X  🟠 Y]
    ➡ [Proceeding to commit + [ENH] PR. | Findings found — remediating them automatically now (round [n]).]
    ```
-1. **Verdict clean (zero 🔴 and zero 🟠)** → go to **Step 16 (Commit, Push & Raise the `[ENH]` PR)**.
+1. **Verdict clean (zero 🔴 and zero 🟠)** → go to **Step 15.5 (Manifest Reconciliation)**, then Step 16.
 2. **Any 🔴 or 🟠 finding** → go to **15c (SH-LOOP-5)**. The framework fixes its own findings within a budget of **3 remediation rounds**; it hands them back to the user only when that budget is exhausted (SH-4), and then it HALTS instead of raising the `[ENH]` PR.
 3. **MANDATORY**: log the routing decision in runtime-artifacts/audit.md under a plain heading (`## Review Verdict — Clean, Proceeding to PR (Enhancement [TICKET-ID])` or `## Review Verdict — Findings, Auto-Remediating (Enhancement [TICKET-ID])`) with the full findings list by severity. **No "GATE" in the heading, and no user response to record.**
 
@@ -484,7 +487,7 @@ The review's own verdict decides what happens next. **Do NOT present an A/B choi
 4. **MANDATORY — audit the complete remediate log**: the round number (`[n] of 3`), which findings were fixed (by severity), files changed, unit-test evidence, regression comparison. Record the complete log, not a summary.
 5. **Re-review automatically**: return to **15a** (produces the next report version `v[X+1]`), then **15b** again.
 6. **Loop control**:
-   - **Verdict clean** → the loop exits successfully → **Step 16 (Commit, Push & Raise the `[ENH]` PR)**.
+   - **Verdict clean** → the loop exits successfully → **Step 15.5 (Manifest Reconciliation)**, then Step 16.
    - **Findings remain AND attempts spent < 3** → increment the counter and return to step 1.
    - **Findings remain AND attempts spent = 3** → **exhausted** → step 7.
    - **Stall (SH-5)** — a round produced **no code change at all** AND the next review returned an **identical** finding set → the loop cannot progress. Treat as exhausted immediately, regardless of attempts remaining → step 7, noting the early end.
@@ -497,18 +500,44 @@ The review's own verdict decides what happens next. **Do NOT present an A/B choi
 ### 15d. Status
 The ticket stays `🔵 In Development` throughout review and remediation.
 
+## Step 15.5 — Manifest Reconciliation (MANDATORY, AUTOMATIC — after local gates pass, BEFORE the commit)
+
+Identical mechanism to `dev-implement.md` Section D Step 1.5 — see `common/ci-pipeline-generation.md`
+Section 4.0f for the full contract. Write ONE NEW file, `tests/.evals/ci-manifest.d/enh-[TICKET-ID].json`,
+from what Steps 13/13.5/14.5 **already executed for real** for every root this enhancement touched —
+never re-derived, never guessed. Append-only; never edit `tests/.evals/config.json` or another work
+unit's fragment. Re-run `validate-pipeline.{sh,ps1}` and confirm it passes before proceeding to Step 16.
+Include the fragment in the same commit as the change. 🔴 **Write the COMPLETE entry per Section 4.0f's field table** — including `runtimeVersion`,
+`coverageReportPath`/`coverageFormat`, `noTestsExitCode`, `dependsOn`, `toolchainSetup`, and `tools`
+**paired with** `toolInstallCommands`. A name in `tools` with no matching `toolInstallCommands` entry is a
+hard Manifest defect, and an omitted `dependsOn` silently disables monorepo diff-scoping.
+
 ## Step 16 — Commit, Push & Raise the `[ENH]` PR —  FULLY AUTOMATIC
 
 🔴 **A clean review verdict is the ONLY thing that triggers this step.** An exhausted SH-LOOP-5 (15c.7) does NOT reach it — that path HALTS at the gate and waits for the user. The commit, push,
 PR creation, labels, tracker update (Step 17) and auto PR review (Step 18) run **automatically with
 no prompts**. Announce each action; never ask whether to do it.
 
-1. Verify the active branch is the Enhancement Branch (switch automatically and announce if not). Stage and commit (code + tests + updated docs) with the framework signature trailer, `[N]` read live from CLAUDE.md:
+1. Verify the active branch is the Enhancement Branch (switch automatically and announce if not). Stage and commit (code + tests + updated docs, plus the Step 15.5 manifest fragment if one was written) with the framework signature trailer, `[N]` read live from CLAUDE.md:
    ```
    git add <files>
    git commit -m "[ENH][TICKET-ID] <concise enhancement summary>" -m "AIRE-Version: [N]"
    ```
    Record the hash in runtime-artifacts/audit.md.
+1.5. **🔴 CI PREFLIGHT GATE (MANDATORY, AUTOMATIC — after this commit, BEFORE the push)** — identical
+   mechanism to `dev-implement.md` Section D Step 2.5; `common/ci-pipeline-generation.md` **Section 4.0i**
+   is the contract. In a **clean room** (fresh venv / empty `node_modules` / throwaway Podman container —
+   never this agent's ambient shell, never an install the manifest does not declare), against the
+   **committed** change with `BASE_SHA="$(git merge-base origin/<base-branch> HEAD)"`, run CI's own
+   entrypoints — `ci-manifest-runner.sh install` → `build` → `run-static-evals.sh` →
+   `ci-manifest-runner.sh coverage` — plus the P1 declaration check over the merged manifest. **FAIL** on a
+   missing tool, an undeclared dependency (`ModuleNotFoundError` / `requires the <pkg> package`), a
+   Manifest defect, or a gate reporting `N/A`/a qualified pass on a root this diff touched. Fix the
+   **declaration** (this enhancement's own fragment for `tools`+`toolInstallCommands`; the repo's own
+   dependency declaration for a test/runtime package) — never the gate, never a bare install inside CI
+   YAML. This is **SH-LOOP-9**, capped at **3 attempts** (SH-1); on exhaustion apply SH-4 — HALT with the
+   Retry-Limit Report, no push and no PR. Reuse Step 13.2's containerised behavioural evidence rather than
+   re-running it.
 2. Invoke **`pr-generator`** (as-is) **in WORKFLOW mode**, passing **target branch = the Base Branch** from `## Branching`. The PR title carries the **`[ENH]`** prefix; the skill applies the `ai-generated` and `aire-v[N]` labels (plus the `AIRE Framework: v[N]` line in the PR body).  **Its Phase 5 confirmation is SKIPPED — this workflow has no gates; the Implementation Checkpoint authorized the whole of Phase B.** It announces the draft and raises the PR without asking.
 3. Record the PR URL in `## Branching` (`Enhancement PR: <url>`) and the full outcome in runtime-artifacts/audit.md.
 
@@ -517,6 +546,23 @@ no prompts**. Announce each action; never ask whether to do it.
 1. Story Tracker: keep Status = `🔵 In Development`; set **End** = today and **Recorded** = now; note the PR URL.
 2. 🔴 **Do NOT transition the tracker ticket to "Ready for Testing"** — the ticket stays In Development after the PR. Promotion is ve's, via `ve-list-work` Option B, run **on `<enhancement-branch>` while the `[ENH]` PR is still OPEN** — never post-merge on the base branch (see Step 19). Add a **comment** on the ticket (**automatic** — part of the prompt-free post-review sequence, same as the bug flow), dispatched per `common/tracker-sync.md` Section 10 (LOCAL: note on the local entry), linking the PR with evidence (tests passing, coverage %, regression clean vs baseline).
 3. Log in runtime-artifacts/audit.md (with the TRACKER ITEM field).
+
+## Step 17.5 — CI Attestation Gate (MANDATORY, AUTOMATIC — after the PR is raised, before Step 18)
+
+Identical mechanism to `dev-implement.md` Section D Step 8. Confirm a run of
+`agentic-eval-pipeline.yml` exists for this PR's head SHA, watch it to conclusion, download `eval.json`,
+and cross-check CI's `gates` block against this enhancement's own local gate results. A gate that passed
+locally but is absent/`N/A` in CI is a **manifest defect** — go back to Step 15.5, extend the fragment
+(never remove another unit's entry), re-run the Step 16.1.5 preflight for that root, commit, push,
+re-verify. Bounded at 3 attempts; on exhaustion, HALT with the Retry-Limit Report. On a clean match, log
+the attestation and proceed.
+
+🔴 **SCOPE — this gate repairs CI configuration only** (`common/ci-pipeline-generation.md` **Section 6.6**):
+this workflow owns the manifest fragment, the repo's dependency declarations, the pipeline scripts and
+tool pins; **CI self-repair owns application code and tests**. A Code-class CI failure (Section 6.4) is
+recorded here and left to self-repair — never fixed from this gate and never charged to an attestation
+attempt. Never push into an in-flight self-repair run: wait for it, fetch, rebase onto its commit, re-read;
+never force-push and never revert its commit.
 
 ## Step 18 — AUTO PR Review
 

@@ -67,6 +67,7 @@ this file that describes a loop as uncapped, unbounded, or repeating "until clea
 | **SH-LOOP-4** | Static Eval D1–D7 | Step 7.5 | Zero NEW findings above the `tests/.evals/config.json` thresholds on changed files |
 | **SH-LOOP-6** | Judge Gates J1 + J2 | Step 8a Item 2.5 | `J1 ≥ llmJudgeArchitectureScoreMin` **and** `J2 ≥ llmJudgeSecurityScoreMin` (`N/A` passes) |
 | **SH-LOOP-5** | Auto-Remediate (code review + security findings) | Step 8c | Review verdict clean — zero 🔴 and zero 🟠 |
+| **SH-LOOP-9** | CI Preflight (provisioning + manifest executability) | Step 9 Item 1.5 | Every CI entrypoint runs in a clean room with zero missing tools, zero undeclared dependencies, zero Manifest defects, and no gate `N/A`/qualified pass on a root this fix touched |
 
 **SH-1 — Attempt budget.** Each loop is allowed a **maximum of 3 remediation attempts**. One attempt
 is one complete `fix → re-verify` cycle. The initial verification run that first detects the failure
@@ -174,7 +175,7 @@ loop ONLY, and ONLY under option A or B; every other loop keeps the counter it a
 1. Read `runtime-artifacts/aire-state.md`. Require `## Tracker` with `Workflow Type: bug` + `Parent Ticket`, and `## Branching` with `Bug Branch`. If missing, STOP: tell the user to run `ticket-implement <TICKET-ID>` first — this workflow only implements a prepared fix.
 2. Verify the state records `Design complete — awaiting bug-fix-implement` (or later). If Planning is incomplete, STOP and say which stage is pending.
 3. **Switch to the bug branch**: `git fetch origin`, checkout the recorded Bug Branch, `git pull --ff-only` if it has an upstream. Confirm with `git branch --show-current`. 🔴 All work happens on this ONE branch — never cut another branch.
-4. Read `spec/impact-analysis.md` and `bug-brief.md` — they drive the plan.
+4. Read `spec/plans/impact-analysis.md` and `spec/plans/bug-brief.md` — they drive the plan.
 
 ## Step 2 — Ticket → 🔵 In Development (automatic)
 
@@ -201,14 +202,16 @@ Running `bug-fix-implement` IS the claim. Without asking, dispatch on `## Tracke
 4. If the repo has no test suite at all, record that explicitly — the post-fix regression gate then covers only the new tests.
 5. ** BASELINE STATIC EVAL RUN (MANDATORY, AUTOMATIC — same moment, before any change)**: run the **Static Eval Gate checks D1–D7** per `common/eval-framework.md` Section 2 (lint, type check, SAST, dependency vulnerabilities, licences, complexity, secrets) and save the raw output to `reports/eval-evidence/bug-<TICKET-ID>/static/baseline/`. Exactly like the regression baseline: **every finding is pre-existing debt, not this fix's** — logged, not fixed, never blocking. It exists only so Step 7.5 can tell this fix's findings apart. Log the baseline in runtime-artifacts/audit.md.
    - ** BOOTSTRAP FIRST (eval-framework.md Section 2.3, MANDATORY — same step, immediately BEFORE the baseline run)**: for every check with **no config in the repo**, create the minimal *recommended* config (eslint/ruff/golangci, tsconfig/mypy, `.gitleaks.toml`, the linter's complexity rule at the `tests/.evals/config.json` threshold) so the check is actually runnable. **A check whose config exists is used AS-IS** — the repo's own standards win, never overridden. Announce every file created and log it (`bootstrap` block of `eval.json`) — it adds files to the user's repo, so it is never silent; those files commit with the fix. 🔴 **AND INSTALL THE TOOLS — retried, never skipped (Section 2.4.1)**: for every gate, work the chain *already present → package manager → alternative installer → **OCI image via Podman***, 3 attempts per rung, verifying each install with a version command. Recording a gate `N/A` for a missing tool **before the Podman rung has been tried** is a bootstrap failure, not an `N/A`. If the whole chain is exhausted, **HALT with the per-rung report** — never continue with an unmeasured gate, and never phrase deferred setup as `N/A` ("not wired yet", "not installed", "not enabled yet" — all ERROR, Section 2.5.2).
+
+🔴 **A MISSING TOOL IS NEVER A QUESTION.** Observed in a real run: the workflow reached D1/D5/D6 with no linter, licence scanner or complexity tool configured for the stack, and **asked the user** *"How should I handle the remaining static-eval gaps?"* with a recommended option. That is a double violation — this workflow asks nothing after the story key, and a tooling gap already has a defined answer: **run the Section 2.4.1 bootstrap chain** (already present -> package manager -> alternative installer -> **OCI image via Podman**), 3 attempts per rung. If the whole chain is exhausted, **HALT with the per-rung report** — which is a halt, not a question, and never a proposal to skip the gate. 🔴 Never ask the user to choose between closing a gate and deferring it; deferring is not on the menu (Section 2.5.2).
      - 🔴 **ORDER MATTERS**: bootstrap → baseline → fix → Step 7.5 → diff. A config created AFTER the baseline would make both runs measure under **different rules**, blaming this fix for findings on pre-existing code.
      - 🔴 Recommended presets, never strict/all, and **never a config that pre-suppresses findings**.
    - 🔴 A check is recorded `N/A` **only after the full Section 2.4.1 install chain — including the Podman image rung — has been attempted and recorded**, and only for a reason on the Section 2.5.1 closed list (inapplicable to this stack / to this work unit / no such tool exists). If the chain is exhausted, that is an **ERROR: HALT** with the per-rung report — never `N/A`, never silently skipped, and never phrased as deferred work ("not wired yet", "not installed", "not enabled yet").
 
 ## Step 4 — Fix Plan ( announced, not gated)
 
-1. Build the fix plan from `impact-analysis.md` + the design artifacts, using `code-generation.md`'s Part 1 planning format (checkboxed steps), ending with the mandatory Unit Test & Coverage step, the API & Contract Testing Gate (Step 6.5, when the fix touches an API endpoint), and the Full Regression Gate (Step 7). ** TRACE THREAD (bug variant, `common/requirements-traceability.md` Rule 7)**: tag every plan step with the `bug-brief.md` expected-behavior statement(s) and `impact-analysis.md` entry it addresses, and self-check that every expected-behavior statement and every impact-analysis touch point appears in ≥1 step before presenting the plan.
-2. **Re-validate the impact analysis against current code.** If the plan must touch files NOT in the impact analysis: add them to `impact-analysis.md` and **re-run the Defect Provenance Analyst (`agents/defect-provenance-analyst.md`, per bug-fix Step 5b) on the newly implicated defective lines** — same line-level procedure (trace each defective line to its introducing commit); if any is AI-generated and the ticket isn't labeled yet, offer the `ai-generated-defect` label (confirm-first, verified, logged). Also run **bug-fix Step 5c** on any newly resolved originating ticket keys — create the "is caused by" link automatically (no confirmation), skipping keys already linked, verified and logged.
+1. Build the fix plan from `spec/plans/impact-analysis.md` + the design artifacts, using `code-generation.md`'s Part 1 planning format (checkboxed steps), ending with the mandatory Unit Test & Coverage step, the API & Contract Testing Gate (Step 6.5, when the fix touches an API endpoint), and the Full Regression Gate (Step 7). ** TRACE THREAD (bug variant, `common/requirements-traceability.md` Rule 7)**: tag every plan step with the `spec/plans/bug-brief.md` expected-behavior statement(s) and `spec/plans/impact-analysis.md` entry it addresses, and self-check that every expected-behavior statement and every impact-analysis touch point appears in ≥1 step before presenting the plan.
+2. **Re-validate the impact analysis against current code.** If the plan must touch files NOT in the impact analysis: add them to `spec/plans/impact-analysis.md` and **re-run the Defect Provenance Analyst (`agents/defect-provenance-analyst.md`, per bug-fix Step 5b) on the newly implicated defective lines** — same line-level procedure (trace each defective line to its introducing commit); if any is AI-generated and the ticket isn't labeled yet, offer the `ai-generated-defect` label (confirm-first, verified, logged). Also run **bug-fix Step 5c** on any newly resolved originating ticket keys — create the "is caused by" link automatically (no confirmation), skipping keys already linked, verified and logged.
 3. ** Announce the plan and proceed — NO approval gate**:
    1. **Log the finalized plan** in `runtime-artifacts/audit.md` (ISO 8601 timestamp) under a **plain heading** — e.g. `## Fix Plan — Finalized (auto-approved, no gate) (Bug [JIRA-ID])` — with the plan path, the step count and the trace summary. **The word "GATE" must NOT appear in the heading.**
    2. Present the plan as an **announcement** (NOT a question):
@@ -223,13 +226,13 @@ Running `bug-fix-implement` IS the claim. Without asking, dispatch on `## Tracke
 
 Write `spec/behavior/bug-<TICKET-ID>.feature` per `common/behavior-spec.md` Section 2 — one Gherkin scenario per acceptance criterion, `@AC-n` tagged, failure paths included (for a bug, including the scenario that reproduces the defect). Authored **BEFORE** the implementation: it is the contract, not a description of what was built.
 
-🔴 **That is the ONLY spec file this work unit gets.** No per-unit requirements, architecture, constraints or knowledge-graph document. The agent reads the tracker item for acceptance criteria, `requirements.md` for the covered REQ-IDs, `spec/plans/architecture.md` for design constraints, and `tests/.evals/config.json` for thresholds — copying any of that per unit only creates something that can drift.
+🔴 **That is the ONLY spec file this work unit gets.** No per-unit requirements, architecture, constraints or deep-dive document. The agent reads the tracker item for acceptance criteria, `requirements.md` for the covered REQ-IDs, `spec/plans/architecture.md` for design constraints, and `tests/.evals/config.json` for thresholds — copying any of that per unit only creates something that can drift.
 
 Announce the file path and the scenario/AC counts. Log both in runtime-artifacts/audit.md.
 
 ## Step 5 — Generate the Fix
 
-Execute the announced plan step by step on the bug branch, marking each checkbox `[x]` in the same interaction it completes. ** All application code goes into `src/`** (or the recorded `## Code Root` — `common/directory-structure.md`), test code into `tests/`, and nothing into `spec/`. ** PLAN FIDELITY**: implement EXACTLY the announced plan — no unplanned files, features, refactors, or scope drift; keep the fix consistent with the impact analysis and design docs the plan was grounded in. If mid-coding you discover the plan must change, **revise the plan document, announce the revision (what changed and why) in your output and in runtime-artifacts/audit.md, and continue** — never apply a deviation silently, and never ask for approval. Write code to the workspace root per the existing project structure. Log progress in runtime-artifacts/audit.md.
+Execute the announced plan step by step on the bug branch, marking each checkbox `[x]` in the same interaction it completes. ** All application code goes into `src/`** (or the recorded `## Code Root` — `common/directory-structure.md`) and nothing into `spec/`. 🔴 **TESTS GO IN THE REPO-ROOT `tests/` TREE — NEVER UNDER `src/` AND NEVER UNDER THE CODE ROOT**: unit tests -> **`tests/unit/`**, Gherkin step definitions -> **`tests/behavior/steps/`** (the tree `tests/.evals/behavior/run.sh` executes inside Podman), Playwright -> `tests/e2e/`. The `## Code Root` remapping above applies to **application code ONLY** — a brownfield repo whose code lives in `app/` or `packages/api/src` still writes its tests to the repo-root `tests/`, never `app/tests/` or `packages/api/src/tests/`. This is also what the manifest's `testPaths` records (`common/eval-framework.md` Section 1.1) and what the Podman mount and the coverage gate look at, so a test written anywhere else is invisible to both gates. ** PLAN FIDELITY**: implement EXACTLY the announced plan — no unplanned files, features, refactors, or scope drift; keep the fix consistent with the impact analysis and design docs the plan was grounded in. If mid-coding you discover the plan must change, **revise the plan document, announce the revision (what changed and why) in your output and in runtime-artifacts/audit.md, and continue** — never apply a deviation silently, and never ask for approval. Write code to the workspace root per the existing project structure. Log progress in runtime-artifacts/audit.md.
 
 ## Step 6 — Unit Tests + Coverage Gate (threshold from `tests/.evals/config.json`)
 
@@ -245,7 +248,7 @@ Execute the tiered behavioural gate defined in `common/behavior-spec.md` Section
 2. **B2 — Cumulative scope**: every **other** feature file already in the repo — earlier work units in this cycle plus everything from prior cycles. **Verification**: all green. 🔴 A B2 failure is THIS unit's problem — it turned that scenario red, so it fixes it. "That scenario belongs to another story" is not a defence.
 3. **B3 — Epic scope** (🔴 **last work unit of the cycle ONLY**): B1 ∪ B2 **plus** the cross-unit journeys in `spec/behavior.feature`, tagged `@REQ-<id>`. 🔴 Detect "last" from **PR MERGE STATE, never the tracker status label** (`common/behavior-spec.md` Section 6.1): for every OTHER work unit read its PR from the Story Tracker and verify live with `gh pr view <n> --json state`. **All others merged → this is the last unit → RUN B3** — including the normal case where those units are still `🔵 In Development` awaiting ve sign-off, because the label lags the merge. Defer ONLY when a unit has no merged PR, recording `B3: N/A — deferred, <n> units with unmerged PRs (<list with PR state>)`. 🔴 Never defer on a status label alone, and never report a deferred B3 as a pass.
 
-**Execution** — 🔴 **every tier runs in a Podman pod** (`common/behavior-spec.md` Section 5): the image built from `tests/.evals/behavior/Containerfile`, plus a fresh ephemeral **test database** where the repo needs one, invoked through `tests/.evals/behavior/run.sh <tier>` — the same image and command a developer runs locally, so a CI-only failure is impossible by construction. 🔴 **The ONLY permitted native run is Podman not being installed** (proven by `command -v podman`), recorded as `"containerised": false, "reason": "podman not installed"`. 🔴 "No browser needed", "backend only", "no new dependency" and "faster natively" are **forbidden justifications** — a tier recorded that way is a gate violation, not a pass. Never fall back to the Docker CLI. A tier runs only once the previous is green.
+**Execution** — 🔴 **every tier runs in a Podman pod** (`common/behavior-spec.md` Section 5): the image built from `tests/.evals/behavior/Containerfile`, plus a fresh ephemeral **test database** where the repo needs one, invoked through `tests/.evals/behavior/run.sh <tier>` with **`AIRE_STORY_KEY` exported to THIS work unit's key** (e.g. `story-1.10`, the stem of its own `spec/behavior/<key>.feature`) — `podman run -e AIRE_STORY_KEY=<key> …`. 🔴 Without it B1 cannot identify which unit is under test and refuses to guess; it used to take the lexicographically last feature file, which returns `story-1.9` when `story-1.10` is the unit being built — passing B1 without ever testing it — the same image and command a developer runs locally, so a CI-only failure is impossible by construction. 🔴 **The ONLY permitted native run is Podman not being installed** (proven by `command -v podman`), recorded as `"containerised": false, "reason": "podman not installed"`. 🔴 "No browser needed", "backend only", "no new dependency" and "faster natively" are **forbidden justifications** — a tier recorded that way is a gate violation, not a pass. Never fall back to the Docker CLI. A tier runs only once the previous is green.
 
 **Evidence** — per tier, to `reports/behavior-test-evidence/bug-<TICKET-ID>/<b1|b2|b3>/`: `behavior-test-run.log`, the **mandatory machine-readable** `behavior-test-report.*`, and an `evidence-manifest.md` recording the image ref + digest, the exact command, whether it ran containerised, the tier's feature-file set, and every scenario with its tag and result. A raw log alone does NOT satisfy the gate.
 
@@ -319,7 +322,7 @@ The review's own verdict decides what happens next. **Do NOT present an A/B choi
       Verdict: [clean — all ACs Met / findings: 🔴 X  🟠 Y]
    ➡ [Proceeding to commit + [BUG] PR. | Findings found — remediating them automatically now (round [n]).]
    ```
-1. **Verdict clean (zero 🔴 and zero 🟠)** → go to **Step 9 (Commit, Push & Raise the `[BUG]` PR)**.
+1. **Verdict clean (zero 🔴 and zero 🟠)** → go to **Step 8.5 (Manifest Reconciliation)**, then Step 9.
 2. **Any 🔴 or 🟠 finding** → go to **8c (SH-LOOP-5)**. The framework fixes its own findings within a budget of **3 remediation rounds**; it hands them back to the user only when that budget is exhausted (SH-4), and then it HALTS instead of raising the `[BUG]` PR.
 3. **MANDATORY**: log the routing decision in runtime-artifacts/audit.md under a plain heading (`## Review Verdict — Clean, Proceeding to PR (Bug [JIRA-ID])` or `## Review Verdict — Findings, Auto-Remediating (Bug [JIRA-ID])`) with the full findings list by severity. **No "GATE" in the heading, and no user response to record.**
 
@@ -332,7 +335,7 @@ The review's own verdict decides what happens next. **Do NOT present an A/B choi
 4. **MANDATORY — audit the complete remediate log**: the round number (`[n] of 3`), which findings were fixed (by severity), files changed, unit-test evidence, regression comparison. Record the complete log, not a summary.
 5. **Re-review automatically**: return to **8a** (produces the next report version `v[X+1]`), then **8b** again.
 6. **Loop control**:
-   - **Verdict clean** → the loop exits successfully → **Step 9 (Commit, Push & Raise the `[BUG]` PR)**.
+   - **Verdict clean** → the loop exits successfully → **Step 8.5 (Manifest Reconciliation)**, then Step 9.
    - **Findings remain AND attempts spent < 3** → increment the counter and return to step 1.
    - **Findings remain AND attempts spent = 3** → **exhausted** → step 7.
    - **Stall (SH-5)** — a round produced **no code change at all** AND the next review returned an **identical** finding set → the loop cannot progress. Treat as exhausted immediately, regardless of attempts remaining → step 7, noting the early end.
@@ -345,18 +348,43 @@ The review's own verdict decides what happens next. **Do NOT present an A/B choi
 ### 8d. Status
 The ticket stays `🔵 In Development` throughout review and remediation.
 
+## Step 8.5 — Manifest Reconciliation (MANDATORY, AUTOMATIC — after local gates pass, BEFORE the commit)
+
+Identical mechanism to `dev-implement.md` Section D Step 1.5 — see
+`common/ci-pipeline-generation.md` Section 4.0f for the full contract. Write ONE NEW file,
+`tests/.evals/ci-manifest.d/bug-[TICKET-ID].json`, from what Steps 6/6.5/7.5 **already executed for
+real** for every root this fix touched — never re-derived, never guessed. Append-only; never edit
+`tests/.evals/config.json` or another work unit's fragment. Re-run `validate-pipeline.{sh,ps1}` and
+confirm it passes before proceeding to Step 9. Include the fragment in the same commit as the fix. 🔴 **Write the COMPLETE entry per Section 4.0f's field table** — including `runtimeVersion`,
+`coverageReportPath`/`coverageFormat`, `noTestsExitCode`, `dependsOn`, `toolchainSetup`, and `tools`
+**paired with** `toolInstallCommands`. A name in `tools` with no matching `toolInstallCommands` entry is a
+hard Manifest defect, and an omitted `dependsOn` silently disables monorepo diff-scoping.
+
 ## Step 9 — Commit, Push & Raise the `[BUG]` PR —  FULLY AUTOMATIC
 
 🔴 **A clean review verdict is the ONLY thing that triggers this step.** An exhausted SH-LOOP-5 (8c.7) does NOT reach it — that path HALTS at the gate and waits for the user. The commit, push,
 PR creation, labels, tracker update (Step 10) and auto PR review (Step 11) run **automatically with
 no prompts**. Announce each action; never ask whether to do it.
 
-1. Verify the active branch is the Bug Branch (switch automatically and announce if not). Stage and commit the fix (code + tests + updated docs). The commit message MUST carry an `AIRE-Version:` trailer as the framework signature — exactly as dev-implement Section D does — where `[N]` is read at runtime from the "AIRE Framework Version" line in `CLAUDE.md` (do not hardcode a number):
+1. Verify the active branch is the Bug Branch (switch automatically and announce if not). Stage and commit the fix (code + tests + updated docs) **plus the Step 8.5 manifest fragment, if one was written**. The commit message MUST carry an `AIRE-Version:` trailer as the framework signature — exactly as dev-implement Section D does — where `[N]` is read at runtime from the "AIRE Framework Version" line in `CLAUDE.md` (do not hardcode a number):
    ```
    git add <fix files>
    git commit -m "[BUG][TICKET-ID] <concise fix summary>" -m "AIRE-Version: [N]"
    ```
    The `AIRE-Version: [N]` trailer goes on its own line at the end of the message body (alongside any existing trailers). Record the hash in runtime-artifacts/audit.md.
+1.5. **🔴 CI PREFLIGHT GATE (MANDATORY, AUTOMATIC — after this commit, BEFORE the push)** — identical
+   mechanism to `dev-implement.md` Section D Step 2.5; `common/ci-pipeline-generation.md` **Section 4.0i**
+   is the contract. In a **clean room** (fresh venv / empty `node_modules` / throwaway Podman container —
+   never this agent's ambient shell, never an install the manifest does not declare), against the
+   **committed** fix with `BASE_SHA="$(git merge-base origin/<base-branch> HEAD)"`, run CI's own
+   entrypoints — `ci-manifest-runner.sh install` → `build` → `run-static-evals.sh` →
+   `ci-manifest-runner.sh coverage` — plus the P1 declaration check over the merged manifest. **FAIL** on a
+   missing tool, an undeclared dependency (`ModuleNotFoundError` / `requires the <pkg> package`), a
+   Manifest defect, or a gate reporting `N/A`/a qualified pass on a root this diff touched. Fix the
+   **declaration** (this fix's own fragment for `tools`+`toolInstallCommands`; the repo's own dependency
+   declaration for a test/runtime package) — never the gate, never a bare install inside CI YAML. This is
+   **SH-LOOP-9**, capped at **3 attempts** (SH-1); on exhaustion apply SH-4 — HALT with the Retry-Limit
+   Report, no push and no PR. Reuse the behavioural gate's containerised evidence rather than re-running it.
 2. Invoke **`pr-generator`** (as-is) **in WORKFLOW mode**, passing **target branch = the Base Branch** from `## Branching`. The PR title carries the **`[BUG]`** prefix; the skill applies the `ai-generated` and `aire-v[N]` labels (plus the `AIRE Framework: v[N]` line in the PR body).  **Its Phase 5 confirmation is SKIPPED — this workflow has no gates; invoking it is the authorization.** It announces the draft and raises the PR without asking. Never re-ask about pushing or opening the `[BUG]` PR.
 3. Record the PR URL in `## Branching` (`Bug PR: <url>`) and the full outcome in runtime-artifacts/audit.md — including the labels applied (`ai-generated` + `aire-v[N]`).
 
@@ -365,6 +393,23 @@ no prompts**. Announce each action; never ask whether to do it.
 1. Story Tracker: keep Status = `🔵 In Development`; set **End** = today and **Recorded** = now; note the PR URL.
 2. 🔴 **Do NOT transition the ticket to "Ready for Testing"** (or any further state) — the ticket stays In Development after the PR. Add a **comment** on the ticket (automatic) linking the PR with evidence (tests passing, coverage %, regression clean vs baseline), dispatching on `## Tracker` → `Type` per `common/tracker-sync.md` Section 10: JIRA `addCommentToJiraIssue`, ADO `az boards work-item update --discussion`, GITHUB `gh issue comment`, LOCAL a note appended to the local bug entry (no external call).
 3. Log in runtime-artifacts/audit.md (with the TRACKER ITEM field).
+
+## Step 10.5 — CI Attestation Gate (MANDATORY, AUTOMATIC — after the PR is raised, before Step 11)
+
+Identical mechanism to `dev-implement.md` Section D Step 8. Confirm a run of
+`agentic-eval-pipeline.yml` exists for this PR's head SHA (`gh pr checks` / `gh run list`) — no run is a
+blocking finding. Watch it to conclusion, download `eval.json`, and cross-check CI's `gates` block
+against this fix's own local gate results. A gate that passed locally but is absent/`N/A` in CI is a
+**manifest defect** — go back to Step 8.5, extend the fragment (never remove another unit's entry),
+re-run the Step 9.1.5 preflight for that root, commit, push, re-verify. Bounded at 3 attempts; on
+exhaustion, HALT with the Retry-Limit Report. On a clean match, log the attestation and proceed.
+
+🔴 **SCOPE — this gate repairs CI configuration only** (`common/ci-pipeline-generation.md` **Section 6.6**):
+this workflow owns the manifest fragment, the repo's dependency declarations, the pipeline scripts and
+tool pins; **CI self-repair owns application code and tests**. A Code-class CI failure (Section 6.4) is
+recorded here and left to self-repair — never fixed from this gate and never charged to an attestation
+attempt. Never push into an in-flight self-repair run: wait for it, fetch, rebase onto its commit, re-read;
+never force-push and never revert its commit.
 
 ## Step 11 — AUTO PR Review
 
@@ -434,7 +479,7 @@ The ONLY permitted modification is substituting `<url>`, `<bug-branch>`, `<base-
 ---
 
 ## Critical Rules
-- EVERY audit entry carries the `**JIRA TICKET**:` field AND the `**AIRE VERSION**:` field (version read at runtime from the "AIRE Framework Version" line in `CLAUDE.md` — never hardcoded).
+- EVERY audit entry carries the `**TRACKER ITEM**:` field AND the `**AIRE VERSION**:` field (version read at runtime from the "AIRE Framework Version" line in `CLAUDE.md` — never hardcoded).
 - 🔴 **NO GATES AT ALL** — the fix plan is announced and executed (no GATE 2), and the review verdict routes the run automatically (no GATE 3). Never present a plan-approval or Approve-&-continue/Remediate prompt, and never write "GATE" into an audit heading from this workflow.
 - 🔴 **THE FRAMEWORK FIXES ITS OWN FINDINGS, WITHIN A BOUNDED BUDGET** — any 🔴/🟠 finding triggers the auto-remediate loop (8c, **SH-LOOP-5**): remediate → regression → re-review, looping until the verdict is clean **or the 3-attempt budget is exhausted**. On exhaustion (3 rounds, or an SH-5 stall — no code change + identical findings) the run **HALTS at the gate**: no commit, no push, no `[BUG]` PR, no tracker change; the Retry-Limit Report is emitted to the user and to runtime-artifacts/audit.md, and the run waits for user direction.
 - 🔴 Mid-coding plan deviations are applied only after the plan document is revised and the change announced + logged — never silently, and never via an approval prompt.

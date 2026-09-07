@@ -189,8 +189,8 @@ Examples (these are internal sub-steps within a single stage, not separate stage
 
 ### Plans
 Documents with checkboxes and questions that guide execution.
-- Located in `spec/plans/`
-- Examples: `story-generation-generation.md`, `functional-design-generation.md`
+- Located in `spec/spec-generation/`
+- Examples: `story-generation.md`, `functional-design-generation.md`
 
 ### Artifacts
 Generated outputs from executing plans.

@@ -48,7 +48,7 @@ documents listed under Inputs — never from implementation code.
 | 3 | `spec/plans/requirements.md` | REQ-IDs the story `Covers`, NFR targets |
 | 4 | `spec/plans/epic-brief.md` | What the epic/ticket is meant to deliver |
 | 5 | `spec/plans/**` (functional / NFR / NFR-design / infrastructure) | Interfaces, endpoints, data shapes, performance & security targets, deployment topology |
-| 6 | `spec/plans/deep-dive.md` + the flat RE docs under `spec/plans/` (if present) | Existing external interfaces, APIs, architecture of the system under test |
+| 6 | `spec/plans/atlas-deep-dive.md` + the flat RE docs under `spec/plans/` (if present) | Existing external interfaces, APIs, architecture of the system under test |
 | 7 | `runtime-artifacts/aire-state.md` | `## Story Tracker` (Story ID ↔ Tracker ID ↔ title), `## Tracker`, `## Branching` |
 
 **🔴 Explicitly OUT OF BOUNDS**: application source files, unit tests, diffs, PRs, commits — and

@@ -67,20 +67,73 @@ newer template introduced. The repo's own file wins.
   "ci": {
     "baseBranch": "main",
     "integrationBranchPrefixes": ["epic", "bug", "enh", "ci", "story", "ve"],
-    "installCommands": ["<resolved from the repo, e.g. pip install -r src/backend/requirements.txt>"],
-    "coverageCommand": "<resolved from the repo, e.g. pytest --cov=src/backend --cov-report=xml>",
-    "coverageReportPath": "<single-report form: path the coverage command writes, e.g. coverage.xml. Scored against every ci.sourcePaths file. Use coverageReports instead for a multi-stack repo>",
-    "coverageFormat": "<cobertura | lcov — paired with coverageReportPath in the single-report form>",
-    "coverageReports": "<multi-report form for a full-stack repo with separate backend/frontend coverage: [{ \"path\": \"coverage.xml\", \"format\": \"cobertura\", \"sourcePaths\": [\"src/backend\"] }, { \"path\": \"src/frontend/coverage/lcov.info\", \"format\": \"lcov\", \"sourcePaths\": [\"src/frontend\"] }]. Each changed file is scored against the report whose sourcePaths prefix owns it; a file matching neither is skipped. Takes priority over coverageReportPath/coverageFormat when present.>",
-    "sourcePaths": ["<resolved code root(s), e.g. src/backend>"],
-    "testPaths": ["<resolved, e.g. tests/unit>"],
-    "tools": ["semgrep", "pip-audit", "gitleaks"],
+    "manifestState": "resolved",
+    "roots": [
+      {
+        "root": ".",
+        "stack": "python",
+        "runtimeVersion": "3.11",
+        "markerFile": "requirements.txt",
+        "installCommands": ["pip install -r requirements.txt"],
+        "buildCommand": null,
+        "coverageCommand": "pytest --cov=. --cov-report=xml",
+        "noTestsExitCode": 5,
+        "dependsOn": [],
+        "toolchainSetup": [],
+        "coverageReportPath": "coverage.xml",
+        "coverageFormat": "cobertura",
+        "sourcePaths": ["src/backend"],
+        "testPaths": ["tests/unit"],
+        "tools": ["semgrep", "pip-audit", "gitleaks"],
+        "toolInstallCommands": {
+          "semgrep": "pip install \"semgrep==1.127.0\"",
+          "pip-audit": "pip install \"pip-audit==2.9.0\"",
+          "gitleaks": "gitleaks_version=8.21.2; curl -sSfL \"https://github.com/gitleaks/gitleaks/releases/download/v${gitleaks_version}/gitleaks_${gitleaks_version}_linux_x64.tar.gz\" | tar xz -C /usr/local/bin gitleaks"
+        }
+      }
+    ],
     "gates": ["D1_lint", "D2_types", "D3_sast", "D4_deps", "D5_licenses", "D6_complexity", "D7_secrets",
               "unitCoverage", "behaviorB1", "behaviorB2", "behaviorB3", "J1_architecture", "J2_security"],
-    "_comment": "🔴 CI SINGLE SOURCE OF TRUTH. The generated pipeline reads THIS block — it never re-authors any of these facts. See ci-pipeline-generation.md Section 4."
+    "_rootsComment": "🔴 noTestsExitCode is the exit status THIS root's test runner returns when it collects ZERO tests (pytest 5; jest/vitest 1 — prefer adding --passWithNoTests to the command instead; go/maven/gradle/dotnet exit 0 and omit the field). ci-manifest-runner.* records that exit as N/A rather than FAIL, because 'no suite exists yet' is the correct state of a greenfield repo before its first story and of a brownfield repo with no tests — NOT something to self-repair by writing dummy tests. It cannot hide a missing test: coverage_delta() still enforces unitTestCoverageMin on the CHANGED files and records ERROR when one has no coverage data. See ci-pipeline-generation.md Section 3.0.",
+    "_comment": "🔴 CI SINGLE SOURCE OF TRUTH. The generated pipeline AND every local step read THIS block — neither one re-authors or independently re-derives any of these facts, `root` included. See ci-pipeline-generation.md Section 4 and Section 4.0d."
   }
 }
 ```
+
+#### 1.1 🔴 `ci.roots[]` — the working directory is a manifest fact, not a guess made twice
+
+**Every stack-fact entry is scoped to exactly one `root`: the repo-root-relative directory every command
+in that entry executes from.** A single-root repo has one entry with `root: "."`; a monorepo has one
+entry per package (`src/backend`, `src/frontend`, `packages/api`, …). This is the ONE authoritative
+record of "where does this command run" — resolved once, by whichever process establishes the stack fact
+(Section 3's stack detection at generation time, or a work unit's own reconciliation after it runs a
+command for real), and read **identically** by every consumer afterward: the local gate (`dev-implement.md`
+Steps 1.5.4.6/6, `implementation/code-generation.md` Steps 11a/11a.5/11b/11c) and the generated CI
+pipeline (`common/ci-pipeline-generation.md` Section 4.0d) both `cd` into the SAME recorded `root` before
+running the SAME command. **Neither side ever re-derives, guesses, or independently detects a working
+directory** — that is precisely the split that let a local run and a CI run of the same manifest command
+execute from different directories and disagree, silently, on a monorepo.
+
+| Field | Meaning |
+|---|---|
+| `root` | Repo-root-relative directory (`.`, `src/backend`, `packages/api`). The working directory for every command below in this entry. Never embedded a second time inside a command's own flags. |
+| `stack` | The detected stack for this root (`python`, `node`, `java`, `go`, `dotnet`, …) — what `markerFile` and the Section 3 command table are keyed on. Also what the generated pipeline's `Read manifest` step (Section 4.0d.1) unions across every root to decide WHICH of the permanently-present `actions/setup-*` blocks to enable — a repo becomes `node`-enabled the moment any root declares `stack: "node"`, never by re-detecting it separately in the YAML. |
+| `runtimeVersion` | The exact runtime version to pin (`"3.11"`, `"20.11.0"`, `"17"`, `"1.22"`, `"8.0"`) — resolved ONCE, the same moment `stack`/`markerFile` are (Section 3.2: read from the project's own `.node-version`/`pyproject.toml [project] requires-python`/`go.mod`'s `go` directive/etc., latest LTS if none exists), and read back by the `Read manifest` step to pin the corresponding `actions/setup-*` step's version — never re-detected at CI run time, and never a second, independently-chosen pin that could disagree with what was verified locally. Two roots sharing a `stack` but declaring a genuinely different `runtimeVersion` is a #14.1-class conflict, surfaced at reconciliation time, never silently "last wins". |
+| `dependsOn` | Repo-root-relative roots **in this same manifest** whose source this root compiles or links against — resolved from the repo's OWN declaration, never guessed: a Maven/Gradle dependency on a groupId this repo owns, a `package.json` dep resolving to a `workspaces` member (or a `workspace:*`/`file:`/`link:` specifier), `go.work` `use` plus a `replace ./`, a `<ProjectReference>` in a csproj, a `-e ../pkg` or `path = "../pkg"` install spec. 🔴 **This is what makes diff-scoping sound.** `root_touched` walks the TRANSITIVE closure, so a PR changing only `common` still builds, tests and gates `api` when api depends on it. Without it, diff-scoping was a pure path-prefix test — correct only for INDEPENDENT roots — and a compile-breaking change to a shared module merged green while every dependent module was skipped. Empty for a single-root repo or a genuinely independent package, which behaves exactly as before. |
+| `toolchainSetup` | Explicit, repo-traceable commands that install and PIN this root's toolchain when its `stack` has no `actions/setup-*` block in the template (the built-in five are `node`, `python`, `java`, `go`, `dotnet`). e.g. `rustup toolchain install 1.82 && rustup default 1.82`. 🔴 The pin comes from the repo's own pin file (`rust-toolchain.toml`, `.ruby-version`, `.tool-versions`, `composer.json` `config.platform`) — never invented. A root whose `stack` is outside the built-in five **and** whose `toolchainSetup` is empty is a **Manifest** defect (`read-manifest.*` raises it): nothing would install its toolchain, so the build would silently run against whatever the runner image happens to ship. |
+| `markerFile` | The stack's own project-root file (`package.json`, `pyproject.toml`/`setup.py`/`requirements.txt`, `pom.xml`/`build.gradle(.kts)`, `go.mod`, `Cargo.toml`, `*.csproj`/`*.sln`, `Gemfile`, `composer.json`) — verified present at `root` before any command in this entry runs (Section 4.0d). A `root` whose `markerFile` is missing is a **Manifest** defect (Section 6.4's triage class), never a silent skip. |
+| `installCommands`, `buildCommand`, `coverageCommand`, tool invocations | **Bare commands that assume `cwd == root`.** Never bake the subfolder into the command's own arguments — `pytest --cov=src/backend` becomes, under `root: "src/backend"`, simply `pytest --cov=. --cov-report=xml`. This is what makes the convention work for every stack: `go test`, `dotnet test`, `jest`/`vitest`, and Gradle without `-p` all support "run from directory X" uniformly; none of them support an equivalent "target directory X" flag the way `pytest --cov=` does. |
+| `coverageFormat` values | 🔴 One of **`cobertura`** (pytest-cov, .NET coverlet), **`lcov`** (istanbul/jest/vitest, `cargo llvm-cov`), **`jacoco`** (Maven/Gradle `jacoco:report` — JaCoCo XML is a DIFFERENT schema from Cobertura XML and needs its own parser), or **`gocover`** (`go test -coverprofile`). Anything else is an explicit ERROR, never a silent skip. Pair it with the command Section 3 resolves for the stack: emitting `jacoco:report` while declaring `cobertura` means the gate can never pass. |
+| `coverageReportPath` / `coverageFormat` | The report this root's coverage command writes, **relative to `root`** (e.g. `coverage.xml` inside `src/frontend/` means the real path is `src/frontend/coverage.xml`) — Section 2.2 below normalizes it back to repo-root-relative before any changed-file match. |
+| `sourcePaths` / `testPaths` | Stay **repo-root-relative** (matched against `git diff --name-only`, which is always repo-root-relative) — distinct from `root`. `root` says where a command executes; `sourcePaths`/`testPaths` say which repo-root-relative files that root's findings apply to. For the common case they nest under `root` (`src/backend` under a `root: "src/backend"` entry), but do not have to (a monorepo package can `root` at its own directory while still declaring a narrower `sourcePaths` inside it). |
+| `tools` | Same meaning as before, scoped to this root — installed and gated together, exactly as Section 3.1/3.2 already require. |
+| `toolInstallCommands` | `{tool name: exact install command}` — resolved the same moment `tools` is (Section 3.2's pinned-version rules, including the Section 3.2.1 clean-room dry-run), and read back by `tests/.evals/scripts/ci-manifest-runner.sh` at run time instead of a separately generated "Install eval tools" YAML block. This is what lets a work unit that introduces the repo's first stack of a given kind (its first Node code, say) bring that stack's eval tools with it automatically, on its own PR — no committed YAML to edit (#7a). |
+
+🔴 **Legacy manifests keep their old flat shape.** A `config.json` created before this schema existed
+(`installCommands`/`coverageCommand`/`sourcePaths`/`testPaths` as top-level `ci` keys, no `roots[]`) is
+used **AS-IS**, per this section's own "if it already exists, use it AS-IS" rule — it is never
+retroactively migrated. Treat a flat manifest as exactly one implicit root at `root: "."`. Every new
+manifest this framework creates from here on uses `roots[]`.
 
 - `scope: "changed-files"` is **mandatory behaviour, not a preference**: every threshold applies ONLY
   to files this work unit changed. Repo-wide absolutes are unachievable on brownfield code and cause
@@ -102,6 +155,11 @@ newer template introduced. The repo's own file wins.
   the pipeline needs that is *not* a threshold lives here exactly once, and every consumer reads the
   array rather than re-authoring the value (`common/ci-pipeline-generation.md` Section 4). Drift is
   impossible by construction:
+  - `manifestState`: `"unresolved"` when generated on a greenfield repo with no stack yet to detect —
+    `roots[]` is then genuinely empty, honestly, rather than guessed from `architecture.md` (a plan is
+    not a detected stack). `"resolved"` once at least one root has been detected or established. Every
+    gate scoped to an empty `roots[]` reports `N/A` with the reason `"no stack in the manifest yet"`,
+    never a silent pass.
   - `baseBranch` + `integrationBranchPrefixes` → the `on:` trigger AND the `EVAL_KEY` resolver. Adding
     `ci` to the prefixes is why `ci/**` branches no longer crash the key resolver.
   - `tools` → both the install step and the D1–D7 gate steps iterate the SAME array, so a tool can
@@ -110,8 +168,11 @@ newer template introduced. The repo's own file wins.
     gate that fails the build can never be absent from the scorecard (the SonarQube-missing class).
     `sonarqube` is appended to `gates` at generation time only when the user answers `proceed` at the
     Section 4.1.2 setup gate.
-  - `installCommands`, `coverageCommand`, `sourcePaths`, `testPaths` are resolved from the repo ONCE
-    during stack detection (Section 3) and written here; the pipeline and scripts read them back.
+  - `roots[].root`, `installCommands`, `coverageCommand`, `sourcePaths`, `testPaths` are resolved from
+    the repo ONCE during stack detection (Section 3) and written here; the pipeline and every local step
+    read them back **identically** — see Section 1.1 above and `common/ci-pipeline-generation.md`
+    Section 4.0d. `root` in particular is never re-derived independently by the consumer that runs a
+    command; it is read from this one recorded value.
   - 🔴 The generator FILLS this block from real repo detection — it never invents these values, and it
     never hardcodes any of them a second time in the YAML or a script. The `<...>` strings above are
     placeholders that MUST be replaced with detected values before the file is committed.
@@ -166,6 +227,21 @@ exactly as it binds the local gate. Both invoke the SAME script — `tests/.eval
 drift. A CI step that runs a tool bare over the whole tree (`semgrep … --error`, `mypy src/`) has no
 baseline, fails on pre-existing debt, and contradicts this section. That is a generation defect, not a
 stricter policy.
+
+🔴 **NORMALIZE EVERY TOOL-REPORTED PATH TO REPO-ROOT-RELATIVE BEFORE MATCHING.** `git diff --name-only`
+is always repo-root-relative. A tool invoked with `cwd == ci.roots[].root` (Section 1.1) reports its own
+findings, and its coverage report's internal paths, relative to **that** `root`, not to the repo root —
+`Component.tsx` from a lint finding produced with `root: "src/frontend"` means `src/frontend/Component.tsx`
+in real terms. **Before any comparison against the changed-file set, in every gate that does one — D1/D2/D6's
+baseline diff, the coverage delta, semgrep's/gitleaks'/every other tool's own findings — prefix the
+tool-reported path with the entry's `root` to obtain the repo-root-relative path.** A `root: "."` entry's
+paths are already repo-root-relative and the prefix is a no-op; every other `root` needs it applied.
+Getting this wrong does not fail loudly: it makes a real finding fail to match the changed-file set, and
+the gate reports clean on code that was never actually checked against the right diff. (This already had
+one visible symptom before `root` existed as a manifest fact — a coverage report's `SF:` lines matching
+neither direction of a naive substring compare — worked around, at the time, inside the coverage-specific
+comparison alone; the rule here is the general one, and it now applies to every path comparison the
+diffing script performs, not only coverage's.)
 
 🔴 **Changed-file scoping is NOT a substitute for the baseline diff.** Running a tool only on changed
 files still fails on a pre-existing finding that happens to live in one of them. Scoping narrows
@@ -328,6 +404,17 @@ config bootstrap (Section 2.3).
 CI-specific installation requirements. A tool present locally but absent in CI produces a gate that
 passes locally and fails (or silently skips) in CI — the worst drift.
 
+🔴 **AN INSTALL THAT IS NOT DECLARED DID NOT HAPPEN, AS FAR AS CI IS CONCERNED.** Installing a tool here
+makes the LOCAL gate runnable and nothing more. CI provisions **only** what the manifest declares, so
+every tool this step installs MUST also be written into the work unit's manifest fragment as
+`ci.roots[].tools` **paired with** `toolInstallCommands` (`ci-pipeline-generation.md` Section 4.0f) —
+otherwise CI reports `tool '<x>' for gate <D> is not installed on this runner`, measures nothing, and
+burns a full run plus a self-repair triage on a declaration gap. The same applies to a **test-only
+runtime dependency** that happens to be importable in this environment (e.g. `httpx` behind
+`fastapi.testclient`): it belongs in the repo's own test/dev dependency declaration, not only in the
+ambient env. **The owning workflow's CI Preflight Gate (`ci-pipeline-generation.md` Section 4.0i,
+`dev-implement.md` Section D Step 2.5) is what proves this, in a clean room, before the PR is pushed.**
+
 **Record it**: list every tool installed (name + version) in `eval.json` under `"toolchain"` and in
 `runtime-artifacts/audit.md`. A gate result without its tool version is not reproducible.
 
@@ -345,6 +432,14 @@ while measuring nothing, and it must be spent from a **closed list of reasons**.
 | 1 | The check **cannot apply to this stack** | D2 type check on plain JavaScript with no type checker in the ecosystem |
 | 2 | The check **does not apply to this work unit** | `apiContract` when the plan has no API-layer step; `behaviorB3` when this is not the last work unit |
 | 3 | The tool **genuinely does not exist** for this stack — 🔴 valid ONLY after the full Section 2.4.1 chain, **including the Podman image rung**, has been attempted and recorded | a licence scanner for a niche language, with all four rungs shown as tried |
+| 4 | **No changed file falls under this entry's `sourcePaths`/`root` for this work unit's diff** — diff-scoped execution (`common/ci-pipeline-generation.md` Section 4.0g) | a monorepo root/coverage report whose `sourcePaths` this PR's diff never touches |
+
+🔴 **Reason 4's boundary, precisely** — this is what tells a genuinely inapplicable root apart from a
+manifest that lost track of a path it should have known about (`common/ci-pipeline-generation.md`
+Section 6.4's Manifest triage class): `N/A` **only if no changed file falls under that entry's
+`sourcePaths`/`root`**. If a changed file **does** fall under it and the tool/report/path is missing or
+fails, that is **ERROR**, never `N/A` — the check should have run against code this PR demonstrably
+touched, and did not.
 
 Each must name the **concrete fact** that makes it inapplicable — the stack, the plan step, the tracker
 state. `"reason": "project is plain JavaScript; no type checker applies"` is a reason.
@@ -361,6 +456,14 @@ inapplicable check**. Observed verbatim in a real run, all forbidden:
 - `"gitleaks not installed"`
 - anything containing **"yet"**, "TODO", "not wired", "not bootstrapped", "not implemented",
   "pending", "future"
+- 🔴 **"time-boxed"**, **"not run this pass"**, **"flagged as a follow-up"**, **"deferred"**,
+  **"no tool configured for this stack"**, **"will be added in a later story"** — observed verbatim in
+  a real story run, on D1, D5 and D6 simultaneously. Running out of time is not a property of the
+  check; it is a decision to ship an unmeasured gate.
+- 🔴 **"verified by inspection"**, **"manual check"**, **"reviewed the dependency list by hand"** — a
+  hand-written claim is NEVER a gate result. Observed: D5 recorded as satisfied because someone read
+  the dependency list and judged the licences acceptable. That is an opinion in an artifact. The gate
+  is the TOOL's output or it is ERROR; there is no third option.
 
 🔴 **The word "yet" is the tell.** It admits the check *should* run and doesn't. Section 2.3 exists
 precisely to make it run: create the missing config **before** the baseline, then measure. Deferring
@@ -429,7 +532,7 @@ derive from). Resolve in order and record which link was used in `eval.json`:
 2. A versioned rubric already committed at `tests/.evals/rubrics/architecture-rubric.json` from a prior
    cycle — usable only if the reverse-engineering artifacts still describe the same architecture.
 3. Derive from **Atlas** existing-system truth (`common/helix-atlas-integration.md`) or, if Atlas is
-   unavailable, from `spec/plans/deep-dive.md` and the flat RE docs under `spec/plans/`.
+   unavailable, from `spec/plans/atlas-deep-dive.md` and the flat RE docs under `spec/plans/`.
 4. **J1 = `N/A`**, with the reason recorded. **When J1 is `N/A` it does not block** — an absent
    rubric must never fail a work unit.
 
@@ -540,11 +643,48 @@ audited amendment. Not to remove the gate.
 | Behavioural **B1** — this unit | SH-LOOP-7 | 2 |  |
 | Behavioural **B2** — cumulative (every other feature file) | SH-LOOP-7 | 2 |  |
 | Behavioural **B3** — epic scope (last work unit only) | SH-LOOP-8 | 2 (epic PR) |  |
-| API & contract | SH-LOOP-2 | 2 |  (when applicable) |
-| Full regression | SH-LOOP-3 | 2 |  |
+| API & contract | SH-LOOP-2 | **local only** |  (when applicable) |
+| Full regression | SH-LOOP-3 | **local only** |  |
 | J1 architecture | SH-LOOP-6 | 3 |  (unless `N/A`) |
 | J2 security (OWASP) | SH-LOOP-6 | 3 |  |
 | Code review findings (🔴/🟠) | SH-LOOP-5 | — |  |
+
+🔴 **`apiContract` and `regression` are LOCAL-ONLY gates — deliberately, and this table is the single
+place that says so.** They ran at `dev-implement`/`bug-fix-implement`/`enhancement-implement` time and
+nowhere else; no step in `agentic-eval-pipeline.yml`, `run-static-evals.*` or `run-evals.*` implements
+either, and neither appears in the `ci.gates` default. They were previously listed here as CI stage 2
+gates, which was simply false — three documents promised a CI enforcement that had never existed.
+Two consequences follow, and both are intentional:
+- 🔴 **Never add either id to `ci.gates`.** A declared gate with no result is now an ERROR
+  (`run-evals.*`), so listing them would fail every PR rather than enforce anything.
+- The **regression** signal is not wholly absent from CI: `ci-manifest-runner.* coverage` runs each
+  touched root's full test command, so a break is still caught. What CI has no equivalent of is the
+  **baseline diff** that separates "this work unit broke it" from "it was already red" — that
+  attribution exists only in the local gate.
+
+#### 2.5.5 🔴 THE STATUS VOCABULARY IS CLOSED — `PASS` · `FAIL` · `ERROR` · `N/A`
+
+Those four are the ONLY values a gate may carry, in `eval.json`, in `eval-summary.md`, and in any
+completion message. 🔴 **Inventing a fifth is itself a violation**, because every downstream rule keys
+off these four: the verdict derivation, `any_fail`, the Verdict tally, and self-repair's triage.
+
+Observed in a real story run, all forbidden:
+
+| Written | Why it is a violation | What it actually was |
+|---|---|---|
+| `⚪ Partial — frontend PASS, backend ERROR` | A gate is one status. "Partial" hides an ERROR inside something that reads as a soft pass | **ERROR** |
+| `⚪ Not run — flagged as a follow-up` | Not a status. A declared gate that did not run is not a category of pass | **ERROR** |
+| `Not run this pass (time-boxed)` | Same, with a schedule as the excuse | **ERROR** |
+
+🔴 **"Partial" is the tell.** It means some sub-checks ran and some did not — which is precisely
+`ERROR` (the check should have run and did not), never a shade of `PASS`. A multi-root gate reports
+**per root** (`record_multi_root`) and collapses to the WORST status across roots; a frontend PASS
+beside a backend ERROR is an **ERROR gate**, and the scorecard says so.
+
+🔴 **And the scorecard header follows the gates, not the author's intent.** A run whose gate table
+contains an ERROR — under any label — cannot print `· **PASS**` above it. Observed: a scorecard headed
+`Story 1 · **PASS**` over a table carrying two unrun gates and one backend ERROR. `verdict` is derived,
+never asserted.
 
 `verdict` is `PASS` only when **every** gate is `PASS` or `N/A`. There is no weighted composite — one
 gate's failure is never offset by another's success.

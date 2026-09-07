@@ -251,7 +251,7 @@ Verify: `podman info` should return without error.
 
 Connect the **Helix MCP** server to your Claude Code setup once per repository. AIRE detects it
 automatically the first time it's needed, and pulls existing-system truth — knowledge graph and
-deepdive docs, epic plan — straight from Atlas instead of re-deriving it from scratch.
+deep dive doc, epic plan — straight from Atlas instead of re-deriving it from scratch.
 
 ---
 
@@ -259,7 +259,16 @@ deepdive docs, epic plan — straight from Atlas instead of re-deriving it from 
 
 AIRE generates a CI/CD eval pipeline (`.github/workflows/agentic-eval-pipeline.yml`) tailored to your project. The pipeline re-runs the same gates locally enforced during development — static analysis , unit tests, Gherkin behavioural tests, regression, and LLM-as-judge scoring (architecture conformance, OWASP security) — plus an autonomous self-repair job that uses Claude Code CLI to fix failing gates automatically.
 
-The pipeline itself, the eval scripts, and all configuration are generated for you at the STOP CHECKPOINT (after the design stages). Three secrets cannot be generated because they belong to your accounts. Everything else works without them — the gates still run and still block the PR. Only the self-repair job and the SonarQube scan are skipped when their secrets are absent.
+The pipeline itself, the eval scripts, and all configuration are generated for you at the STOP CHECKPOINT (after the design stages), driven by a manifest-based runner (`ci-manifest-runner`) so every CI command is read from a declared manifest rather than hand-typed into the YAML. Three secrets cannot be generated because they belong to your accounts. Everything else works without them — the gates still run and still block the PR. Only the self-repair job and the SonarQube scan are skipped when their secrets are absent.
+
+### Before the PR: Manifest Reconciliation and the CI Preflight Gate
+
+Every local gate above runs in the developer's own environment, where tools and dependencies are already installed. CI starts from a bare runner and installs **only** what a manifest declares — so before any work unit pushes its branch, two things happen automatically, entirely locally, with no PR yet open:
+
+1. **Manifest Reconciliation** — each story, bug fix, or enhancement writes its own small file, `tests/.evals/ci-manifest.d/<work-unit-key>.json`, recording exactly what its own run proved: install commands, coverage command and report path, tools used. This is append-only — a work unit never edits `tests/.evals/config.json` or another unit's fragment, so two people building in parallel never conflict on the file that defines the gates. At CI run time, `run-static-evals` merges `config.json`'s declared roots with every fragment into one manifest.
+2. **CI Preflight Gate** — a clean-room run (fresh install, no leftover ambient tooling) of CI's own entrypoints against the just-committed diff, proving the pipeline can actually run before the PR exists. A missing tool or an undeclared dependency is fixed in the manifest fragment or the repo's own dependency file — never by editing the gate. Capped at 3 attempts; on exhaustion the run halts with a Retry-Limit Report rather than pushing a PR whose CI is known to fail.
+
+Once the PR is open, the **CI Attestation Gate** watches the real CI run to conclusion and cross-checks it against the local results. A gate that passed locally but is silently `N/A` in CI is a manifest problem, looped back to Manifest Reconciliation; a real code failure (a genuine finding, a failing test) is left entirely to the self-repair job below — the two never repair the same PR head at the same time.
 
 ### Secrets overview
 
@@ -367,13 +376,13 @@ From there:
 2. **Answer the structured questions** AIRE asks you. Questions come in multiple-choice format (A, B, C, D…) with an "Other" option — answer inline with the `[Answer]:` tag.
 3. **Carefully review every plan the AI generates.** Provide your oversight and validation — this is a team effort; involve the relevant stakeholders at each phase.
 4. **Review the execution plan** to see which stages will run (and at what depth). You can override the recommendation and add/remove stages.
-5. **Review the artifacts** as they are produced. Planning design stages still ask for your approval; the story set and the whole `dev-implement` / ticket implementation chain are automatic — tell the AI at any point if something needs changing.
+5. **Review the artifacts** as they are produced. Planning design stages still ask for your approval, and the generated story set requires one explicit approval before it is pushed to your tracker (Request Changes / Approve & Continue); once approved, the whole `dev-implement` / ticket implementation chain runs automatically — tell the AI at any point if something needs changing.
 6. **Five roots, and AIRE never writes outside them**:
    - `src/` — ALL application code, greenfield and brownfield (a brownfield repo whose code lives
      elsewhere gets that root recorded once in `runtime-artifacts/aire-state.md` `## Code Root`; nothing is mass-moved)
-   - `tests/` — `unit/`, `behavior/` ( Gherkin step definitions), `e2e/` (Playwright), `playwright-specs/`, and the eval framework nested at `tests/.evals/` (`config.json`, `rubrics/`, `scripts/`, `behavior/`)
+   - `tests/` — `unit/`, `behavior/` ( Gherkin step definitions), `e2e/` (Playwright), `playwright-specs/`, and the eval framework nested at `tests/.evals/` (`config.json`, `rubrics/`, `scripts/`, `behavior/`, `ci-manifest.d/` — one append-only fragment per work unit, merged with `config.json` at CI run time)
    - `spec/` — specs and docs only: `behavior.feature` at its root (once per cycle) plus four
-     subfolders — `plans/` (all planning + design docs as flat files: `architecture.md`, `deep-dive.md`
+     subfolders — `plans/` (all planning + design docs as flat files: `architecture.md`, `atlas-deep-dive.md`
      + the flat RE docs, `requirements.md`, `stories.md`, `personas.md`, `epic-brief.md`,
      `dependency-graph.yml`, `functional-design.md`, `nfr.md`, `infrastructure-design.md`,
      `application-design.md`), `spec-generation/` (the `*-generation.md` files), `behavior/`
@@ -544,7 +553,7 @@ Merge the story PR into the Epic branch, then type `dev-implement` again for the
 
 ### Step 7 — Close the EPIC release cycle: `archive-epic`
 
-When the epic is done (all story PRs merged and ve has approved every story to Ready for testing via `/ve-list-work`, local **Option B**), invoke **`/pr-generator`** on the epic branch: it raises/updates the Epic → Base PR and **auto-triggers `archive-epic`**, which archives the complete `spec/` + `reports/` + `runtime-artifacts/` into `aire-archives/epics/<EPIC-ID>-<epic-name>/`. It generates no reverse-engineering delta and stitches nothing. Merging the Epic PR completes the cycle; the next cycle pulls fresh current-system truth (`spec/plans/deep-dive.md` and the flat RE docs) from Atlas via the Helix MCP.
+When the epic is done (all story PRs merged and ve has approved every story to Ready for testing via `/ve-list-work`, local **Option B**), invoke **`/pr-generator`** on the epic branch: it raises/updates the Epic → Base PR and **auto-triggers `archive-epic`**, which archives the complete `spec/` + `reports/` + `runtime-artifacts/` into `aire-archives/epics/<EPIC-ID>-<epic-name>/`. It generates no reverse-engineering delta and stitches nothing. Merging the Epic PR completes the cycle; the next cycle pulls fresh current-system truth (`spec/plans/atlas-deep-dive.md` and the flat RE docs) from Atlas via the Helix MCP.
 
 ---
 
@@ -847,7 +856,7 @@ Located in `.claude/skills/` — invoked by natural language or `/skill-name`.
 | **`pr-review`** | Senior-reviewer pass over a PR: reads diff + description, cross-checks stories and audit context, drafts inline comments tagged 🔴 Blocker / 🟠 Issue / 🟡 Nit /  Question / 🟢 Praise plus a verdict and a "Suggested for human review" section.|
 | **`playwright-implement`** | Orchestrates Playwright's **own** official Test Agents (Planner, Generator, Healer — installed once via `npx playwright init-agents --loop=claude`) to turn a story's already-Approved manual UI test steps into executable Playwright automation. Runs only after both the dev's story PR and ve's own `/ve-implement` test-plan PR have merged into the integration branch; gated by a Prerequisite Gate (Playwright + agents installed, local server up, fixtures seeded), a Seed Test Gate, a mandatory approval on the Planner's plan, and a push gate before pushing directly to the integration branch (no PR). UI/browser automation only — backend/API cases stay manual. |
 | **`reverse-engineering-root`** | Generates the **root** reverse engineering artifacts once at the workspace root — a single artifact set covering **all monorepo modules**, which every module then reuses for development. Run upfront before an epic cycle (or let each cycle refresh current-system truth fresh from Atlas via the Helix MCP) |
-| **`archive-epic`** | Closes an **epic, bug, or enhancement** release cycle: archives the complete `spec/` + `reports/` + `runtime-artifacts/` (runtime-artifacts/audit.md, runtime-artifacts/aire-state.md, RE docs, etc..) into `aire-archives/epics/<EPIC-ID>-<name>/`, `aire-archives/bugs/<BUG-ID>-<name>/`, or `aire-archives/enhancements/<ENH-ID>-<name>/` per the `Workflow Type` in state. It generates **no** reverse-engineering delta and stitches nothing — current-system truth (`spec/plans/deep-dive.md` and the flat RE docs) is refreshed fresh from Atlas via the Helix MCP at the start of each new cycle. **Auto-triggered only for epic cycles** (pr-generator, Epic → Base PR); **bug and enhancement cycles are archived manually** by the operator once the ve's work is completed and all the artifacts are merged into the cycle branch. |
+| **`archive-epic`** | Closes an **epic, bug, or enhancement** release cycle: archives the complete `spec/` + `reports/` + `runtime-artifacts/` (runtime-artifacts/audit.md, runtime-artifacts/aire-state.md, RE docs, etc..) into `aire-archives/epics/<EPIC-ID>-<name>/`, `aire-archives/bugs/<BUG-ID>-<name>/`, or `aire-archives/enhancements/<ENH-ID>-<name>/` per the `Workflow Type` in state. It generates **no** reverse-engineering delta and stitches nothing — current-system truth (`spec/plans/atlas-deep-dive.md` and the flat RE docs) is refreshed fresh from Atlas via the Helix MCP at the start of each new cycle. **Auto-triggered only for epic cycles** (pr-generator, Epic → Base PR); **bug and enhancement cycles are archived manually** by the operator once the ve's work is completed and all the artifacts are merged into the cycle branch. |
 
 ---
 

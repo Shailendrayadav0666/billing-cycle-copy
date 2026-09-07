@@ -34,7 +34,7 @@ ARCH_MIN=$(jq -r '.thresholds.llmJudgeArchitectureScoreMin // 0.85' "$CONFIG")
 SEC_MIN=$(jq -r '.thresholds.llmJudgeSecurityScoreMin // 0.85' "$CONFIG")
 MODEL=$(jq -r '.judge.model // ""' "$CONFIG")
 RUBRIC_VERSION=$(jq -r '.judge.rubricVersion // ""' "$CONFIG")
-GATES=(); while IFS= read -r line; do GATES+=("$line"); done < <(jq -r '.ci.gates[]?' "$CONFIG")  # portable
+GATES=(); while IFS= read -r line; do GATES+=("$line"); done < <(jq -r '.ci.gates[]?' "$CONFIG" | tr -d '\r')  # portable
 
 # ── Credentials: missing is ERROR, not N/A (the judge gate SHOULD run) ──
 if [ -z "${CLAUDE_CODE_OAUTH_TOKEN:-}" ] && [ -z "${ANTHROPIC_API_KEY:-}" ]; then
@@ -109,7 +109,7 @@ ${diff}"
   echo "$json" | jq --arg m "$MODEL" --arg rv "$RUBRIC_VERSION" \
     '. + {model:$m, rubricVersion:$rv}' > "$out"
   local score
-  score="$(jq -r '.score // 0' "$out")"
+  score="$(jq -r '.score // 0' "$out" | tr -d '\r')"
   awk -v s="$score" -v m="$min" 'BEGIN{exit !(s+0 >= m+0)}' && return 0 || return 1
 }
 
@@ -168,7 +168,21 @@ EVAL_JSON="${EVIDENCE_DIR}/eval.json"
         #    in run-static-evals.* writes it into static-results.json.gates, same as D1-D7. It was
         #    previously grouped with behaviorB1-3/sonarqube (which read tests/.evals/_run/<gate>.status),
         #    meaning its real computed result never reached eval.json. Fixed here.
-        st="${STATIC_STATUS[$g]:-N/A}"; rs="${STATIC_REASON[$g]:-not run by static script}" ;;
+        # 🔴 A DECLARED GATE WITH NO RESULT IS AN **ERROR**, NEVER A PASSING N/A.
+        #    `${STATIC_STATUS[$g]:-N/A}` laundered an ABSENT gate into a non-failing status: N/A never
+        #    sets any_fail, so a pipeline that recorded ZERO of D1/D2/D4/D5/D6 - because the generator
+        #    resolved no command for them, or the stack-resolved region was empty - emitted
+        #    "verdict": "PASS" having measured nothing. The gate is in ci.gates, so it was DECLARED as
+        #    something this project enforces; the only honest outcome for "declared but never run" is
+        #    ERROR. A gate that genuinely does not apply must be RECORDED as an earned N/A by
+        #    run-static-evals.* with a real reason (eval-framework.md Section 2.5.1's closed list) -
+        #    absence is not that.
+        if [ -n "${STATIC_STATUS[$g]:-}" ]; then
+          st="${STATIC_STATUS[$g]}"; rs="${STATIC_REASON[$g]:-}"
+        else
+          st="ERROR"
+          rs="gate '${g}' is declared in ci.gates but produced NO result in static-results.json.gates - it was never run. Absence is not a pass: either the generator resolved no command for it (fix ci.roots[]/the stack-resolved region), or the gate should not be in ci.gates."
+        fi ;;
       J1_architecture) st="$j1_status"; rs="$j1_reason" ;;
       J2_security) st="$j2_status"; rs="$j2_reason" ;;
       behaviorB1|behaviorB2|behaviorB3|sonarqube)

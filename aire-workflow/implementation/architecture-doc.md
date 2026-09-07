@@ -59,7 +59,7 @@ flowchart LR
 ## 2. Component Inventory
 | Component | Responsibility | Status | Source |
 |---|---|---|---|
-| BillingService | Plan changes and proration | existing (modified) | Atlas deepdive-billing.md |
+| BillingService | Plan changes and proration | existing (modified) | Atlas atlas-deep-dive.md |
 | ProrationEngine | Prorated amount calculation | new | functional-design/billing.md |
 
 ## 3. Layering and Boundaries

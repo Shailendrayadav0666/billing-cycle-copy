@@ -41,7 +41,7 @@ authoritative elsewhere — copying it per story only creates something that can
 | Architecture and its constraints | `spec/plans/architecture.md` |
 | Thresholds and quality floor | `tests/.evals/config.json` |
 | Security rules | the Security Baseline extension |
-| Existing-system truth | `spec/plans/deep-dive.md` (from Atlas — `helix-atlas-integration.md`) |
+| Existing-system truth | `spec/plans/atlas-deep-dive.md` (from Atlas — `helix-atlas-integration.md`) |
 
 ---
 
@@ -112,7 +112,10 @@ requirement has none.
 
 ## 4. Step definitions and runner configuration
 
-Step definitions live in **`tests/behavior/steps/`**. Feature files live under `spec/`. They are in
+Step definitions live in the **repo-root** **`tests/behavior/steps/`** — never nested under `src/`, and
+never under a brownfield `## Code Root` (that remapping applies to application code only). This is the
+tree `tests/.evals/behavior/run.sh` mounts and executes inside Podman, so a step definition written
+anywhere else is simply not found by the runner. Feature files live under `spec/`. They are in
 different trees **on purpose**: a `.feature` file is an authored specification, a step definition is
 source code, and `spec/` never holds source.
 

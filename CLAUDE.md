@@ -157,14 +157,16 @@ Users typically start with "using aire" + an existing Epic/tracking-item link or
 
 ## Reverse Engineering (CONDITIONAL - Brownfield Only)
 
-** ATLAS FIRST (`common/helix-atlas-integration.md` Section 5)**: AIRE never re-derives documentation
-Atlas already holds and a human has already reviewed. Dispatch on Atlas coverage:
+** ATLAS FIRST (`common/helix-atlas-integration.md` Section 6)**: AIRE never re-derives documentation
+Atlas already holds and a human has already reviewed. **First check whether `spec/plans/atlas-deep-dive.md`
+already exists in the workspace** (Workspace Detection); only if it doesn't, ask Atlas for **one deep
+dive document** for the estate/scope. Dispatch on whether it comes back:
 
-| Coverage | Behaviour |
+| Atlas deep dive doc | Behaviour |
 |---|---|
-| **Full** |  **SKIP the stage.** Pull the deepdive docs into `spec/plans/` (`deep-dive.md` + the flat RE docs) and the graph into `spec/plans/knowledge-graph.md`, each with its provenance block. Announce the skip and the coverage list. |
-| **Partial** |  Consume Atlas for what it covers; generate locally ONLY for the gaps, marking each locally generated file in its provenance block. |
-| **None** (user approved local generation) | ▶ Full local generation, with the banner *"Existing-system context derived locally; Atlas was not consulted."* on every artifact. |
+| **Already exists locally** |  **SKIP the stage.** Reuse `spec/plans/atlas-deep-dive.md` as-is. |
+| **Found on Atlas** |  **SKIP the stage.** Pull it verbatim into `spec/plans/atlas-deep-dive.md`, with its provenance block. Announce the skip. |
+| **Not found** |  Tell the user plainly: *"No deep dive document found on Atlas."* Then present the connect-gate A/B halt (`common/helix-atlas-integration.md` Section 4) — on **B**, generate the reverse-engineering artifacts locally, with the banner *"Existing-system context derived locally; no Atlas deep dive document was available."* on every artifact; on **A**, HALT. |
 
 Otherwise **execute** when existing code is detected and no prior RE artifacts exist; **skip** on
 greenfield, or when prior artifacts already exist anywhere in the repo.
@@ -467,7 +469,13 @@ without running either. Log every user response and tracker update in runtime-ar
 - **Content Validation** — validate all content before file creation (`common/content-validation.md`).
 - **Bounded Self-Healing** — every automatic fix loop is capped at **3 attempts**; on exhaustion the
   run HALTS at that gate with the Retry-Limit Report and asks the user for next steps. A failing gate
-  is never skipped, weakened, or carried forward.
+  is never skipped, weakened, or carried forward. 🔴 **One named exception**: `smoke-test-epic.{sh,ps1}`'s
+  own watch loop (`common/ci-pipeline-generation.md` Section 4.0.6) is UNBOUNDED — it terminates only
+  when `auto-fix-agent.*` itself stops producing a new run (that script's own `retryLimitForSelfRepair`
+  exhaustion, which still produces its own Retry-Limit Report, or a genuine fix), never on an
+  independent count. This is a one-time, epic-level environment check before any story exists, not a
+  per-story fix loop, and it is named here explicitly so it is never read as license to uncap any OTHER
+  self-healing loop in this framework.
 - 🔴 **NO EMERGENT BEHAVIOR** — Implementation-phase design stages MUST use the standardized
   **2-option** completion message from their own rule file. Never invent a 3-option menu or any other
   navigation pattern.
@@ -504,7 +512,7 @@ workflow start). Summary of the non-negotiables:
 - **`tests/`** — `unit/`, `behavior/` ( Gherkin step definitions), `e2e/` (Playwright)
 - **`spec/`** — specifications and documentation ONLY, 🔴 never a source file:
   `behavior.feature` at its root (**once per cycle, never per story**), and four subfolders:
-  **`plans/`** — all planning/design DOCS as flat files (`architecture.md`, `deep-dive.md` + the flat
+  **`plans/`** — all planning/design DOCS as flat files (`architecture.md`, `atlas-deep-dive.md` + the flat
   reverse-engineering docs from Atlas, `requirements.md`, `stories.md`, `personas.md`, `epic-brief.md`,
   `dependency-graph.yml`, `functional-design.md`, `nfr.md`, `infrastructure-design.md`,
   `application-design.md`); **`spec-generation/`** — the `*-generation.md` plan / clarifying-question

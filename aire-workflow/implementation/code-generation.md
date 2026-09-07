@@ -99,7 +99,7 @@ This is your own self-check while writing the plan — satisfy it yourself befor
   - Service/component boundaries and responsibilities (from Application Design)
 
 ## Step 4: Create Story Plan Document
-- [ ] Save complete plan as `spec/spec-generation/story-N.M-code-generation-generation.md`
+- [ ] Save complete plan as `spec/spec-generation/story-N.M-code-generation.md`
 - [ ] Include step numbering (Step 1, Step 2, etc.)
 - [ ] Include story context and dependencies
 - [ ] Include story traceability
@@ -135,7 +135,7 @@ This is your own self-check while writing the plan — satisfy it yourself befor
 # PART 2: GENERATION
 
 ## Step 10: Load Story Code Generation Plan
-- [ ] Read the complete plan from `spec/spec-generation/story-N.M-code-generation-generation.md`
+- [ ] Read the complete plan from `spec/spec-generation/story-N.M-code-generation.md`
 - [ ] Identify the next uncompleted step (first [ ] checkbox)
 - [ ] Load the context for that step (story, dependencies, design artifacts)
 
@@ -150,7 +150,12 @@ This is your own self-check while writing the plan — satisfy it yourself befor
   - **If file doesn't exist**: Create new file
 - [ ] Write to correct locations:
   - **Application Code**: the resolved code root (`src/` by default) per project structure
-  - **Unit tests**: `tests/unit/` · **Gherkin step definitions**: `tests/behavior/steps/`
+  - **Unit tests**: **repo-root** `tests/unit/` · **Gherkin step definitions**: **repo-root**
+    `tests/behavior/steps/` · **Playwright**: `tests/e2e/`
+    🔴 The `tests/` tree is ALWAYS at the repository root, never nested under `src/` and never
+    under a brownfield `## Code Root`. The Code Root remapping is for application code only.
+    `tests/.evals/behavior/run.sh` mounts and runs `tests/behavior/` inside Podman, and the
+    coverage gate reads the manifest's `testPaths` — a test written elsewhere is invisible to both.
   - **Documentation / specs**: `spec/` (markdown only — e.g. the `.feature` contract under `spec/behavior/`)
   - **Generated evidence**: `reports/` (unit / behavior / api-contract / eval evidence — never under `spec/`)
   - **Build/Config Files**: workspace root (they belong there by tooling convention)
@@ -160,6 +165,17 @@ This is your own self-check while writing the plan — satisfy it yourself befor
 
 ## Step 11a: Unit Test & Coverage Step (MANDATORY — after implementation, the `unitTestCoverageMin` threshold, same run)
 Runs ONCE per story, immediately after all implementation steps are complete (business logic, API, repository, frontend):
+
+🔴 **Working directory is a manifest fact for EVERY command in Steps 11a/11a.5/11b/11c below, on a
+monorepo or not** — before running the test runner, the API-test runner, the full-suite re-run, or any
+D1–D7 tool, resolve that command's owning entry in `tests/.evals/config.json`'s `ci.roots[]`, `cd` into
+`"$(git rev-parse --show-toplevel)/<root>"` (resolved fresh, never cached), and verify the declared
+`markerFile` is present before running the bare command (`common/ci-pipeline-generation.md` Section
+4.0d, `common/eval-framework.md` Section 1.1). A single-root repo does this as a no-op `cd "."` plus a
+marker check; skipping it on a monorepo is exactly what lets a local run and CI's later re-run of the
+SAME manifest command disagree on which directory they actually ran in. A missing/mismatched root is a
+**Manifest defect** — fix `ci.roots[]`, never invent a different path around it.
+
 - [ ] **Generate unit tests** covering ALL of the story's new/changed code — happy paths, edge cases, error scenarios, per acceptance criterion
 - [ ] **RUN the tests** with the project's test runner; fix any failures (whether in the tests or defects they expose in the implementation) until 100% of tests pass
 - [ ] **Measure coverage** on the story's new/changed code using the stack's standard coverage tool (e.g., jest `--coverage`, pytest-cov, JaCoCo)

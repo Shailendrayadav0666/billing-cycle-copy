@@ -5,6 +5,52 @@ param([string]$BaseSha = "", [switch]$CoverageOnly)
 $ErrorActionPreference = "Continue"
 
 $config = "tests/.evals/config.json"
+
+# ============================================================================================
+# 🔴 THIS VARIANT DOES NOT IMPLEMENT ci.roots[] AND MUST NOT PRETEND TO.
+#    run-static-evals.sh carries the full multi-root engine (per-root cd, markerFile verification,
+#    transitive dependsOn diff-scoping, the cobertura/jacoco/lcov/gocover coverage parsers, the
+#    unmatched-file sentinel). This PowerShell variant was never ported - it still assumes a single
+#    implicit "src" root.
+#    Silently running it would be the worst outcome available: the developer's LOCAL gate would enforce
+#    a materially DIFFERENT contract from the one CI enforces, which is precisely what
+#    ci-pipeline-generation.md Section 7 exists to forbid ("CI re-verifies in a clean environment what
+#    was verified on the developer's machine"). A green local run would mean nothing.
+#    So it refuses, loudly, and names the supported path. Exit 2 = setup/tooling problem, never a gate
+#    result - it can never be mistaken for a PASS.
+$mergedManifestPath = "tests/.evals/_run/merged-manifest.json"
+$configPath = "tests/.evals/config.json"
+$hasRoots = $false
+if (Test-Path $configPath) {
+  try {
+    $cfg = Get-Content $configPath -Raw | ConvertFrom-Json
+    if ($cfg.ci.roots -and @($cfg.ci.roots).Count -gt 0) { $hasRoots = $true }
+  } catch { }
+}
+# 🔴 FRAGMENTS ARE WHERE ROOTS ACTUALLY ACCUMULATE. Checking only config.json and the merged manifest
+#    missed the normal case entirely: reconciliation never edits config.json (it writes a NEW file per
+#    work unit under ci-manifest.d/), and tests/.evals/_run/ is gitignored and rm -rf'd in CI - so on a
+#    fresh clone or a clean dev box neither signal exists and this script sailed past the refusal to
+#    enforce the single-implicit-src-root contract, which is the exact divergence it exists to prevent.
+$fragmentDir = "tests/.evals/ci-manifest.d"
+$hasFragments = (Test-Path $fragmentDir) -and (@(Get-ChildItem -Path $fragmentDir -Filter *.json -File -ErrorAction SilentlyContinue).Count -gt 0)
+if ((Test-Path $mergedManifestPath) -or $hasRoots -or $hasFragments) {
+  Write-Error @"
+run-static-evals.ps1: REFUSING TO RUN - this repository uses the ci.roots[] manifest, which only
+run-static-evals.sh implements. Running this variant would enforce a DIFFERENT contract than CI and
+report a meaningless PASS.
+
+Run the supported variant instead:
+
+    bash tests/.evals/scripts/run-static-evals.sh <base-sha>
+
+On Windows use Git Bash or WSL. CI (ubuntu-latest) always uses the .sh variant, so this is the same
+engine your PR will actually be judged by.
+"@
+  exit 2
+}
+# ============================================================================================
+
 $evalKey = if ($env:EVAL_KEY) { $env:EVAL_KEY } else { "local" }
 $evidenceDir = "reports/eval-evidence/$evalKey"
 $staticDir = "$evidenceDir/static"

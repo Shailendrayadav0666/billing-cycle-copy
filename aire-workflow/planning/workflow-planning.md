@@ -7,7 +7,7 @@
 ## Step 1: Load All Prior Context
 
 ### 1.1 Load Reverse Engineering Artifacts (if brownfield)
-- architecture.md
+- atlas-deep-dive.md
 - component-inventory.md
 - technology-stack.md
 - dependencies.md

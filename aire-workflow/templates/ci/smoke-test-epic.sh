@@ -41,10 +41,13 @@ if ! gh auth status >/dev/null 2>&1; then
   exit 2
 fi
 
-# 🔴 Fixed at 1 (deliberate override) — the smoke test never reads retryLimitForSelfRepair from
-#    tests/.evals/config.json for its own budget. This is a smaller, separately-chosen cap for the epic-level
-#    environment check specifically, not the real self-repair budget used for actual story-code fixes.
-RETRY_LIMIT=1
+# 🔴 UNBOUNDED — no independent cap of its own (Section 4.0.6). The watch loop below keeps following new
+#    self-repair-triggered runs and terminates ONLY when no new run appears (meaning auto-fix-agent.sh
+#    itself stopped — either its own retryLimitForSelfRepair exhaustion, which already produces its own
+#    Retry-Limit Report, or a genuine fix) or a genuine pass. A stall where self-repair keeps pushing
+#    commits that come back byte-identical is not routed to a third "ask a human" condition here — that
+#    would let a real generation defect (a wrong command in the manifest, a wrong stack detected)
+#    masquerade as an environment problem instead of surfacing through auto-fix-agent's own report.
 
 # Filesystem-safe slug from the epic id (mirrors resolve-eval-key.sh's own sanitization).
 SLUG="$(printf '%s' "$EPIC_ID" | tr -cs 'A-Za-z0-9._-' '-')"
@@ -103,11 +106,10 @@ if [ -z "$run_id" ]; then
   exit 1
 fi
 
-max_attempts=$((RETRY_LIMIT + 1))   # the initial run, plus up to RETRY_LIMIT self-repair follow-up runs
-attempt=1
+attempt=1   # logging only — this loop has no independent attempt cap (see the note above)
 passed=0
-while [ "$attempt" -le "$max_attempts" ]; do
-  note "watching run ${run_id} (attempt ${attempt}/${max_attempts})"
+while :; do
+  note "watching run ${run_id} (attempt ${attempt}, unbounded — stops only when self-repair stops)"
   if gh run watch "$run_id" --exit-status >/dev/null 2>&1; then
     note "run ${run_id} PASSED"
     passed=1
@@ -136,18 +138,54 @@ done
 
 trap - ERR
 
+# 🔴 HONEST PER-CHECK REPORTING (Section 4.0.6, "Never report this as proof the whole pipeline is
+#    correct") — a single PASS/FAIL word invites exactly the reading that section forbids. What this
+#    run actually proves is trigger/checkout/credential/gating-mechanics viability; the delta-scoped
+#    gates ran too, but on a ZERO-DIFF PR they resolve to their own honest N/A (#4's diff-scoped
+#    execution: no changed files under any root means every stack-scoped block reports N/A on its own,
+#    mechanically — this function surfaces that real breakdown, it does not invent one).
+report_breakdown() {
+  local outcome="$1"
+  note "trigger coverage: PASS — the workflow triggered on this PR"
+  note "workflow acceptance: PASS — GitHub accepted and parsed the generated YAML"
+  note "checkout: PASS — the runner checked out ${SCRATCH_BRANCH}"
+  note "credential resolution: ${outcome} — see the gate breakdown below for whether the judge/Sonar steps could authenticate"
+  note "gating mechanics: ${outcome} — the Verdict step ran and produced a real result"
+  local gates_dir
+  gates_dir="$(mktemp -d)"
+  # 🔴 gh run download preserves the artifact's own internal relative paths (the upload step in
+  #    agentic-eval-pipeline.yml.template uploads tests/.evals/_run/ and reports/eval-evidence/ as-is),
+  #    so search recursively rather than assuming a flattened layout.
+  if gh run download "$run_id" -n eval-results -D "$gates_dir" >/dev/null 2>&1; then
+    local gates_file
+    gates_file="$(find "$gates_dir" -name 'static-results.json.gates' 2>/dev/null | head -n1)"
+    if [ -n "$gates_file" ] && [ -f "$gates_file" ]; then
+      note "per-gate breakdown (a zero-diff PR earns N/A on every stack-scoped gate by construction):"
+      while IFS=$'\t' read -r g s r; do
+        note "  ${g}: ${s} — ${r}"
+      done < "$gates_file"
+    else
+      note "per-gate breakdown: not found in the downloaded artifact — inspect ${PR_URL} directly"
+    fi
+  else
+    note "per-gate breakdown: could not download the eval-results artifact — inspect ${PR_URL} directly"
+  fi
+  rm -rf "$gates_dir"
+}
+
 if [ "$passed" -eq 1 ]; then
+  report_breakdown "PASS"
   note "merging ${PR_URL} into ${EPIC_BRANCH} and deleting ${SCRATCH_BRANCH}"
   if ! gh pr merge "$PR_NUMBER" --merge --delete-branch 2>&1; then
     fail "smoke test passed but the merge failed — resolve ${PR_URL} manually"
     exit 1
   fi
-  note "smoke test PASSED — ${EPIC_BRANCH} is validated, safe to hand off to dev-implement"
+  note "smoke test PASSED — the environment is viable to build on. This does NOT prove delta-scoped gate accuracy, behaviour tiers, or J1/J2 judge scoring — the first real story's PR is what exercises those for the first time (Section 4.0.6)."
   exit 0
 fi
 
-attempts_run=$((attempt > max_attempts ? max_attempts : attempt))
-fail "SMOKE TEST FAILED after ${attempts_run} attempt(s). ${PR_URL} is left OPEN for inspection."
-fail "3 retries ended. Please suggest next steps."
+report_breakdown "FAIL"
+
+fail "SMOKE TEST FAILED after ${attempt} attempt(s) — self-repair stopped producing new runs (its own retryLimitForSelfRepair exhaustion, reported in its own Retry-Limit Report on ${PR_URL}, or a genuine fix that still left something red). ${PR_URL} is left OPEN for inspection."
 fail "Development Handoff is BLOCKED until this is resolved — see ci-pipeline-generation.md Section 4.0.6."
 exit 1

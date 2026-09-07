@@ -6,7 +6,7 @@
 
 ## Input
 
-The Impact Analysis root-cause findings (`spec/impact-analysis.md` Step 5a), which MUST include explicit `file:line-range` evidence per affected file.
+The Impact Analysis root-cause findings (`spec/plans/impact-analysis.md` Step 5a), which MUST include explicit `file:line-range` evidence per affected file.
 
 ## Constraints
 
@@ -68,7 +68,7 @@ The Impact Analysis root-cause findings (`spec/impact-analysis.md` Step 5a), whi
 
 ## Output — Provenance Verdict table
 
-Return this table to the invoking workflow (it is recorded in `impact-analysis.md`, drives the labeling gate, and supplies the originating tickets the workflow links the bug to):
+Return this table to the invoking workflow (it is recorded in `spec/plans/impact-analysis.md`, drives the labeling gate, and supplies the originating tickets the workflow links the bug to):
 
 ```markdown
 | File:Lines | Verdict | Basis | Introducing commit | PR | Evidence | Originating ticket | Ticket evidence |

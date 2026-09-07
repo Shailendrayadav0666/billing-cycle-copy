@@ -15,10 +15,9 @@ if (-not (Get-Command gh -ErrorAction SilentlyContinue)) { Fail "gh CLI not inst
 gh auth status *> $null
 if ($LASTEXITCODE -ne 0) { Fail "gh CLI not authenticated — run 'gh auth login' first"; exit 2 }
 
-# 🔴 Fixed at 1 (deliberate override) — the smoke test never reads retryLimitForSelfRepair from
-#    tests/.evals/config.json for its own budget. This is a smaller, separately-chosen cap for the epic-level
-#    environment check specifically, not the real self-repair budget used for actual story-code fixes.
-$retryLimit = 1
+# 🔴 UNBOUNDED — no independent cap of its own (Section 4.0.6). See smoke-test-epic.sh's matching note
+#    for the full rationale: the watch loop below stops only when self-repair itself stops producing new
+#    runs, never on an external count.
 
 $slug = ($EpicId -replace '[^A-Za-z0-9._-]', '-')
 $scratchBranch = "ci/epic-smoke-$slug"
@@ -64,11 +63,10 @@ if (-not $runId) {
   exit 1
 }
 
-$maxAttempts = $retryLimit + 1
-$attempt = 1
+$attempt = 1   # logging only — no independent attempt cap
 $passed = $false
-while ($attempt -le $maxAttempts) {
-  NoteMsg "watching run $runId (attempt $attempt/$maxAttempts)"
+while ($true) {
+  NoteMsg "watching run $runId (attempt $attempt, unbounded - stops only when self-repair stops)"
   gh run watch $runId --exit-status *> $null
   if ($LASTEXITCODE -eq 0) {
     NoteMsg "run $runId PASSED"
@@ -94,16 +92,44 @@ while ($attempt -le $maxAttempts) {
   $attempt++
 }
 
+# 🔴 HONEST PER-CHECK REPORTING (Section 4.0.6) — see smoke-test-epic.sh's matching function for the
+#    full rationale: a zero-diff PR earns N/A on every stack-scoped gate by construction (#4's
+#    diff-scoped execution), and this surfaces that real breakdown rather than a single PASS/FAIL word.
+function ReportBreakdown($outcome) {
+  NoteMsg "trigger coverage: PASS - the workflow triggered on this PR"
+  NoteMsg "workflow acceptance: PASS - GitHub accepted and parsed the generated YAML"
+  NoteMsg "checkout: PASS - the runner checked out $scratchBranch"
+  NoteMsg "credential resolution: $outcome - see the gate breakdown below for whether the judge/Sonar steps could authenticate"
+  NoteMsg "gating mechanics: $outcome - the Verdict step ran and produced a real result"
+  $gatesDir = New-Item -ItemType Directory -Path (Join-Path $env:TEMP ([System.Guid]::NewGuid())) -Force
+  gh run download $runId -n eval-results -D $gatesDir.FullName *> $null
+  if ($LASTEXITCODE -eq 0) {
+    $gatesFile = Get-ChildItem -Recurse -Filter "static-results.json.gates" -Path $gatesDir.FullName -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($gatesFile) {
+      NoteMsg "per-gate breakdown (a zero-diff PR earns N/A on every stack-scoped gate by construction):"
+      foreach ($line in (Get-Content $gatesFile.FullName)) {
+        $parts = $line -split "`t"
+        if ($parts.Count -ge 3) { NoteMsg "  $($parts[0]): $($parts[1]) - $($parts[2])" }
+      }
+    } else {
+      NoteMsg "per-gate breakdown: not found in the downloaded artifact - inspect $prUrl directly"
+    }
+  } else {
+    NoteMsg "per-gate breakdown: could not download the eval-results artifact - inspect $prUrl directly"
+  }
+  Remove-Item -Recurse -Force $gatesDir.FullName -ErrorAction SilentlyContinue
+}
+
 if ($passed) {
+  ReportBreakdown "PASS"
   NoteMsg "merging $prUrl into $EpicBranch and deleting $scratchBranch"
   gh pr merge $prNumber --merge --delete-branch
   if ($LASTEXITCODE -ne 0) { Fail "smoke test passed but the merge failed - resolve $prUrl manually"; exit 1 }
-  NoteMsg "smoke test PASSED - $EpicBranch is validated, safe to hand off to dev-implement"
+  NoteMsg "smoke test PASSED - the environment is viable to build on. This does NOT prove delta-scoped gate accuracy, behaviour tiers, or J1/J2 judge scoring - the first real story's PR is what exercises those for the first time (Section 4.0.6)."
   exit 0
 }
 
-$attemptsRun = [Math]::Min($attempt, $maxAttempts)
-Fail "SMOKE TEST FAILED after $attemptsRun attempt(s). $prUrl is left OPEN for inspection."
-Fail "3 retries ended. Please suggest next steps."
+ReportBreakdown "FAIL"
+Fail "SMOKE TEST FAILED after $attempt attempt(s) - self-repair stopped producing new runs (its own retryLimitForSelfRepair exhaustion, reported in its own Retry-Limit Report on $prUrl, or a genuine fix that still left something red). $prUrl is left OPEN for inspection."
 Fail "Development Handoff is BLOCKED until this is resolved - see ci-pipeline-generation.md Section 4.0.6."
 exit 1

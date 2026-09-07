@@ -50,4 +50,4 @@ The per-story code-generation plan MUST:
 
 ## Rule 7 — Single-story flows (enhancement / bug)
 - **Enhancement**: the single story's `Covers` names the REQ-IDs from the enhancement-scoped `requirements.md`; plan steps are tagged per Rule 5.
-- **Bug**: the "requirement" is the expected behavior in `bug-brief.md` — plan steps trace to the brief's expected-behavior statements and the impact-analysis entries instead of REQ-IDs.
+- **Bug**: the "requirement" is the expected behavior in `spec/plans/bug-brief.md` — plan steps trace to the brief's expected-behavior statements and the impact-analysis entries instead of REQ-IDs.

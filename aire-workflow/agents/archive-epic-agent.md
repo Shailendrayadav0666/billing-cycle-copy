@@ -18,7 +18,7 @@ You are a **release manager** closing a release cycle. You will:
 2. Optionally reset the live workspace for the next cycle
 
 🔴 **No reverse-engineering delta is generated, and there is no stitching.** Current-system truth
-(`spec/plans/deep-dive.md` and the flat RE docs) is pulled fresh from **Atlas via the Helix MCP** at the
+(`spec/plans/atlas-deep-dive.md` and the flat RE docs) is pulled fresh from **Atlas via the Helix MCP** at the
 start of each new cycle (`common/helix-atlas-integration.md`), so a cycle never has to diff itself against
 the previous one or fold changes back into root documents. This skill's only job is to snapshot the cycle
 and (optionally) reset the workspace.
@@ -37,7 +37,7 @@ and (optionally) reset the workspace.
 
 1. Verify `runtime-artifacts/aire-state.md` exists. If not, STOP: tell the user there is no active AIRE project to archive.
 2. Resolve the **cycle type and ID**:
-   - Read `## Tracker` in `runtime-artifacts/aire-state.md`. `Workflow Type: bug` → **bug mode**; `Workflow Type: enhancement` → **enhancement mode** (both: Cycle ID = `Parent Ticket`, name from the ticket title / `bug-brief.md` / `enhancement-brief.md`); otherwise **epic mode** (Cycle ID = `Parent Epic`, name from `epic-brief.md`).
+   - Read `## Tracker` in `runtime-artifacts/aire-state.md`. `Workflow Type: bug` → **bug mode**; `Workflow Type: enhancement` → **enhancement mode** (both: Cycle ID = `Parent Ticket`, name from the ticket title / `spec/plans/bug-brief.md` / `spec/plans/enhancement-brief.md`); otherwise **epic mode** (Cycle ID = `Parent Epic`, name from `epic-brief.md`).
    - Fallback: ask the user:
      ```
       Which Epic, Bug, or Enhancement ticket does this release cycle belong to?
@@ -112,7 +112,7 @@ Present this message VERBATIM (substituting real values) and then **HALT — do 
 ## Step 3: (Removed) — No Delta Generation
 
 🔴 **This skill no longer generates a reverse-engineering delta and does not stitch anything.**
-Current-system truth lives in `spec/plans/deep-dive.md` and the flat RE docs under `spec/plans/`, and
+Current-system truth lives in `spec/plans/atlas-deep-dive.md` and the flat RE docs under `spec/plans/`, and
 is refreshed **fresh from Atlas via the Helix MCP** at the start of each new cycle
 (`common/helix-atlas-integration.md`) — so there is nothing to diff or fold back into root documents at
 cycle close. Proceed directly to the archive.
@@ -144,7 +144,7 @@ cycle close. Proceed directly to the archive.
    [ -d runtime-artifacts ] && cp -R runtime-artifacts "$ARCH/runtime-artifacts"  # audit.md + aire-state.md
    ```
    Those copies carry **everything** the cycle was built from and produced:
-   - `spec/` — `architecture.md` (`spec/plans/architecture.md`) and all flat docs under `spec/plans/` (requirements, stories, personas, the design docs, `dependency-graph.yml`, `deep-dive.md` and the flat RE docs), `spec/spec-generation/`, `spec/behavior/`, `spec/test-plans/`
+   - `spec/` — `architecture.md` (`spec/plans/architecture.md`) and all flat docs under `spec/plans/` (requirements, stories, personas, the design docs, `dependency-graph.yml`, `atlas-deep-dive.md` and the flat RE docs), `spec/spec-generation/`, `spec/behavior/`, `spec/test-plans/`
    - `spec/behavior/` — one `.feature` file per work unit: the Gherkin contract the code was built against
    - `reports/` — the generated outputs: `unit-test-evidence/`, `behavior-test-evidence/`, `api-contract-test-evidence/`, `eval-evidence/`, `reviews/`, `code-security-reviews/`, `ticket-summary/` (mirrored only when the live `reports/` folder exists)
    - `runtime-artifacts/` — the cycle's `audit.md` and `aire-state.md` (mirrored only when the live folder exists)
@@ -174,7 +174,7 @@ cycle close. Proceed directly to the archive.
    ```
 5. **Verify the copy** — check BOTH of the following before proceeding; do NOT proceed until both pass:
    - **Structural check (layout guardrail)**: list the archive folder's immediate children (`ls -a aire-archives/epics/<EPIC-ID>-<epic-name-slug>/`) — it MUST contain EXACTLY `spec/`, `archive-manifest.md`, and (when the corresponding live folder exists) `reports/` and `runtime-artifacts/`. If any OTHER entry appears at this level (e.g. `requirements/`, `design/`, `aire-state.md`, `audit.md`), the copy was flattened instead of mirrored — redo Step 3 before continuing.
-   - **Content check**: spot-check key files exist at their mirrored paths: `runtime-artifacts/aire-state.md`, `runtime-artifacts/audit.md`, `spec/plans/architecture.md`, `spec/plans/deep-dive.md`, one `spec/behavior/<work-unit>.feature`, and (when `reports/` was copied) one evidence file such as `reports/eval-evidence/<work-unit>/eval.json`.
+   - **Content check**: spot-check key files exist at their mirrored paths: `runtime-artifacts/aire-state.md`, `runtime-artifacts/audit.md`, `spec/plans/architecture.md`, `spec/plans/atlas-deep-dive.md`, one `spec/behavior/<work-unit>.feature`, and (when `reports/` was copied) one evidence file such as `reports/eval-evidence/<work-unit>/eval.json`.
    - 🔴 **Completeness check (BLOCKING — same for every cycle type)**: prove nothing was dropped, by comparing each live tree against its archived copy — every diff MUST be **completely empty**:
      ```bash
      diff <(cd spec && find . | sort) \
@@ -193,7 +193,7 @@ cycle close. Proceed directly to the archive.
 ```
 aire-archives/epics/<EPIC-ID>-<epic-name-slug>/
 ├── spec/                  ← the ENTIRE spec/ tree, folder name preserved
-│   ├── plans/                         ← architecture.md, deep-dive.md + flat RE docs, requirements,
+│   ├── plans/                         ← architecture.md, atlas-deep-dive.md + flat RE docs, requirements,
 │   │                                     Stories/Personas, design docs, dependency-graph.yml
 │   ├── spec-generation/               ← *-generation.md plan/clarifying-question files
 │   ├── behavior/                       ← .feature contracts
@@ -210,7 +210,33 @@ aire-archives/epics/<EPIC-ID>-<epic-name-slug>/
 ```
 (`bugs/<BUG-ID>-<slug>/` and `enhancements/<ENH-ID>-<slug>/` follow the identical shape and the identical full-tree contents — the folders shown above are illustrative, not a whitelist: archive whatever exists, nothing less.)
 
-> The **latest cycle archive folder** is a complete snapshot of the cycle — workspace detection can offer to restore human-curated context from it when a new cycle starts. Current-system truth (`deep-dive.md` and the flat RE docs) is refreshed fresh from Atlas each cycle, not restored from the archive.
+> The **latest cycle archive folder** is a complete snapshot of the cycle — workspace detection can offer to restore human-curated context from it when a new cycle starts. Current-system truth (`atlas-deep-dive.md` and the flat RE docs) is refreshed fresh from Atlas each cycle, not restored from the archive.
+
+---
+
+## Step 5.5: Collapse CI Manifest Fragments (MANDATORY)
+
+`tests/.evals/ci-manifest.d/` is not part of the `spec/`/`reports/`/`runtime-artifacts/` mirror-and-reset
+above — `tests/.evals/` persists across cycles at base, inherited by the next cycle "as-is"
+(`common/directory-structure.md` Artifact Ownership). Left uncollapsed, every cycle's fragments would
+keep accumulating in the next cycle's checkout forever. This is the ONE place they get folded back in.
+
+1. If `tests/.evals/ci-manifest.d/` does not exist or is empty, log that there was nothing to collapse
+   and skip to Step 6.
+2. Otherwise, merge every `tests/.evals/ci-manifest.d/*.json` fragment into `tests/.evals/config.json`'s
+   `ci.roots[]` array, using the SAME filename-sorted, root-keyed merge
+   `tests/.evals/scripts/run-static-evals.*` already performs at every gate run
+   (`common/ci-pipeline-generation.md` Section 4.0f.1) — never a different, ad hoc merge here. Write the
+   merged `roots[]` directly into `config.json`, and set `ci.manifestState: "resolved"` if it was
+   `"unresolved"` and at least one root now exists.
+3. **Delete every file under `tests/.evals/ci-manifest.d/`** (the directory itself may remain, empty) —
+   their content is now permanently part of `config.json`.
+4. **Verify before proceeding**: re-run `tests/.evals/scripts/validate-pipeline.{sh,ps1}` against the
+   collapsed `config.json` and confirm it still passes (in particular **V28/V30** — every root's
+   directory and marker file still verify) before this becomes what the next cycle inherits.
+5. Log the collapse in `runtime-artifacts/audit.md` (still live at this point, before Step 6 deletes
+   it): which fragments were collapsed, the resulting `roots[]` count, and the `validate-pipeline`
+   result.
 
 ---
 
@@ -237,7 +263,7 @@ A) Reset, keep human-curated context (recommended) — clear cycle-scoped
    spec/behavior.feature, the whole reports/ tree, and runtime-artifacts/) but KEEP:
      - spec/context-project/existing-knowledge/ and spec/context-project/new-references/
        — human-authored, cross-cycle; the next cycle reads them again
-   The next cycle pulls fresh current-system truth (deep-dive.md + RE docs) from Atlas.
+   The next cycle pulls fresh current-system truth (atlas-deep-dive.md + RE docs) from Atlas.
 B) Full reset — remove spec/ entirely (every doc + every work-unit bundle, AND the
    context-project/ with both its subfolders), remove reports/, and remove runtime-artifacts/
     also removes the human-curated context inputs from the working tree. They are
@@ -264,6 +290,7 @@ Everything this skill produced so far exists only in the working tree. 🔴 **If
 1. Stage the cycle-close changes:
    - `aire-archives/<EPIC-ID>-<epic-name-slug>/` (the verified archive — includes the mirrored `spec/`, `reports/` and `runtime-artifacts/`)
    - The workspace-reset changes from Step 6 (deleted cycle-scoped docs, the deleted `reports/` tree, and the deleted `runtime-artifacts/` — including `audit.md` and `aire-state.md`)
+   - The Step 5.5 collapse: `tests/.evals/config.json` (updated `ci.roots[]`/`manifestState`) and the deleted `tests/.evals/ci-manifest.d/*.json` fragment files
 2. Commit on the current (cycle) branch:
    ```
    docs: close cycle <EPIC-ID> — release archive, workspace reset
@@ -301,7 +328,7 @@ Everything this skill produced so far exists only in the working tree. 🔴 **If
    1⃣  Merge the open PR into `<base-branch>`: <PR URL>
        (the cycle-close commit above rides this PR)
 
-   The next cycle pulls fresh current-system truth (deep-dive.md + RE docs) from Atlas via the
+   The next cycle pulls fresh current-system truth (atlas-deep-dive.md + RE docs) from Atlas via the
    Helix MCP — there is nothing to stitch.
 ```
 

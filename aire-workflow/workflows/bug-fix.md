@@ -62,7 +62,7 @@ workflow or by `bug-fix-implement`.**
 1. **Resume check first**: if `runtime-artifacts/aire-state.md` exists, read it. If `## Tracker` records a DIFFERENT ticket/epic, ask the user which to keep — NEVER silently overwrite. If it records this same ticket with `Workflow Type: bug`, resume from the recorded stage per `common/session-continuity.md`. If `## Tracker` doesn't exist yet (standalone invocation before any aire workflow ran), ask the Tracker Selection question (`common/tracker-sync.md` Section 1) first.
 2. Dispatch on `## Tracker` → `Type`, per `common/tracker-sync.md` Section 8:
    - **JIRA/ADO/GITHUB**: parse the `<TICKET-ID>` from the invocation (key/ID/number or URL). If missing, ask for it and wait. Fetch the ticket (`getJiraIssue` / `az boards work-item show` / `gh issue view`) — accept issue type **Bug or Story/Task**. Save summary, description, severity, steps to reproduce, environment, and acceptance criteria (if any) to `spec/plans/bug-brief.md`.
-   - **LOCAL**: no ID expected. Ask ` Describe the bug (what's broken, steps to reproduce, environment, expected vs actual behavior):`, capture the answer, and mint a local ID `BUG-LOCAL-N` (next unused N found by scanning `runtime-artifacts/aire-state.md`) to use as `<TICKET-ID>` for the rest of this flow. Write the captured description directly to `bug-brief.md`.
+   - **LOCAL**: no ID expected. Ask ` Describe the bug (what's broken, steps to reproduce, environment, expected vs actual behavior):`, capture the answer, and mint a local ID `BUG-LOCAL-N` (next unused N found by scanning `runtime-artifacts/aire-state.md`) to use as `<TICKET-ID>` for the rest of this flow. Write the captured description directly to `spec/plans/bug-brief.md`.
    The bug-brief is the intake brief: it defines WHAT to fix and is the primary input to every later stage.
 3. Record in `runtime-artifacts/aire-state.md`:
    ```markdown
@@ -99,7 +99,7 @@ Exactly per the epic flow: if RE artifacts exist anywhere in the repo (or restor
 
 ## Step 4 — Requirements Analysis (as-is, bug-scoped)
 
-1. Execute `planning/requirements-analysis.md` with `bug-brief.md` as the primary input. Depth will usually be **minimal** (the ticket defines the defect); use standard/comprehensive only if the fix is genuinely complex or high-risk. Its Step 1.5 reads the `## Context Project` answer captured by `ticket-implement` (Step 3.5) and, if `Use Artifacts: Yes`, uses **only** the recorded path as background context about the existing system — do NOT re-ask.
+1. Execute `planning/requirements-analysis.md` with `spec/plans/bug-brief.md` as the primary input. Depth will usually be **minimal** (the ticket defines the defect); use standard/comprehensive only if the fix is genuinely complex or high-risk. Its Step 1.5 reads the `## Context Project` answer captured by `ticket-implement` (Step 3.5) and, if `Use Artifacts: Yes`, uses **only** the recorded path as background context about the existing system — do NOT re-ask.
 2. Extension opt-ins are presented as usual; Security Baseline is always enforced.
 3. **Wait for explicit approval** of requirements.md.
 4. On approval: commit the planning artifacts on the **bug branch**. 🔴 **Do NOT raise a PR here** — unlike the epic flow's Step 10, the bug flow raises its single `[BUG]` PR at the end, inside `bug-fix-implement`.
@@ -111,7 +111,7 @@ Exactly per the epic flow: if RE artifacts exist anywhere in the repo (or restor
 
 ### 5a. Impact Analysis
 1. Using the RE artifacts, the bug-brief, and code search (grep/glob/read), identify the **affected files/components**: where the defect lives, the likely root cause, and the blast radius (callers, consumers, shared files). The Root-Cause Hypothesis MUST cite explicit **`file:line-range`** evidence per affected file — 5b's line-level provenance tracing consumes these exact ranges.
-2. Write `spec/impact-analysis.md`:
+2. Write `spec/plans/impact-analysis.md`:
    ```markdown
    # Impact Analysis — [TICKET-ID]
    ## Root-Cause Hypothesis
@@ -126,7 +126,7 @@ Exactly per the epic flow: if RE artifacts exist anywhere in the repo (or restor
 
 ### 5b. AI-Origin Detection (line-level, via the Defect Provenance Analyst agent)
 1. Load `agents/defect-provenance-analyst.md` and execute its procedure with 5a's root-cause `file:line-range` findings as input. It traces each **defective line** (not the file's last change) to the commit that **introduced** the defective logic (`git blame -w -M -C -L`, walking past cosmetic commits via `git log -L`; omission bugs attribute to the enclosing block's introducing commit), resolves that commit's PR, resolves the **originating tracker item** that shipped the line, and returns a **Provenance Verdict table** — verdict AI-generated / human / **undetermined**, each row with concrete evidence (SHA, PR number, which marker) plus the originating item and which source it came from.
-2. Record each verdict (with introducing commit + evidence) in the impact-analysis table's **Defect-line origin (5b)** column, and include the full Provenance Verdict table in `impact-analysis.md`. 🔴 Label only on positive evidence (per the agent's marker rules) — NEVER guess; "undetermined" gets no label.
+2. Record each verdict (with introducing commit + evidence) in the impact-analysis table's **Defect-line origin (5b)** column, and include the full Provenance Verdict table in `spec/plans/impact-analysis.md`. 🔴 Label only on positive evidence (per the agent's marker rules) — NEVER guess; "undetermined" gets no label.
 3. **If ANY defective line's introducing change is AI-generated —  apply the label AUTOMATICALLY (no confirmation)**, exactly like the 5c causal links and for the same reason: the analyst labels **only on positive, verified evidence** (an "ai-generated" PR label, a Claude co-author trailer, or an `AIRE-Version:` trailer), and "undetermined" is never labeled — so there is no judgement call left for the user to make.
    - Apply the label/tag `ai-generated-defect` to the ticket, dispatching on `## Tracker` → `Type` per `common/tracker-sync.md` Section 9 (JIRA: `editJiraIssue`; ADO: add to `System.Tags` via `az boards work-item update`; GITHUB: `gh issue edit --add-label`; LOCAL: note it directly on the local bug entry — no external call), **verify it landed** (non-LOCAL), and **announce it** (not a question):
      ```
@@ -199,7 +199,7 @@ Establishes the relationship `[Bug] --"is caused by"--> [Originating Story / Bug
 **3c. ADO / GITHUB / LOCAL mechanics** (per `common/tracker-sync.md` Section 7 — no typed "is caused by" relation exists on these platforms, so a comment is always the authoritative record):
 - **ADO**: best-effort `az boards work-item relation add --relation-type "System.LinkTypes.Related"` (the closest native type — carries no direction/semantics on its own) PLUS a mandatory discussion comment on the bug work item stating the causation explicitly (`az boards work-item update --discussion "Caused by work item #[ORIGIN-ID] — <one-line reason>"`). The comment is authoritative; the `Related` link is metadata only.
 - **GITHUB**: no typed relation is reachable via `gh` — record causation as a plain comment on the bug issue (`gh issue comment [BUG-NUMBER] --body "Caused by #[ORIGIN-NUMBER] — <one-line reason>"`; GitHub auto-links the `#N` reference). This comment IS the record.
-- **LOCAL**: write the causation directly into the bug's entry in `stories.md` / `impact-analysis.md` as a plain note (`Caused by: Story 1.3` or `Caused by: BUG-LOCAL-2`) — no external call.
+- **LOCAL**: write the causation directly into the bug's entry in `stories.md` / `spec/plans/impact-analysis.md` as a plain note (`Caused by: Story 1.3` or `Caused by: BUG-LOCAL-2`) — no external call.
 4. Log every created link in runtime-artifacts/audit.md with the complete evidence chain: `file:line` → introducing commit SHA → PR → matched source (`pr-title` / `commit-subject` / `branch`) → originating item → link/comment mechanism used. Log failures and skips with the same detail.
 5. Announce the created links in the Step 5 completion summary.
 
@@ -209,7 +209,7 @@ Present the Impact Analysis summary (including the Provenance Verdict table, any
 
 The impact analysis is evidence-based (`file:line` citations, git-traced provenance) and is not the last word: it is re-validated against the current code at `bug-fix-implement` Step 4.2, and its conclusions are re-surfaced inside the announced fix plan (`bug-fix-implement` Step 4). Gating it here would present the same content twice.
 
-Log in runtime-artifacts/audit.md that the impact analysis was completed and auto-approved, with the affected-file list and the provenance verdicts. If the user volunteers a correction ("you missed file X", "that's not the root cause"), update `impact-analysis.md`, re-announce, and continue — that is an interrupt, not a gate.
+Log in runtime-artifacts/audit.md that the impact analysis was completed and auto-approved, with the affected-file list and the provenance verdicts. If the user volunteers a correction ("you missed file X", "that's not the root cause"), update `spec/plans/impact-analysis.md`, re-announce, and continue — that is an interrupt, not a gate.
 
 ## Step 6 — Single Story (replaces User Stories + Dependency Graph)
 
@@ -291,7 +291,7 @@ After the design stages complete (or are all skipped), mark in `runtime-artifact
 
  **Ticket**: [TICKET-ID] — [title]  ([ai-generated-defect label applied / human-origin / undetermined])
  **Caused by**: [PROJ-102, PROJ-456 — linked/commented per the configured tracker / none resolvable]
- **Impact**: [N] files identified in spec/impact-analysis.md
+ **Impact**: [N] files identified in spec/plans/impact-analysis.md
  Design stages: [list which ran vs were skipped]
  Branch: bug/[TICKET-ID]-[title] (cut from [base branch]) — analysis + design **committed and pushed** ([commit hash])
 
@@ -325,7 +325,7 @@ Substitute every placeholder (`[TICKET-ID]`, `[base branch]`, `[commit hash]`) w
 ---
 
 ## Critical Rules
-- 🔴 EVERY audit entry carries the `**JIRA TICKET**:` field.
+- 🔴 EVERY audit entry carries the `**TRACKER ITEM**:` field.
 - 🔴 Step 8.5 (STOP CHECKPOINT) gives this ONE-fix cycle the SAME project-level bootstrap the epic flow gets: `architecture.md`, the cycle's `behavior.feature`, the rubrics, the CI pipeline, and — at Step 9 — the pre-handoff smoke test. Every artifact is **create-if-missing, never regenerate**: a repo that already has them (from a prior epic/bug/enhancement cycle) reuses them AS-IS. Never skip Step 8.5 on the reasoning that "this is only a bug fix."
 - 🔴 Step 9 is a **BREAK, not a stop-and-wait-for-a-keyword**: ALWAYS commit + push the analysis/design/STOP-CHECKPOINT artifacts on the bug branch FIRST (the ve's `/ve-implement` needs them on origin), run the pre-handoff smoke test, present the ve handoff, then ask the yes/no. On **yes** continuation into `bug-fix-implement` happens in the same session — no second keyword. On **no**, halt with state saved. The yes/no is **flow control, deliberately unnumbered** — never write "GATE" into its audit heading. It is the LAST question of the entire bug cycle: `bug-fix-implement` has no gates.
 - 🔴 The Step 9 break NEVER blocks the ve on the dev: the ve's `/ve-implement [JIRA-ID]` run is independent of the yes/no answer and of the fix existing at all.

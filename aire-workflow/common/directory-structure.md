@@ -76,11 +76,11 @@ this specific project** (see `common/ci-pipeline-generation.md`).
 │   │                                     #    What the B3 tier runs on the last work unit.
 │   ├── plans/                            #    ALL planning + design DOCS, as FLAT files:
 │   │   ├── architecture.md               #     ONCE per cycle — system design + Section 10 constraints
-│   │   ├── deep-dive.md                  #     current-system architecture, from Atlas via Helix MCP
+│   │   ├── atlas-deep-dive.md            #     current-system architecture, from Atlas via Helix MCP
 │   │   ├── business-overview.md          #     + the flat RE docs (from Atlas): code-structure.md,
 │   │   │                                 #     api-documentation.md, component-inventory.md,
 │   │   │                                 #     technology-stack.md, dependencies.md,
-│   │   │                                 #     code-quality-assessment.md, knowledge-graph.md,
+│   │   │                                 #     code-quality-assessment.md,
 │   │   │                                 #     reverse-engineering-timestamp.md
 │   │   ├── requirements.md               #     epic-brief.md, requirements.md
 │   │   ├── stories.md                    #     stories.md, personas.md
@@ -89,12 +89,15 @@ this specific project** (see `common/ci-pipeline-generation.md`).
 │   │   ├── functional-design.md          #     consolidated design docs (one per stage)
 │   │   ├── nfr.md                        #     nfr-requirements + nfr-design, merged
 │   │   ├── infrastructure-design.md
-│   │   └── application-design.md         #     components / methods / services / dependency, merged
+│   │   ├── application-design.md         #     components / methods / services / dependency, merged
+│   │   ├── bug-brief.md                  #     ticket-implement (bug-fix): fetched/captured ticket brief
+│   │   ├── enhancement-brief.md          #     ticket-implement (enhancement): fetched/captured brief
+│   │   └── impact-analysis.md            #     bug-fix / enhancement-implement: affected files + root cause
 │   ├── spec-generation/                 #    the *-generation.md plan + clarifying-question files
-│   │   ├── story-generation-generation.md #   nfr-generation.md, application-design-generation.md,
+│   │   ├── story-generation.md          #   nfr-generation.md, application-design-generation.md,
 │   │   ├── functional-design-generation.md #   infrastructure-design-generation.md,
-│   │   ├── story-N.M-code-generation-generation.md # Bug-generation.md, enhancement-generation.md,
-│   │   └── requirements-clarifying-questions.md
+│   │   ├── story-N.M-code-generation.md # Bug-generation.md, enhancement-generation.md,
+│   │   └── requirement-verification-questions.md
 │   ├── behavior/                         #    ONE .feature per work unit — the only per-unit spec
 │   │   ├── story-1.1.feature             #     SPEC (contract), stays in spec/ — NOT evidence
 │   │   ├── story-1.2.feature
@@ -155,7 +158,7 @@ this specific project** (see `common/ci-pipeline-generation.md`).
 2. **`spec/` is documentation and specification only.** Never a `.ts`, `.py`, `.java` or any other
    source file. There is **no `aire-docs/` layer** — `spec/` has exactly four subfolders plus
    `behavior.feature` at its root: **`plans/`** (all planning + design docs as flat files —
-   `architecture.md`, `deep-dive.md` + the flat RE docs from Atlas, `requirements.md`, `stories.md`,
+   `architecture.md`, `atlas-deep-dive.md` + the flat RE docs from Atlas, `requirements.md`, `stories.md`,
    `personas.md`, `epic-brief.md`, `dependency-graph.yml`, `functional-design.md`, `nfr.md`,
    `infrastructure-design.md`, `application-design.md`), **`spec-generation/`** (the `*-generation.md`
    plan / clarifying-question files), **`behavior/`** (one `.feature` per work unit), **`test-plans/`**
@@ -172,7 +175,7 @@ this specific project** (see `common/ci-pipeline-generation.md`).
    one. The blocking J1 rubric is derived from its Section 10 and from nothing else.
    3b. **One `.feature` per work unit is the ONLY per-unit spec file**, under
    `spec/behavior/`. No per-story requirements, architecture,
-   constraints or knowledge-graph documents — that information is already authoritative in
+   constraints or deep-dive documents — that information is already authoritative in
    `stories.md`, `requirements.md`, `architecture.md` and `tests/.evals/config.json`, and copying it per
    story only creates something that can drift.
 4. **Test code lives in `tests/`, never in `src/`** unless the stack's own convention is co-location
@@ -208,9 +211,28 @@ branch. Nothing is ever pushed to the base branch.**
 | `reports/**` (generated evidence)             | work-unit branch | Written during code generation / gate runs     |
 | `runtime-artifacts/{audit.md,aire-state.md}`  | cycle branch     | Created by Workspace Detection at cycle start  |
 | `src/**`, `tests/**`                        | work-unit branch | Generate during code generation                |
+| `.gitignore`'s `tests/.evals/_run/` entry     | cycle branch     | **Add it** if the entry is missing — never overwrite the rest of an existing `.gitignore` |
+| `tests/.evals/ci-manifest.d/<work-unit-key>.json` | **work-unit branch** | **Create it** — one NEW file per work unit, written ONLY by that unit at the end of its own run (`common/ci-pipeline-generation.md` Section 4.0f) |
 
 **"Cycle branch"** = the epic branch for an epic cycle, the bug branch for a bug cycle, the
 enhancement branch for an enhancement cycle.
+
+🔴 **`tests/.evals/_run/` is CI-local scratch state, never committed** (`common/ci-pipeline-generation.md`
+Section 4.0e) — it holds the per-run `failed-gates.txt`, `*.status` files and the self-repair attempt
+counter, all of which must be purged and freshly rewritten by every single run, local or CI. This is
+the ONE exception to "reports/eval-evidence/ is tracked" (Section 5.3 of `common/ci-pipeline-generation.md`)
+— that directory stays committed as part of a story's own evidence trail; `tests/.evals/_run/` never is.
+`auto-fix-agent.*`'s `git add -A` must never be allowed to stage it, which is exactly what this
+`.gitignore` entry prevents.
+
+🔴 **`tests/.evals/ci-manifest.d/<work-unit-key>.json` is the ONE row in this table not written on the
+cycle branch** — it is **append-a-new-file** territory, written on the **work-unit branch** by the story,
+bug, or enhancement that established the stack facts it records. This is what keeps two parallel
+`dev-implement` sessions (Step 1.75) conflict-free on CI configuration specifically: neither
+`tests/.evals/config.json` nor another unit's fragment is ever touched by a different work unit. Section
+2.1.1's "present → leave it completely alone" rule stays exactly as written for the REST of
+`tests/.evals/` — this directory is the one, narrow exception, and only because a new file with a unique
+name is being added, never an existing one edited.
 
 ### Why nothing is pushed to base
 
@@ -280,6 +302,26 @@ unreviewable diff and breaks every import in the repo.
 | Existing code already in`src/`                                       | Nothing to do. Continue.                                                                                                                                                                      |
 | Existing code in a single other root (`app/`, `lib/`, `server/`) | **Record it** in `runtime-artifacts/aire-state.md` under `## Code Root` and treat that directory as `src/` for the whole cycle. Announce it. Every rule that says `src/` means the recorded root. |
 | Monorepo with several package roots                                    | Record each in`## Code Root` as a list. New code goes into the package the work unit belongs to, at that package's own `src/`.                                                            |
+
+🔴 **ENUMERATING a monorepo's package roots — do not eyeball it.** `## Code Root` is what Section 3 of
+`common/ci-pipeline-generation.md` turns into `ci.roots[]`, and a package missing from this list gets
+no root, so it is never installed, built, tested or gated — **silently**, because diff-scoping reports
+an absent root exactly like an untouched one. Read the repo's own workspace declaration rather than
+scanning directories:
+
+| Ecosystem | Where the package list is declared |
+|---|---|
+| npm / yarn / pnpm | `workspaces` in the root `package.json`, or `packages:` in `pnpm-workspace.yaml` |
+| Maven | `<modules>` in the aggregator `pom.xml` (recursively — modules may declare their own) |
+| Gradle | `include(...)` in `settings.gradle` / `settings.gradle.kts` |
+| Go | `use (...)` in `go.work` |
+| .NET | the project list in the `.sln` |
+| Python | path/editable installs (`-e ../pkg`, `path = "../pkg"`), or a `packages/*` convention |
+| Nx / Turborepo / Lerna | `nx.json` / `turbo.json` / `lerna.json` project globs |
+
+Record EVERY package the declaration names. If a package is deliberately excluded, record why — an
+unexplained omission is indistinguishable from an oversight, and its cost is an entire module outside
+CI for the life of the repo.
 | No discernible code root (files loose at repo root)                    | Create`src/`, put **only new** code there, and record it. Leave existing files alone.                                                                                                 |
 
 🔴 Record the decision once, in `runtime-artifacts/aire-state.md`, and never re-derive it per story — an inconsistent

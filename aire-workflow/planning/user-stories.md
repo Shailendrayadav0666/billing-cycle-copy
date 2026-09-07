@@ -164,8 +164,8 @@ Embed EXACTLY this question in the plan (fill in the computed values — never l
 - Allow for hybrid approaches with clear decision criteria
 
 ## Step 6: Store Story Plan
-- Save the complete story plan with embedded questions in `spec/plans/` directory
-- Filename: `story-generation-generation.md`
+- Save the complete story plan with embedded questions in `spec/spec-generation/` directory
+- Filename: `story-generation.md`
 - Include all [Answer]: tags for user input
 - Ensure plan is comprehensive and covers all story development aspects
 
@@ -221,7 +221,7 @@ to Tracker).
   auto-approved, including the plan path and a one-line summary of the approach chosen.
 - Present a short announcement (NOT a question):
   ```
-   Story plan ready — spec/spec-generation/story-generation-generation.md
+   Story plan ready — spec/spec-generation/story-generation.md
      Approach: [breakdown approach] | Target stories: [X] | team_size: [N]
      Generating all stories now — the complete set will be presented for your approval (GATE 1) before anything is pushed to the configured tracker.
   ```
@@ -252,7 +252,7 @@ loop and no final story-set approval.
       between stories for approval.
 
 ## Step 15: Load Story Generation Plan
-- [ ] Read the complete story plan from `spec/spec-generation/story-generation-generation.md`
+- [ ] Read the complete story plan from `spec/spec-generation/story-generation.md`
 - [ ] Identify the next uncompleted step (first [ ] checkbox)
 - [ ] Load the context and requirements for that step
 
