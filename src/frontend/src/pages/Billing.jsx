@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import '../App.css'
 
@@ -97,15 +97,88 @@ function OnDemandUsageCard({ data }) {
   )
 }
 
+function UpgradeModal({ preview, currentPlanPrice, loading, error, onConfirm, onCancel }) {
+  return (
+    <div className="modal-overlay" role="dialog" aria-modal="true">
+      <div className="modal-panel">
+        <h3>Upgrade to Premium</h3>
+        {preview && (
+          <div className="upgrade-preview">
+            <p>Current plan: {preview.current_plan} ({currentPlanPrice})</p>
+            <p>
+              New plan: {preview.new_plan} (${preview.next_renewal_price.toFixed(2)}/mo)
+            </p>
+            <p>Days remaining in current cycle: {preview.days_remaining}</p>
+            <p>
+              You will be charged <strong>${preview.prorated_charge.toFixed(2)}</strong> today
+            </p>
+            <p>
+              Next renewal price: ${preview.next_renewal_price.toFixed(2)}/month starting {preview.renew_at}
+            </p>
+          </div>
+        )}
+        {error && <p className="upgrade-error">Payment failed: {error}. Your plan has not changed.</p>}
+        <div className="modal-actions">
+          <button type="button" onClick={onCancel} disabled={loading}>
+            Cancel
+          </button>
+          <button type="button" onClick={onConfirm} disabled={loading || !preview}>
+            {loading ? 'Processing...' : 'Confirm Upgrade'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Billing() {
   const { token } = useAuth()
   const [data, setData] = useState(null)
+  const [upgrade, setUpgrade] = useState({ open: false, preview: null, loading: false, error: null })
+  const [banner, setBanner] = useState(null)
 
-  useEffect(() => {
+  const fetchBilling = useCallback(() => {
     fetch(`/api/billing?email=${encodeURIComponent(token)}`)
       .then((r) => r.json())
       .then(setData)
   }, [token])
+
+  useEffect(() => {
+    fetchBilling()
+  }, [fetchBilling])
+
+  const openUpgrade = () => {
+    setUpgrade({ open: true, preview: null, loading: false, error: null })
+    fetch(`/api/billing/upgrade-preview?email=${encodeURIComponent(token)}`)
+      .then((r) => r.json())
+      .then((preview) => setUpgrade((prev) => ({ ...prev, preview })))
+  }
+
+  const cancelUpgrade = () => setUpgrade({ open: false, preview: null, loading: false, error: null })
+
+  const confirmUpgrade = () => {
+    setUpgrade((prev) => ({ ...prev, loading: true, error: null }))
+    fetch('/api/billing/upgrade', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: token }),
+    })
+      .then(async (r) => {
+        const body = await r.json()
+        if (!r.ok) {
+          throw new Error(body.message || body.detail || 'Upgrade failed')
+        }
+        return body
+      })
+      .then((body) => {
+        setUpgrade({ open: false, preview: null, loading: false, error: null })
+        setBanner(`You're now on Premium! $${body.charge.toFixed(2)} was charged.`)
+        fetchBilling()
+      })
+      .catch((err) => {
+        setUpgrade((prev) => ({ ...prev, loading: false, error: err.message }))
+      })
+  }
 
   if (!data) {
     return (
@@ -124,8 +197,10 @@ export default function Billing() {
         </div>
       </div>
 
+      {banner && <p className="upgrade-success-banner">{banner}</p>}
+
       <p className="current-label">
-        Current plan: <span className="standard-badge">Standard</span>
+        Current plan: <span className="standard-badge">{data.plan_name}</span>
       </p>
 
       <div className="plan-row">
@@ -139,12 +214,28 @@ export default function Billing() {
               <span className="badge active">Active</span>
             </div>
           </div>
+          {data.plan_name === 'Standard' && (
+            <button type="button" className="upgrade-cta" onClick={openUpgrade}>
+              Upgrade to Premium
+            </button>
+          )}
         </div>
         <div className="renew-card">
           <div className="renew-title">Renew at</div>
           <div className="renew-date">{data.renew_at}</div>
         </div>
       </div>
+
+      {upgrade.open && (
+        <UpgradeModal
+          preview={upgrade.preview}
+          currentPlanPrice={data.price}
+          loading={upgrade.loading}
+          error={upgrade.error}
+          onConfirm={confirmUpgrade}
+          onCancel={cancelUpgrade}
+        />
+      )}
 
       <div className="section-title">Usage</div>
       <p className="section-sub">Your usage is renewed every month</p>

@@ -221,7 +221,7 @@ Commit with:  fix(ci): self-repair attempt ${attempt} - ${GATES[*]}"
 # 🔴 headless/permission flags resolved from `claude --help` at GENERATION time (Section 6.0) —
 #    the generator writes the resolved invocation between the markers below, never assumed from memory.
 # >>> CLAUDE_REPAIR_INVOCATION START <<<
-printf '%s' "$BRIEF" | claude || report_and_exit "the repair CLI invocation failed on attempt ${attempt}." 1
+printf '%s' "$BRIEF" | claude -p --dangerously-skip-permissions || report_and_exit "the repair CLI invocation failed on attempt ${attempt}." 1
 # >>> CLAUDE_REPAIR_INVOCATION END <<<
 
 # ── Verify the agent actually changed something ──

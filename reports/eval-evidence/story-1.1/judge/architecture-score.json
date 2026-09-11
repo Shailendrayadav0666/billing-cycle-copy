@@ -1,0 +1,14 @@
+{
+  "gate": "J1_architecture",
+  "rubricVersion": "1.0.0",
+  "judgeModel": "claude-sonnet-5",
+  "minimum": 0.85,
+  "criteria": [
+    { "id": "ARCH-01", "weight": 0.30, "score": 1.0, "note": "Billing.jsx renders preview.prorated_charge/next_renewal_price/days_remaining verbatim; no client-side proration arithmetic." },
+    { "id": "ARCH-02", "weight": 0.25, "score": 1.0, "note": "charge_card() (main.py) is a pure function, no network/SDK import; no payment package added to requirements.txt/package.json." },
+    { "id": "ARCH-03", "weight": 0.20, "score": 1.0, "note": "upgrade() (main.py) returns the 402 JSONResponse before any users/billing_data mutation; verified by test_confirm_upgrade_declined_leaves_user_on_standard." },
+    { "id": "ARCH-04", "weight": 0.15, "score": 1.0, "note": "_compute_proration() raises 409 already_premium as its first statement, before charge_card is ever called, on both endpoints." },
+    { "id": "ARCH-05", "weight": 0.10, "score": 1.0, "note": "No assignment to a renew_at key anywhere in the upgrade flow; verified by test_confirm_upgrade_success_flips_plan_and_charges." }
+  ],
+  "weightedScore": 1.0
+}

@@ -1,0 +1,36 @@
+[
+  {
+    "cell": null,
+    "code": "E501",
+    "end_location": {
+      "column": 122,
+      "row": 19
+    },
+    "filename": "C:\\Users\\shailendra.yadav\\Desktop\\projects\\helix-aire-v1-demo1\\billing-cycle-copy\\src\\backend\\main.py",
+    "fix": null,
+    "location": {
+      "column": 121,
+      "row": 19
+    },
+    "message": "Line too long (121 > 120)",
+    "noqa_row": 19,
+    "url": "https://docs.astral.sh/ruff/rules/line-too-long"
+  },
+  {
+    "cell": null,
+    "code": "E501",
+    "end_location": {
+      "column": 136,
+      "row": 20
+    },
+    "filename": "C:\\Users\\shailendra.yadav\\Desktop\\projects\\helix-aire-v1-demo1\\billing-cycle-copy\\src\\backend\\main.py",
+    "fix": null,
+    "location": {
+      "column": 121,
+      "row": 20
+    },
+    "message": "Line too long (135 > 120)",
+    "noqa_row": 20,
+    "url": "https://docs.astral.sh/ruff/rules/line-too-long"
+  }
+]

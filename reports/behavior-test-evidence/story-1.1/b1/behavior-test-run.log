@@ -1,0 +1,71 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.3, pytest-9.1.1, pluggy-1.6.0 -- C:\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\shailendra.yadav\Desktop\projects\helix-aire-v1-demo1\billing-cycle-copy
+plugins: anyio-4.14.2, asyncio-1.4.0, bdd-8.1.0, cov-7.1.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 10 items
+
+..\..\tests\behavior\steps\test_story_1_1.py::test_standard_subscriber_sees_the_upgrade_cta PASSED [ 10%]
+..\..\tests\behavior\steps\test_story_1_1.py::test_plan_badge_reflects_the_real_plan PASSED [ 20%]
+..\..\tests\behavior\steps\test_story_1_1.py::test_confirmation_preview_shows_the_exact_prorated_charge PASSED [ 30%]
+..\..\tests\behavior\steps\test_story_1_1.py::test_proration_preview_endpoint_returns_the_documented_contract PASSED [ 40%]
+..\..\tests\behavior\steps\test_story_1_1.py::test_successful_upgrade_charges_the_prorated_amount_and_flips_the_plan PASSED [ 50%]
+..\..\tests\behavior\steps\test_story_1_1.py::test_upgrade_applies_premium_quotas_and_preserves_the_renewal_date PASSED [ 60%]
+..\..\tests\behavior\steps\test_story_1_1.py::test_declined_payment_leaves_the_subscriber_on_standard PASSED [ 70%]
+..\..\tests\behavior\steps\test_story_1_1.py::test_alreadypremium_subscriber_cannot_upgrade_again PASSED [ 80%]
+..\..\tests\behavior\steps\test_story_1_1.py::test_alreadypremium_subscriber_cannot_be_charged_again_via_the_upgrade_endpoint PASSED [ 90%]
+..\..\tests\behavior\steps\test_story_1_1.py::test_unauthenticated_caller_is_rejected PASSED [100%]
+
+============================== warnings summary ===============================
+..\..\..\..\..\..\..\..\Python313\Lib\site-packages\fastapi\testclient.py:1
+  C:\Python313\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+..\..\..\..\..\..\..\..\Python313\Lib\site-packages\gherkin\gherkin_line.py:79: 19 warnings
+  C:\Python313\Lib\site-packages\gherkin\gherkin_line.py:79: DeprecationWarning: 'maxsplit' is passed as positional argument
+    uncommented_line = re.split(r"\s#", self._trimmed_line_text.strip(), 2)[0]
+
+..\..\..\..\..\..\..\..\Python313\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Python313\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC1 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+..\..\..\..\..\..\..\..\Python313\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Python313\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC2 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+..\..\..\..\..\..\..\..\Python313\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Python313\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC3 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+..\..\..\..\..\..\..\..\Python313\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Python313\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC4 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+..\..\..\..\..\..\..\..\Python313\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Python313\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC5 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+..\..\..\..\..\..\..\..\Python313\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Python313\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC6 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+..\..\..\..\..\..\..\..\Python313\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Python313\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC7 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+..\..\..\..\..\..\..\..\Python313\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Python313\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC8 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+..\..\..\..\..\..\..\..\Python313\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Python313\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC8b - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+..\..\..\..\..\..\..\..\Python313\Lib\site-packages\pytest_bdd\plugin.py:137
+  C:\Python313\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.AC9 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    mark = getattr(pytest.mark, tag)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\shailendra.yadav\Desktop\projects\helix-aire-v1-demo1\billing-cycle-copy\reports\behavior-test-evidence\story-1.1\b1\behavior-test-report.xml -
+======================= 10 passed, 30 warnings in 1.48s =======================

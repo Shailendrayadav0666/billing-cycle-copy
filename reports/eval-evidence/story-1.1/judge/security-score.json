@@ -1,0 +1,13 @@
+{
+  "gate": "J2_security",
+  "rubricVersion": "1.0.0",
+  "judgeModel": "claude-sonnet-5",
+  "minimum": 0.85,
+  "criteria": [
+    { "id": "SEC-01", "owasp": "A01:2025", "weight": 0.35, "score": 1.0, "note": "Both new endpoints (main.py upgrade_preview, upgrade) apply the same email-existence check as every pre-existing endpoint (billing, tasks, add_task) before any read/write; no endpoint is less strict than the existing pattern." },
+    { "id": "SEC-02", "owasp": "A06:2025", "weight": 0.30, "score": 1.0, "note": "days_remaining is floored at max(1, ...); the already-Premium guard runs before charge_card on both endpoints so a second call after success returns 409, never a second charge; verified by test_already_premium_guard_on_preview_and_upgrade." },
+    { "id": "SEC-03", "owasp": "A10:2025", "weight": 0.20, "score": 1.0, "note": "All three documented error paths (401/402/409) return the exact documented {detail, message?} shape with no internal detail leaked; renew_at is only ever written by this same backend (never user input), so the strptime call has no externally reachable exception path this diff introduces." },
+    { "id": "SEC-04", "owasp": "A03:2025", "weight": 0.15, "score": 1.0, "note": "New backend deps (pytest, pytest-cov, httpx, pytest-bdd) are unpinned, matching the existing requirements.txt convention (fastapi, uvicorn[standard] are also unpinned) — not a new deviation. No payment/network SDK was added." }
+  ],
+  "weightedScore": 1.0
+}

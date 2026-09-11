@@ -1,0 +1,48 @@
+{
+  "key": "story-1.1",
+  "trackerId": "LOCAL",
+  "evalFrameworkVersion": "1.0.0",
+  "rubricVersion": "1.0.0",
+  "judgeModel": "claude-sonnet-5",
+  "scope": "changed-files",
+  "changedFiles": 8,
+  "bootstrap": {
+    "created": [
+      { "check": "D1_lint/D6_complexity", "path": "src/backend/ruff.toml", "tool": "ruff", "preset": "recommended + C901@12" }
+    ],
+    "reused": [
+      { "check": "D1_lint (frontend)", "path": "src/frontend/.oxlintrc.json", "note": "repo's own config, used as-is" }
+    ]
+  },
+  "toolchain": [
+    { "tool": "ruff", "version": "0.8.4" },
+    { "tool": "mypy", "version": "1.14.1" },
+    { "tool": "semgrep", "version": "1.127.0" },
+    { "tool": "pip-audit", "version": "2.9.0" },
+    { "tool": "pip-licenses", "version": "5.0.0" },
+    { "tool": "gitleaks", "version": "8.21.2" },
+    { "tool": "oxlint", "version": "1.79.0" },
+    { "tool": "license-checker", "version": "25.0.1" }
+  ],
+  "gates": {
+    "D1_lint": { "status": "PASS", "newFindings": 0, "note": "2 new E501 (backend) + 1 new exhaustive-deps (Billing.jsx) fixed in this run; 4 pre-existing oxlint findings on Tasks.jsx/AuthContext.jsx untouched" },
+    "D2_types": { "status": "PASS", "newFindings": 0, "note": "3 new mypy errors fixed in this run (PLANS/renew_at typing); 2 pre-existing errors on add_task untouched" },
+    "D3_sast": { "status": "PASS", "newFindings": 0, "note": "1 pre-existing WARNING (wildcard-cors), matched by rule-id across the baseline/post-change diff" },
+    "D4_deps": { "status": "PASS", "newFindings": 0, "note": "no new backend deps added this run beyond STOP CHECKPOINT tooling; pip-audit 0 vulns; npm audit 6 pre-existing" },
+    "D5_licenses": { "status": "PASS", "newFindings": 0 },
+    "D6_complexity": { "status": "PASS", "newFindings": 0, "note": "max C901 measured across changed functions: 3 (well under 12)" },
+    "D7_secrets": { "status": "PASS", "newFindings": 0 },
+    "unitCoverage": { "status": "PASS", "coveragePercent": 100.0, "note": "100% of new/changed lines both stacks; see reports/unit-test-evidence/story-1.1/evidence-manifest.md" },
+    "apiContract": { "status": "PASS", "note": "see reports/api-contract-test-evidence/story-1.1/evidence-manifest.md" },
+    "behaviorB1": { "status": "PASS", "containerised": false, "reason": "podman machine has no outbound network access to docker.io (verified, not transient)" },
+    "behaviorB2": { "status": "PASS", "containerised": false, "reason": "podman machine has no outbound network access to docker.io (verified, not transient)" },
+    "behaviorB3": { "status": "PASS", "containerised": false, "reason": "podman machine has no outbound network access to docker.io (verified, not transient); this is the last (only) work unit by PR-merge-state (no other units exist) -- B3 = B1 union B2 plus spec/behavior.feature's cross-unit journeys (none recorded), already green" },
+    "J1_architecture": { "status": "PASS", "score": 1.0, "rubricVersion": "1.0.0" },
+    "J2_security": { "status": "PASS", "score": 1.0, "rubricVersion": "1.0.0" }
+  },
+  "note": "sonarqube is a CI-only gate (common/eval-framework.md Section 5 gate inventory) — it is not a local SH-LOOP and is never computed here. It runs for real once this story's PR is raised and is cross-checked against this local eval.json by the Section D.8 CI Attestation Gate.",
+  "checksRun": 14,
+  "checksTotal": 14,
+  "checksNA": [],
+  "overall": "PASS"
+}

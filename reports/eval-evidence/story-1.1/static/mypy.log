@@ -1,0 +1,8 @@
+src\backend\main.py:137: error: Argument 1 to "strptime" of "datetime" has incompatible type "Collection[Collection[str]]"; expected "str"  [arg-type]
+src\backend\main.py:139: error: Unsupported left operand type for - ("object")  [operator]
+src\backend\main.py:248: error: Value of type variable "SupportsRichComparisonT" of "max" cannot be "object"  [type-var]
+src\backend\main.py:248: error: Unsupported operand types for + ("object" and "int")  [operator]
+src\backend\main.py:279: error: Incompatible types in assignment (expression has type "object", target has type "Collection[Collection[str]]")  [assignment]
+src\backend\main.py:281: error: Value of type "Collection[str]" is not indexable  [index]
+src\backend\main.py:285: error: Unsupported target for indexed assignment ("Collection[Collection[str]]")  [index]
+Found 7 errors in 1 file (checked 1 source file)

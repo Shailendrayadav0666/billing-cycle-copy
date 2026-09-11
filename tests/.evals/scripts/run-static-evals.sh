@@ -677,6 +677,21 @@ if [ "$COVERAGE_ONLY" -eq 0 ]; then
   :  # no-op — keeps this block syntactically valid even before the generator fills in any gates
      # (bash treats an if-body containing only comments as empty, which is a syntax error)
 # >>> STACK-RESOLVED D-GATES START <<<
+# src/backend (python) — ruff (D1/D6), mypy (D2), pip-audit (D4), pip-licenses (D5)
+delta_diff D1_lint 'ruff check . --output-format=json | jq -r ".[] | [.code, .filename, .message] | @tsv"' "src/backend" "requirements.txt"
+delta_diff D2_types 'mypy . --ignore-missing-imports 2>&1 | grep ": error:" || true' "src/backend" "requirements.txt"
+delta_diff D4_deps 'pip-audit -r requirements.txt -f json 2>/dev/null | jq -r ".dependencies[]? | .name as \$n | (.vulns // [])[]? | [\$n, .id, .description] | @tsv"' "src/backend" "requirements.txt"
+delta_diff D5_licenses 'pip-licenses --format=json 2>/dev/null | jq -r --arg bad "$AIRE_DISALLOWED_LICENSES" "(\$bad | split(\",\")) as \$bl | .[] | select(.License as \$l | \$bl | any(. as \$b | (\$b != \"\") and (\$l | contains(\$b)))) | [.Name, .License] | @tsv"' "src/backend" "requirements.txt"
+delta_diff D6_complexity 'ruff check . --select C901 --config "lint.mccabe.max-complexity=$AIRE_MAX_CYCLOMATIC_COMPLEXITY" --output-format=json | jq -r ".[] | [.code, .filename, .message] | @tsv"' "src/backend" "requirements.txt"
+
+# src/frontend (node) — oxlint (D1), license-checker (D5); no type checker (plain JS) or complexity
+# rule available for oxlint on this stack, so D2/D6 are an earned N/A on this root (Section 2.5.1
+# reason 1 — the check cannot apply to this stack), recorded directly rather than via delta_diff.
+delta_diff D1_lint 'npx --yes oxlint --format=json src 2>/dev/null | jq -r "(.diagnostics // [])[] | [.code, .filename, .message] | @tsv"' "src/frontend" "package.json"
+record_multi_root D2_types "src/frontend" N/A "plain JavaScript project, no type checker in this stack (no tsconfig.json / TypeScript)"
+delta_diff D4_deps 'npm audit --json 2>/dev/null | jq -r "(.vulnerabilities // {}) | to_entries[] | [.key, .value.severity] | @tsv"' "src/frontend" "package.json"
+delta_diff D5_licenses 'npx --yes license-checker --json 2>/dev/null | jq -r --arg bad "$AIRE_DISALLOWED_LICENSES" "(\$bad | split(\",\")) as \$bl | to_entries[] | select((.value.licenses // \"\") as \$l | \$bl | any(. as \$b | (\$b != \"\") and (\$l | contains(\$b)))) | [.key, .value.licenses] | @tsv"' "src/frontend" "package.json"
+record_multi_root D6_complexity "src/frontend" N/A "oxlint has no cyclomatic-complexity rule; no complexity tool exists for this stack"
 # >>> STACK-RESOLVED D-GATES END <<<
   collapse_multi_root
 fi

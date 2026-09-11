@@ -87,7 +87,7 @@ ${diff}"
   local rc claude_err_file
   claude_err_file="$(mktemp)"
   # >>> CLAUDE_JUDGE_INVOCATION START <<<
-  resp="$(printf '%s' "$prompt" | claude 2>"$claude_err_file")"; rc=$?
+  resp="$(printf '%s' "$prompt" | claude -p --dangerously-skip-permissions --model "$MODEL" 2>"$claude_err_file")"; rc=$?
   # >>> CLAUDE_JUDGE_INVOCATION END <<<
   if [ "$rc" -ne 0 ]; then
     fail "judge CLI invocation failed: $(cat "$claude_err_file" 2>/dev/null)"
@@ -98,7 +98,7 @@ ${diff}"
   local json
   json="$(printf '%s' "$resp" | sed -n '/{/,/}/p' | jq -c '.' 2>/dev/null || true)"
   if [ -z "$json" ]; then
-    resp="$(printf '%s' "$prompt" | claude 2>"$claude_err_file")" || true
+    resp="$(printf '%s' "$prompt" | claude -p --dangerously-skip-permissions --model "$MODEL" 2>"$claude_err_file")" || true
     json="$(printf '%s' "$resp" | sed -n '/{/,/}/p' | jq -c '.' 2>/dev/null || true)"
   fi
   rm -f "$claude_err_file"

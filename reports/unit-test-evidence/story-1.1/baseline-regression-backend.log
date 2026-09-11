@@ -1,0 +1,20 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.3, pytest-9.1.1, pluggy-1.6.0 -- C:\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\shailendra.yadav\Desktop\projects\helix-aire-v1-demo1\billing-cycle-copy
+plugins: anyio-4.14.2, asyncio-1.4.0, bdd-8.1.0, cov-7.1.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... C:\Python313\Lib\site-packages\coverage\control.py:963: CoverageWarning: No data was collected. (no-data-collected); see https://coverage.readthedocs.io/en/7.15.4/messages.html#warning-no-data-collected
+  self._warn("No data was collected.", slug="no-data-collected")
+collected 0 items
+
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.13.3-final-0 _______________
+
+Name      Stmts   Miss  Cover
+-----------------------------
+main.py      65     65     0%
+-----------------------------
+TOTAL        65     65     0%
+Coverage XML written to file coverage.xml
+============================ no tests ran in 0.20s ============================
