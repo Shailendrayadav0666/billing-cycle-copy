@@ -11,4 +11,16 @@ export default defineConfig({
       },
     },
   },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['../../../tests/unit/frontend/setup.js'],
+    include: ['../../../tests/unit/frontend/**/*.test.jsx'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      reportsDirectory: './coverage',
+      include: ['src/pages/Billing.jsx'],
+    },
+  },
 })

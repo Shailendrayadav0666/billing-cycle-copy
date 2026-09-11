@@ -1,0 +1,35 @@
+{
+  "rubricName": "Security — OWASP Top 10:2025 — Billing-Cycle (Mid-Cycle Subscription Upgrade)",
+  "rubricVersion": "1.0.0",
+  "derivedFrom": ["OWASP Top 10:2025", "spec/plans/architecture.md"],
+  "evalCriteria": [
+    {
+      "id": "SEC-01", "owasp": "A01:2025",
+      "metric": "Broken access control",
+      "weight": 0.35,
+      "prompt": "Review the two new endpoints (GET /api/billing/upgrade-preview, POST /api/billing/upgrade). Score 0 if either endpoint mutates or discloses billing/plan data for an email without at minimum the same existence check the rest of this codebase already applies (email must be a key in `users`, else 401) — i.e. the new endpoints must not be LESS strict than the existing /api/billing pattern. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A01_2025-Broken_Access_Control/"
+    },
+    {
+      "id": "SEC-02", "owasp": "A06:2025",
+      "metric": "Insecure design — business logic abuse",
+      "weight": 0.30,
+      "prompt": "Review the proration and upgrade logic. Score 0 if: (a) prorated_charge can be computed or applied as a negative/zero-or-less value without the max(1, days_remaining) floor being enforced, (b) an already-Premium account can still trigger a second charge/mutation because the guard is missing or ordered after the side-effecting code, or (c) the upgrade endpoint can be called multiple times to repeatedly re-apply Premium quotas/charges with no idempotency check appropriate to this POC's scope. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A06_2025-Insecure_Design/"
+    },
+    {
+      "id": "SEC-03", "owasp": "A10:2025",
+      "metric": "Mishandling of exceptional conditions",
+      "weight": 0.20,
+      "prompt": "Review the error paths (402 card_declined, 409 already_premium, 401 unknown email). Score 0 if any error response leaks an internal stack trace, exception message, or implementation detail instead of the documented `detail`/`message` shape, or if an unhandled exception (e.g. a malformed renew_at string) would surface a raw 500 with internal detail instead of a clean, documented error. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A10_2025-Mishandling_of_Exceptional_Conditions/"
+    },
+    {
+      "id": "SEC-04", "owasp": "A03:2025",
+      "metric": "Software supply chain failures",
+      "weight": 0.15,
+      "prompt": "Review new dependencies added to requirements.txt/package.json for this story. Score 0 if any added package is unpinned with no version specifier where the rest of the file pins versions, or if a payment/network SDK was added where the epic explicitly requires a dependency-free dummy gateway. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A03_2025-Software_Supply_Chain_Failures/"
+    }
+  ]
+}

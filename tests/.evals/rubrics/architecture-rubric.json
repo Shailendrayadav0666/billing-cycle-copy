@@ -1,0 +1,42 @@
+{
+  "rubricName": "Architectural Alignment — Billing-Cycle (Mid-Cycle Subscription Upgrade)",
+  "rubricVersion": "1.0.0",
+  "derivedFrom": ["spec/plans/architecture.md#10-verifiable-constraints"],
+  "evalCriteria": [
+    {
+      "id": "ARCH-01",
+      "metric": "Proration is server-side only",
+      "weight": 0.30,
+      "prompt": "Review every changed frontend file. Score 0 if any changed frontend code recomputes prorated_charge, daily_delta, or days_remaining from raw plan prices/dates instead of rendering the value returned by GET /api/billing/upgrade-preview. Cite the file and line.",
+      "source": "spec/plans/requirements.md REQ-NF-03"
+    },
+    {
+      "id": "ARCH-02",
+      "metric": "Deterministic dummy gateway, no external dependency",
+      "weight": 0.25,
+      "prompt": "Review the diff for charge_card() and any new dependency declarations. Score 0 if a third-party payment SDK/package was added to requirements.txt or package.json, or if charge_card contains a network call (requests/httpx/socket) rather than a pure in-process decision on the email string. Cite the file and line.",
+      "source": "spec/plans/requirements.md REQ-NF-01; spec/plans/epic-brief.md Gateway Specification"
+    },
+    {
+      "id": "ARCH-03",
+      "metric": "No mutation on payment failure",
+      "weight": 0.20,
+      "prompt": "Review the POST /api/billing/upgrade handler. Score 0 if any write to users[email] or billing_data[email] occurs before, or independently of, the charge_card() decline check — i.e. any path where a card_declined result still leaves a mutation applied. Cite the file and line.",
+      "source": "spec/plans/stories.md Story 1.1 AC7"
+    },
+    {
+      "id": "ARCH-04",
+      "metric": "Already-Premium guard on both endpoints",
+      "weight": 0.15,
+      "prompt": "Review both GET /api/billing/upgrade-preview and POST /api/billing/upgrade. Score 0 if either handler is missing the already-Premium check, or performs proration/charge work before that check runs. Cite the file and line.",
+      "source": "spec/plans/stories.md Story 1.1 AC8"
+    },
+    {
+      "id": "ARCH-05",
+      "metric": "renew_at immutability",
+      "weight": 0.10,
+      "prompt": "Review the diff for any assignment to a renew_at key on users[email] or billing_data[email] inside the upgrade flow. Score 0 if any such assignment exists. Cite the file and line.",
+      "source": "spec/plans/stories.md Story 1.1 AC6; spec/plans/epic-brief.md Acceptance Criteria — Epic Level"
+    }
+  ]
+}
