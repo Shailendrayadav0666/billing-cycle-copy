@@ -485,6 +485,18 @@ coverage_delta() {
   while IFS= read -r f; do
     [ -z "$f" ] && continue
 
+    # 🔴 NOT EVERY CHANGED FILE UNDER sourcePaths IS COVERABLE (comment above, unenforced until now):
+    #    sourcePaths is a DIRECTORY-level ownership prefix, matched by delta_diff/D1-D7 with no notion
+    #    of file extension. A coverage report is instrumentation-tool output — it can only ever mention
+    #    the language's own source files (.py/.js/.jsx/.ts/.tsx), never a project config/meta file
+    #    (ruff.toml, .gitignore, ...) or a stylesheet (.css) that happens to live in the same directory.
+    #    Without this, a story that merely adds/edits a lint config alongside its code fails the gate
+    #    on a "report/path mismatch" that is not a mismatch at all — the file was never instrumentable.
+    case "$f" in
+      *.py|*.js|*.jsx|*.ts|*.tsx|*.mjs|*.cjs|*.vue|*.go|*.java|*.kt|*.rb|*.php|*.cs) ;;
+      *) continue ;;
+    esac
+
     local matched_idx=-1 i
     for i in "${!REPORT_SOURCEPATHS[@]}"; do
       local sp_joined="${REPORT_SOURCEPATHS[$i]}" sp matched=0

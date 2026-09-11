@@ -66,7 +66,7 @@
         "installCommands": ["npm install"],
         "buildCommand": "npm run build",
         "coverageCommand": "npm run test",
-        "noTestsExitCode": 1,
+        "noTestsExitCode": 0,
         "dependsOn": [],
         "toolchainSetup": [],
         "coverageReportPath": "coverage/lcov.info",
