@@ -54,4 +54,4 @@ there is nothing to graph — `Requires: none`).
 - User confirmed CLAUDE_CODE_OAUTH_TOKEN, SONAR_TOKEN, SONAR_HOST_URL added as GitHub Actions repository secrets, and set `sonar-project.properties` `sonar.projectKey=shailendrayadav0666_billing-cycle-copy`, `sonar.projectName=billing-cycle-copy`, `sonar.organization=shailendrayadav0666` (Option A — SonarQube Cloud; Option B self-hosted was unavailable, see Environment Notes). Secret values were not and cannot be verified from here — the first pipeline run is what proves them. `tests/.evals/config.json` `sonarqube.enabled = true`; `sonarqube` appended to `ci.gates`.
 
 ## Status
-- Analysis complete — awaiting downstream stages
+- Design complete — awaiting dev-implement

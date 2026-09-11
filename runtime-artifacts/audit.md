@@ -115,3 +115,20 @@
 **User Input**: "proceed"
 **AI Response**: Per common/ci-pipeline-generation.md Section 4.1.3, left the generated artifacts active — did NOT attempt to verify the secret values (unreadable from here; the first pipeline run proves them). User had already signed up for SonarQube Cloud and edited `sonar-project.properties` directly (`sonar.projectKey=shailendrayadav0666_billing-cycle-copy`, `sonar.projectName=billing-cycle-copy`, `sonar.organization=shailendrayadav0666`) before answering. Set `tests/.evals/config.json` `sonarqube.enabled = true` and appended `"sonarqube"` to `ci.gates`. Recorded in both `aire-state.md` (durable, so a resumed session doesn't miss it) and here. Continuing the STOP CHECKPOINT to the Section 4.0.6 smoke test next.
 **Context**: STOP CHECKPOINT Step 1.6 — SonarQube setup gate resolved.
+
+---
+
+## STOP CHECKPOINT — Epic-Level Smoke Test PASSED
+**Timestamp**: 2026-09-11T09:01:49Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "Yes, run it" (smoke test) / "Yes, merge and delete it" (PR #7)
+**AI Response**: Committed + pushed all STOP CHECKPOINT artifacts to `epic/EPIC-LOCAL-1-mid-cycle-subscription-upgrade` (commit e93dc1f). Ran `tests/.evals/scripts/smoke-test-epic.sh` per common/ci-pipeline-generation.md Section 4.0.6: cut scratch branch `ci/epic-smoke-EPIC-LOCAL-1`, opened draft PR #7, watched GitHub Actions run 33745286732 — **PASSED** on attempt 1 (no self-repair needed): workflow trigger, YAML acceptance, checkout, credential resolution, and gating mechanics all PASS; D3_sast/D7_secrets PASS with no findings; unitCoverage correctly reports N/A-by-construction (zero-diff PR). This proves the CLAUDE_CODE_OAUTH_TOKEN and SONAR_TOKEN/SONAR_HOST_URL secrets are valid and the generated pipeline is viable in this repo. The script's own auto-merge step failed (`GraphQL: Pull Request is still a draft`) — a script gap, not a pipeline gap — so completed it manually with explicit user approval: `gh pr ready 7` then `gh pr merge 7 --squash --delete-branch`. PR #7 merged into the epic branch at 2026-09-11T10:41:25Z (commit b5efc46), scratch branch deleted, local epic branch fast-forwarded.
+**Context**: STOP CHECKPOINT Step 4 complete. Proceeding to the Development Handoff message and HALT.
+
+---
+
+## Development Handoff — HALT
+**Timestamp**: 2026-09-11T09:01:49Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**AI Response**: Presented the verbatim Development Handoff message (common/development-handoff.md). Status set to "Design complete — awaiting dev-implement" in aire-state.md. Workflow HALTS here per CLAUDE.md's MANDATORY STOP CHECKPOINT — Code Generation does not start automatically; waiting for the user to type `dev-implement`.
+**Context**: Transition from Implementation Phase design stages to Code Generation.
