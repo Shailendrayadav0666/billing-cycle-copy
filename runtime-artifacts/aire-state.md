@@ -42,9 +42,9 @@
 collapsed into one story covering the whole Epic end-to-end; no Dependency Graph file is needed since
 there is nothing to graph — `Requires: none`).
 
-| Story | Title | Requires | Tracker ID | Status | Start | End | Recorded |
-|-------|-------|----------|------------|--------|-------|-----|----------|
-| 1.1 | Mid-Cycle Subscription Upgrade (Standard -> Premium) | none | LOCAL | 🔵 In Development | 2026-09-11T10:46:13Z | | 2026-09-11T10:46:13Z |
+| Story | Title | Requires | Tracker ID | Status | PR | Merged | Start | End | Recorded |
+|-------|-------|----------|------------|--------|----|--------|-------|-----|----------|
+| 1.1 | Mid-Cycle Subscription Upgrade (Standard -> Premium) | none | LOCAL | 🔵 In Development | https://github.com/Shailendrayadav0666/billing-cycle-copy/pull/8 | no | 2026-09-11T10:46:13Z | | 2026-09-11T09:01:49Z |
 
 ## Environment Notes
 - **Podman**: machine running (`podman ps` connects), but outbound pulls from docker.io **structurally blocked** from inside the WSL VM (verified with 2 images/IPs, `dial tcp ...:443: i/o timeout` both times — proxy/firewall not covering the VM's network namespace). User-approved deviation (2026-09-11): proceed WITHOUT container-based validation for this cycle. Effects: actionlint validation skipped (YAML produced by pure slot-substitution into the pre-vetted framework template, not freehand-authored); the Behavioural Gherkin gate (B1/B2/B3) will run natively (pytest-bdd, no Podman) with `"containerised": false, "reason": "podman machine has no outbound network access to docker.io (verified, not transient)"` recorded on every tier; SonarQube Option B (self-hosted Community Build) is unavailable — Option A (SonarQube Cloud) only, if SonarQube is used at all.

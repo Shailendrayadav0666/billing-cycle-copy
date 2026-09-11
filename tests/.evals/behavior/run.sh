@@ -40,8 +40,12 @@ CROSS_STORY="spec/behavior.feature"
 run_features() { # $@ = feature files
   [ "$#" -gt 0 ] || { echo "run.sh: tier ${TIER} resolved zero feature files" >&2; return 2; }
   # >>> STACK-RESOLVED BEHAVIOUR RUNNER START <<<
-  echo "run.sh: no behaviour runner resolved for this stack — generation defect (ERROR, not a pass)" >&2
-  return 2
+  # python / pytest-bdd. This repo's only step-definition module (tests/behavior/steps/test_story_1_1.py)
+  # binds to spec/behavior/story-1.1.feature via its own scenarios(...) call, so every tier currently
+  # resolves to the same module — the $@ feature-file list is not yet consumed per-file because there is
+  # only one story's worth of step definitions in this repo. Re-visit when a second story's step module
+  # is added (route by matching each file's stem to its owning steps module).
+  python3 -m pytest tests/behavior/steps -v
   # >>> STACK-RESOLVED BEHAVIOUR RUNNER END <<<
 }
 

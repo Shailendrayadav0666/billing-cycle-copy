@@ -679,7 +679,7 @@ if [ "$COVERAGE_ONLY" -eq 0 ]; then
 # >>> STACK-RESOLVED D-GATES START <<<
 # src/backend (python) — ruff (D1/D6), mypy (D2), pip-audit (D4), pip-licenses (D5)
 delta_diff D1_lint 'ruff check . --output-format=json | jq -r ".[] | [.code, .filename, .message] | @tsv"' "src/backend" "requirements.txt"
-delta_diff D2_types 'mypy . --ignore-missing-imports 2>&1 | grep ": error:" || true' "src/backend" "requirements.txt"
+delta_diff D2_types 'mypy . --ignore-missing-imports 2>&1 | grep ": error:" | sed -E "s/^([^:]+):[0-9]+:/\1:/" || true' "src/backend" "requirements.txt"
 delta_diff D4_deps 'pip-audit -r requirements.txt -f json 2>/dev/null | jq -r ".dependencies[]? | .name as \$n | (.vulns // [])[]? | [\$n, .id, .description] | @tsv"' "src/backend" "requirements.txt"
 delta_diff D5_licenses 'pip-licenses --format=json 2>/dev/null | jq -r --arg bad "$AIRE_DISALLOWED_LICENSES" "(\$bad | split(\",\")) as \$bl | .[] | select(.License as \$l | \$bl | any(. as \$b | (\$b != \"\") and (\$l | contains(\$b)))) | [.Name, .License] | @tsv"' "src/backend" "requirements.txt"
 delta_diff D6_complexity 'ruff check . --select C901 --config "lint.mccabe.max-complexity=$AIRE_MAX_CYCLOMATIC_COMPLEXITY" --output-format=json | jq -r ".[] | [.code, .filename, .message] | @tsv"' "src/backend" "requirements.txt"
