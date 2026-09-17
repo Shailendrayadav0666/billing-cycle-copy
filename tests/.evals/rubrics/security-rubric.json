@@ -1,0 +1,61 @@
+{
+  "rubricName": "Security — OWASP Top 10:2025 — Billing-Cycle",
+  "rubricVersion": "1.0.0",
+  "derivedFrom": ["OWASP Top 10:2025", "spec/plans/architecture.md"],
+  "evalCriteria": [
+    {
+      "id": "SEC-01", "owasp": "A01:2025",
+      "metric": "Broken access control",
+      "weight": 0.25,
+      "prompt": "Review the diff's new POST /api/billing/upgrade endpoint. Score 0 if it mutates or reads billing/plan data for an email/identity it has not verified belongs to the requester (object-level authorization), or if the already-Premium idempotency guard can be bypassed by any code path in the diff. Note: this endpoint deliberately reuses the existing system's email-lookup auth pattern by a recorded, human-approved scope decision (spec/plans/requirements.md REQ-NF-02) — do not score 0 solely for matching that pre-existing pattern; score 0 only for a NEW access-control gap this diff introduces beyond that already-accepted pattern (e.g. skipping the email lookup entirely, or a resource-ownership check this endpoint's own logic should have but omits). Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A01_2025-Broken_Access_Control/"
+    },
+    {
+      "id": "SEC-02", "owasp": "A04:2025",
+      "metric": "Cryptographic failures",
+      "weight": 0.20,
+      "prompt": "Review the diff for any new secret, key, or credential handling. Score 0 if the diff hardcodes a credential, transmits or stores any new sensitive value without at least the same protection level as the existing codebase's equivalent data, or if it introduces a banned/weak cryptographic primitive. The endpoint's reuse of the existing email-as-token pattern is a recorded exception (REQ-NF-02) and does not by itself score 0 here — score 0 only for a NEW cryptographic weakness this diff introduces (e.g. a new weak hash, a new plaintext secret store) beyond the already-accepted existing pattern. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A04_2025-Cryptographic_Failures/"
+    },
+    {
+      "id": "SEC-03", "owasp": "A07:2025",
+      "metric": "Authentication failures",
+      "weight": 0.15,
+      "prompt": "Review how the new endpoint identifies the caller. Score 0 if the diff introduces a NEW authentication weakness beyond the existing, recorded email-as-token pattern (REQ-NF-02) — for example, accepting an identity from an unvalidated source, or a new endpoint reachable without even the existing minimal email check. Do not score 0 solely for reusing the pre-existing pattern by recorded decision. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A07_2025-Authentication_Failures/"
+    },
+    {
+      "id": "SEC-04", "owasp": "A02:2025",
+      "metric": "Security misconfiguration",
+      "weight": 0.15,
+      "prompt": "Review the diff for new configuration surfaces (CORS, debug flags, default credentials, verbose error responses). Score 0 if the diff adds a new endpoint that returns stack traces, internal paths, or framework/version details in an error response, or widens any existing security configuration (e.g. CORS) beyond what already exists. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A02_2025-Security_Misconfiguration/"
+    },
+    {
+      "id": "SEC-05", "owasp": "A03:2025",
+      "metric": "Software supply chain failures",
+      "weight": 0.10,
+      "prompt": "Review any new dependency the diff introduces (e.g. an email-validation package for Pydantic EmailStr). Score 0 if a new dependency is added without a pinned version, or is sourced from anywhere other than the official package registry (PyPI/npm).",
+      "source": "https://owasp.org/Top10/2025/A03_2025-Software_Supply_Chain_Failures/"
+    },
+    {
+      "id": "SEC-06", "owasp": "A06:2025",
+      "metric": "Insecure design",
+      "weight": 0.10,
+      "prompt": "Review the upgrade business logic for a misuse case: can the diff be driven to double-charge, apply an incorrect proration, or leave users/billing_data in an inconsistent state (e.g. plan updated but usage limits not, or vice versa) under any input or ordering the diff allows? Score 0 on any such gap. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A06_2025-Insecure_Design/"
+    },
+    {
+      "id": "SEC-07", "owasp": "A10:2025",
+      "metric": "Mishandling of exceptional conditions",
+      "weight": 0.05,
+      "prompt": "Review the diff's error paths (401/400/422 and any exception handling around the new endpoint). Score 0 if any error response exposes internal state, a stack trace, or implementation details beyond the documented {\"detail\": \"...\"} shape already used by existing endpoints. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A10_2025-Mishandling_of_Exceptional_Conditions/"
+    }
+  ],
+  "_excludedCategories": {
+    "A05:2025 Injection": "No SQL/NoSQL/command/template layer exists or is introduced — all data access is in-memory dict lookups by key (atlas-deep-dive.md: 'SQL injection: N/A'). Excluded, not scored 0.",
+    "A08:2025 Software or Data Integrity Failures": "No deserialization of untrusted complex data beyond Pydantic-validated JSON; no CI/CD pipeline in this cycle (user declined). Excluded, not scored 0.",
+    "A09:2025 Security Logging and Alerting Failures": "No logging infrastructure exists today and none is introduced by this Epic (Infrastructure Design skipped). Excluded, not scored 0."
+  }
+}

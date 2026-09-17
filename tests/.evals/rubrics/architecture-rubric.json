@@ -1,0 +1,56 @@
+{
+  "rubricName": "Architectural Alignment — Billing-Cycle",
+  "rubricVersion": "1.0.0",
+  "derivedFrom": ["spec/plans/architecture.md#10-verifiable-constraints"],
+  "evalCriteria": [
+    {
+      "id": "ARCH-01",
+      "metric": "Dry-run never mutates state",
+      "weight": 0.15,
+      "prompt": "Any diff line inside the dry_run branch (or executed before the dry_run check short-circuits) that assigns to users[...] or billing_data[...]. Score 0 on any such write.",
+      "source": "spec/plans/functional-design.md Section 2.3/2.4, spec/plans/requirements.md REQ-F-07"
+    },
+    {
+      "id": "ARCH-02",
+      "metric": "Idempotency guard precedes every write",
+      "weight": 0.15,
+      "prompt": "Score 0 if the diff's write step (plan/price/usage mutation) is reachable before the already-Premium guard clause, for either the dry_run or commit path.",
+      "source": "spec/plans/functional-design.md Section 2.3/2.4, spec/plans/requirements.md REQ-NF-03"
+    },
+    {
+      "id": "ARCH-03",
+      "metric": "Auth pattern parity (no new auth mechanism)",
+      "weight": 0.15,
+      "prompt": "Score 0 if the diff introduces a JWT, HMAC signature, session token, or any auth mechanism for this endpoint that existing endpoints do not already have.",
+      "source": "spec/plans/requirements.md REQ-NF-02 (recorded exception)"
+    },
+    {
+      "id": "ARCH-04",
+      "metric": "New endpoint validates email format",
+      "weight": 0.15,
+      "prompt": "Score 0 if the request model's email field is declared as str (or equivalent unvalidated type) rather than a format-validating type (e.g. Pydantic EmailStr).",
+      "source": "spec/plans/functional-design.md Section 1, spec/plans/requirements.md REQ-NF-05"
+    },
+    {
+      "id": "ARCH-05",
+      "metric": "Usage-limit values match the approved table exactly",
+      "weight": 0.15,
+      "prompt": "Score 0 if any limit value differs from {chat credits: 10000, chatbots: 10, document pages: 5000}, or if any used field is reset/zeroed by the diff.",
+      "source": "spec/plans/functional-design.md Section 2.1, spec/plans/requirements.md REQ-F-06"
+    },
+    {
+      "id": "ARCH-06",
+      "metric": "Single shared proration calculation",
+      "weight": 0.15,
+      "prompt": "Score 0 if the diff contains two distinct implementations (or divergent constants) of the (50-20)/30*days_remaining calculation for the dry_run and commit branches.",
+      "source": "spec/plans/functional-design.md Section 2.2, spec/plans/requirements.md REQ-F-05/REQ-F-07"
+    },
+    {
+      "id": "ARCH-07",
+      "metric": "No new architectural layer introduced",
+      "weight": 0.10,
+      "prompt": "Score 0 if the diff creates a new source file under src/backend/ or src/frontend/src/ to hold this story's logic, instead of extending main.py / Billing.jsx / App.css.",
+      "source": "spec/plans/architecture.md Section 3 (Layering and Boundaries)"
+    }
+  ]
+}
