@@ -26,15 +26,7 @@ every placeholder substituted from real values — never ship an unsubstituted p
 > 2⃣  Type **`dev-implement`** and pick a story (by Story ID / number, or Tracker ID).
 > Run it **once per story** — it cuts `story/N.M-…` from the epic branch.
 
-> **🧪 <u>**ve — use the skill `/ve-implement`**</u>** (in parallel, starting now)
-> ve does **not** wait for development — no dev code, branch, PR or merge is needed.
-> 1⃣  `git fetch origin && git checkout [epic-branch] && git pull --ff-only`
-> 2⃣  Type **`/ve-implement <story-ID or Tracker ID>`** — once per story.
-> It cuts `ve/<TICKET-ID>-<title>` from this branch, writes the MANUAL test steps to
-> `spec/test-plans/<TICKET-ID>-<title>/` from the story's acceptance criteria, and raises
-> its own PR back into `[epic-branch]`.
-
-🔴 Type `dev-implement` / `/ve-implement` EXACTLY as shown — do not describe what you want in your
+🔴 Type `dev-implement` EXACTLY as shown — do not describe what you want in your
    own words. Any other phrasing is not a framework trigger and the workflow will not advance.
 ```
 

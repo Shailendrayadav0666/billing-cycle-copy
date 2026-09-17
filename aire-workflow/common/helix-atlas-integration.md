@@ -106,7 +106,8 @@ Emit **verbatim**, substituting the bracketed values:
    document for this codebase].
 
  How do you want to proceed?
-   A)  I'll connect Helix now / I will generate deep-dive document on Atlas — stop, and I will re-run once it's connected/generated. (Recommended)
+   A)  You connect Helix now, or you generate the deep dive document on Atlas yourself — AIRE stops
+         here; re-run once it's connected/generated on the platform. (Recommended)
    B)  Proceed WITHOUT Atlas — AIRE generates reverse-engineering artifacts locally from the code
          in this workspace. This choice is recorded in runtime-artifacts/aire-state.md and runtime-artifacts/audit.md.
 
@@ -144,6 +145,7 @@ documents. When the cycle's PR merges, the next cycle simply pulls again.
 | Pull | Via | Lands in | Replaces |
 |---|---|---|---|
 | **Deep dive document** — one `.md` document covering the estate/scope | DOCS tool | `spec/plans/atlas-deep-dive.md`, verbatim | Locally generated RE artifacts |
+| **Epic brief** — the tracking item's summary/description/acceptance criteria, when the user is working via Helix MCP rather than a configured tracker fetch | DOCS tool | `spec/plans/epic-brief.md`, verbatim | The tracker-driven fetch in `common/tracker-sync.md` Section 2 |
 | **Targeted answers** — a specific contract, schema, or flow a stage needs | SEARCH / GRAPH | Quoted inline in the consuming artifact, with the citation | Guessing |
 
 🔴 **If the DOCS tool reports no deep dive document for the resolved scope**, do not treat this as an
@@ -151,6 +153,82 @@ error to retry or paper over. Tell the user plainly: **"No deep dive document fo
 go to Section 4 (the connect gate) and present the same A/B halt — if the user picks B, **generate**
 the reverse-engineering artifacts locally, exactly as any other local-generation path, and say so in
 every artifact's provenance.
+
+### 5.4 Combined presence gate — Epic and/or deep dive missing on Helix
+
+🔴 Applies whenever the user directs AIRE to work via Helix MCP for BOTH the Epic and the deep dive
+(e.g. "start working on this using helix mcp"). After the pull attempt in the table above, check the
+two artifacts **independently** — never assume one implies the other:
+
+🔴🔴 **STRICT TYPE MATCH — NO SUBSTITUTION, NO EQUIVALENCE, EVER.** A document counts as "the Epic
+brief" ONLY if Helix/Atlas's own document-type classification for it is exactly Epic/Epic brief. A
+document counts as "the deep dive" ONLY if its type classification is exactly deep dive. **A PRD, a
+"Quick Orient" / software-archaeology analysis, a README, a design doc, or ANY other document type is
+NEVER treated as equivalent, close enough, or a stand-in — no matter how similar its content looks, and
+no matter how confident the match feels.** Do not silently pull, rename, or reinterpret a
+differently-typed document as if it satisfies the Epic brief or deep dive requirement, and do not
+narrate it as "the Epic and deep dive equivalents" or similar softening language. If Atlas holds only
+differently-typed documents for this scope, that IS the missing case (row 2/3/4 below) — those
+documents belong ONLY in the "Other documents found" list of the gate, exactly as they are, never
+folded into `epic-brief.md` or `atlas-deep-dive.md` without the user explicitly choosing option B.
+
+1. **Epic brief present, deep dive present** → no gate. Proceed normally (Section 5, Section 6).
+2. **Epic brief missing, deep dive present** → emit the gate below naming only the Epic as missing.
+3. **Deep dive missing, Epic brief present** → emit the gate below naming only the deep dive as missing.
+4. **Both missing** → emit the gate below naming both.
+
+In every triggered case, also list whatever OTHER documents the DOCS tool did return for the resolved
+estate/scope — the user needs to see what's actually there, not a flat "not found." Emit, substituting
+the bracketed values:
+
+```
+ HELIX MCP — [Epic | deep dive | Epic and deep dive] not found for this scope
+
+   Helix is connected and reachable, but Atlas has no [Epic brief | deep dive document | Epic brief or
+   deep dive document] for this estate/scope.
+
+   Other documents found on Atlas for this scope:
+     - [doc title/type 1]
+     - [doc title/type 2]
+     (or: "None — Atlas has no documents at all for this scope.")
+
+ How do you want to proceed?
+   A)  You generate the missing [Epic | deep dive | Epic and deep dive] on Atlas/Helix yourself —
+         AIRE stops here; re-run once it's generated on the platform. (Recommended)
+   B)  Tell me should I proceed with using the other found documents for [Epic | deep dive | Epic and
+         deep dive] — [for the Epic: AIRE invokes the `intent-intake` skill, handing it the other found
+         document(s) as its reference input, to produce a proper epic-brief.md instead of freehand
+         summarizing them | for the deep dive: AIRE generates atlas-deep-dive.md locally via
+         `planning/reverse-engineering.md`, using those other documents as reference | for both: AIRE
+         invokes `intent-intake` for the Epic and generates the deep dive locally, both using the other
+         found documents as reference]. This choice is recorded in runtime-artifacts/aire-state.md and
+         runtime-artifacts/audit.md.
+
+[Answer]:
+```
+
+🔴 **Only options A and B — never add a third**, same guardrail as Section 4.
+
+- **A** → HALT. Log the halt and the "other documents found" list in `runtime-artifacts/audit.md`. Nothing else runs.
+- **B** → record `Source: local-generation (Atlas unavailable — user approved use of other found
+  documents as reference)` for each missing artifact in `runtime-artifacts/aire-state.md` and
+  `runtime-artifacts/audit.md`. Generate ONLY the missing piece(s) — an artifact that WAS found on
+  Atlas with the exact required type is still pulled verbatim, never regenerated:
+  - **Epic missing** → invoke the `intent-intake` skill, passing it the "other documents found" list
+    (e.g. a PRD) as the reference document it asks for at its own intake step — do not hand-summarize
+    the PRD into `epic-brief.md` directly; let `intent-intake` run its own baseline-gathering flow and
+    produce the Epic through it. For LOCAL tracker, that means `intent-intake` writes `spec/plans/epic.md`
+    per its own contract — copy/link its result into `spec/plans/epic-brief.md` as this file's expected
+    Epic input. For JIRA/ADO/GITHUB, let `intent-intake` push the Epic to the configured tracker as it
+    normally would, then fetch it back into `epic-brief.md` per `common/tracker-sync.md` Section 2.
+  - **Deep dive missing** → generate `atlas-deep-dive.md` locally via the normal
+    `planning/reverse-engineering.md` stage, using the "other documents found" list as reference input.
+  - 🔴 Every artifact produced via this path carries the line *"Existing-system context derived locally
+    from [list the other-document names used]; no document typed exactly as the Epic brief / deep dive
+    was found on Atlas."*
+
+🔴 Log the prompt, the "other documents found" list, and the raw user response in
+`runtime-artifacts/audit.md` — same attributability requirement as Section 4.
 
 ### 5.1 Scoping the pull — pull what the work touches, not the whole estate
 
@@ -192,6 +270,11 @@ Follow Atlas, amend the AIRE-side artifact to stay truthful, say so plainly, log
 ---
 
 ## 6. Effect on the Reverse Engineering stage
+
+🔴 If the user invoked Helix MCP for BOTH the Epic and the deep dive, run the Section 5.4 combined
+presence gate FIRST — it supersedes the single-artifact table below whenever both pulls were attempted
+together. The table below still applies as-is when only the deep dive was pulled via Helix (Epic
+sourced from the configured tracker instead).
 
 `planning/reverse-engineering.md` becomes **conditional on whether Atlas returns a deep dive document**:
 

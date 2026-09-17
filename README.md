@@ -42,12 +42,13 @@
   │ Captures the idea as a lightweight intent (outcome,     │
   │ KPI, success signal, out-of-scope, constraints) and     │
   │ pushes it to your tracker: Jira, Azure DevOps,          │
-  │ GitHub, or keeps it local.                              │
+  │ GitHub, or writes spec/plans/epic.md when local.        │
   └─────────────────────────────────────────────────────────┘
                                    │
                                    ▼
        OUTPUT: an Epic on your tracker (baseline). Example:
-         a Jira key, an ADO work item, or a GitHub issue.
+    a Jira key, an ADO work item, a GitHub issue, or a local
+                spec/plans/epic.md.
                                    │
                                    ▼
   ┌─────────────────────────────────────────────────────────┐
@@ -59,8 +60,9 @@
   └─────────────────────────────────────────────────────────┘
                                    │
                                    ▼
-          OUTPUT: the same Epic, updated on your tracker,
-                now fully detailed and verifiable.
+        OUTPUT: the same Epic, updated on your tracker (or
+      spec/plans/epic.md, when local), now fully detailed and
+                          verifiable.
                                    │
                                    ▼
   ┌─────────────────────────────────────────────────────────┐
@@ -247,7 +249,34 @@ Verify: `podman info` should return without error.
 
 > If Podman is unavailable at eval time, the behavioural tests wont run.
 
-#### 7. Helix MCP connection (recommended)
+#### 7. Playwright and its official Test Agents 
+
+`dev-implement`, `bug-fix-implement` and `enhancement-implement` run the **Playwright UI Automation** automatically before the automated code review  for every story whose plan touches the UI. It does not write browser tests itself: it orchestrates **Playwright's own official Test Agents** (Planner, Generator, Healer), which are subagents backed by the `playwright-test` MCP server. They must exist in the repo before.
+
+**Run all three commands from the true workspace root** — the same directory `spec/` lives in, **never** a monorepo subdirectory like `frontend/`. Claude Code only scans `.claude/agents/` and `.mcp.json` at the project root it was launched from.
+
+```bash
+# 1. Base Playwright test package
+npm i -D @playwright/test
+```
+
+```bash
+# 2. Browser binaries
+npx playwright install
+```
+
+```bash
+# 3. Playwright's own Planner / Generator / Healer subagents + the playwright-test MCP server
+npx playwright init-agents --loop=claude
+```
+
+**4. Restart the Claude Code session.**
+
+Claude Code loads MCP servers **at session start**, so the `playwright-test` server that step 3 just registered in `.mcp.json` is **not connected** in your current session — the Planner, Generator and Healer subagents cannot run until you restart. Close and reopen the session (or reload the window in the IDE extension), then verify with `/mcp`.
+
+> If this is missing when the gate runs, the framework installs it for you automatically (workflow mode treats a missing dependency as an **error to fix**, never a gap to skip) — and then **pauses the run and asks you to restart the session**, exactly as the standalone `/playwright-implement` does, because a newly registered MCP server only connects at session start. Nothing is lost: nothing is committed, pushed or transitioned, and on restart you re-invoke the same keyword with the same work unit and it resumes **at the Playwright gate**, skipping every gate already passed. **Installing it up front avoids that interruption entirely.** Projects with no UI at all never reach this gate.
+
+#### 8. Helix MCP connection (recommended)
 
 Connect the **Helix MCP** server to your Claude Code setup once per repository. AIRE detects it
 automatically the first time it's needed, and pulls existing-system truth — knowledge graph and
@@ -471,13 +500,13 @@ A first-time user's complete path, from idea to merged PR:
 
 ### Step 1 (optional) — Capture the idea: `intent-intake` (skill)
 
-You have a raw idea and no Atlas-backed Epic yet. Invoke the skill `intent-intake` via **`/intent-intake`**. The skill asks whether you have a document (PRD, research notes, Confluence page) or will explain in plain English, gathers exactly **six baseline fields** (outcome, KPI, success signal, out-of-scope, constraints, confidence + unknowns), and — after your confirmation — **pushes an Epic to your configured tracker** (a Jira Epic, an ADO Epic work item, or a GitHub Milestone/tracking issue) labeled `intent-intake`. Fast and deliberately light: no deep elaboration here.
+You have a raw idea and no Atlas-backed Epic yet. Invoke the skill `intent-intake` via **`/intent-intake`**. The skill asks whether you have a document (PRD, research notes, Confluence page) or will explain in plain English, gathers exactly **six baseline fields** (outcome, KPI, success signal, out-of-scope, constraints, confidence + unknowns), and — after your confirmation — **pushes an Epic to your configured tracker** (a Jira Epic, an ADO Epic work item, or a GitHub Milestone/tracking issue) labeled `intent-intake`, or writes `spec/plans/epic.md` when your tracker is Local. Fast and deliberately light: no deep elaboration here.
 
-**Output: an Epic on your configured tracker**
+**Output: an Epic on your configured tracker (or `spec/plans/epic.md`, for Local)**
 
 ### Step 2 (optional) — Deepen it: `intent-refinement` (skill)
 
-Invoke the skill `intent-refinement` via **`/intent-refinement`** and give the Epic reference. The skill fetches the Epic, assesses gaps, runs focused elaboration question batches (measurable success criteria with thresholds, explicit scope/out-of-scope, constraints, domain model, NFRs, risks), and — confirm-first — **updates the Epic on your tracker** to full, verifiable detail with label `intent-refined`.
+Invoke the skill `intent-refinement` via **`/intent-refinement`** and give the Epic reference (for Local, it reads `spec/plans/epic.md` automatically if it exists). The skill fetches the Epic, assesses gaps, runs focused elaboration question batches (measurable success criteria with thresholds, explicit scope/out-of-scope, constraints, domain model, NFRs, risks), and — confirm-first — **updates the Epic on your tracker** to full, verifiable detail with label `intent-refined` (or overwrites `spec/plans/epic.md` in place, for Local).
 
 **Output: the same Epic, now fully detailed.**
 
@@ -753,6 +782,13 @@ All of your generated documentation lives under `spec/test-plans/<STORY-ID>-<tit
 
 ### Step 3 — Automate the UI: `/playwright-implement`
 
+> **Note — this is the standalone, post-merge path.** For any story that touches the UI, this already
+> ran **automatically and pre-PR** inside `dev-implement` (or `bug-fix-implement` /
+> `enhancement-implement`), as their **Playwright UI Automation Gate** — generated, executed against a
+> locally started instance, and any failure fixed before the automated code review. Use the standalone
+> path below for a story that gate skipped (no UI at plan time, later found to need it), or to
+> re-automate after the fact. See Prerequisite 7 for the one-time install.
+
 Once a story's manual UI test steps exist and both of that story's PRs have landed, you can turn the
 UI-relevant cases into real, executable Playwright scripts — driven by Playwright's **own** official
 Test Agents (Planner, Generator, Healer), never a re-implementation of them. Backend/API cases stay
@@ -845,8 +881,8 @@ Located in `.claude/skills/` — invoked by natural language or `/skill-name`.
 
 | Skill | What it does |
 |-------|--------------|
-| **`intent-intake`** | The light front-door: turns a raw idea in natural language (or a PRD/doc/link) into a six-field baseline intent and **pushes it to your configured tracker as an Epic** (Jira, ADO, GitHub, or local-only).  |
-| **`intent-refinement`** | Fetches an existing Epic from your configured tracker, runs structured elaboration batches until the intent is **verifiable** (measurable criteria + thresholds, scope, constraints, domain model, risks), and updates the Epic on the tracker with the refined detail. |
+| **`intent-intake`** | The light front-door: turns a raw idea in natural language (or a PRD/doc/link) into a six-field baseline intent and **pushes it to your configured tracker as an Epic** (Jira, ADO, GitHub), or writes it to `spec/plans/epic.md` for Local.  |
+| **`intent-refinement`** | Fetches an existing Epic from your configured tracker (or reads `spec/plans/epic.md` for Local), runs structured elaboration batches until the intent is **verifiable** (measurable criteria + thresholds, scope, constraints, domain model, risks), and updates the Epic on the tracker (or overwrites `spec/plans/epic.md`) with the refined detail. |
 | **`story-audit`** | Audits an existing Story or Epic — in whichever tracker is configured (Jira, Azure DevOps, GitHub) or directly from stories.md for Local — against the AIRE quality bar. Fetches the issue, assesses what's present vs missing, scores it, and offers to fill gaps through targeted questions — then updates the issue in the tracker with the improvements (or the local story file, for Local). Works for any issue type (Story, Epic, Task) but applies the appropriate checklist for each. |
 | **`ve-implement`** | ve Test Plan (black-box), **per story, in parallel with development** — the dev's code does not need to exist, be built, or be merged, so ve can start the moment the design stages finish. Run it as `/ve-implement <story-ID>` on the **epic branch** (epic cycles) or the **bug/enhancement branch** (ticket cycles), **as soon as the design stages of implementation phase finish**: it cuts an **`ve/<ID>-<title>`** branch from that latest branch, reads the story's acceptance criteria from the configured tracker, requirements and design artifacts — **never application source code** — decides which test plans apply (integration, E2E, API, contract, security, performance, accessibility) and writes them as **manual test steps** into `spec/test-plans/<STORY-ID>-<title>/`, one folder per story, every test case traced to an acceptance criterion and every criterion covered. It then **commits and raises a PR back to that same branch** — labeled `ai-generated` + `aire-v[N]` — logged in `runtime-artifacts/audit.md`; `.gitattributes` merges these files by append so parallel ve runs never conflict. One story per run. |
 | **`code-security-review`** | Full-codebase audit against the 16 Security Baseline rules (SECURITY-01…16: encryption, headers, input validation, SSRF, uploads, access control, CSRF, JWT, credentials, sessions, supply chain, XXE, alerting, error handling, crypto standards). Findings by severity, dated report in `reports/code-security-reviews/`. |

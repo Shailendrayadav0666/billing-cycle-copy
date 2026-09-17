@@ -2,13 +2,13 @@
 name: intent-refinement
 description: >
   Use this skill to take an existing Epic (in whichever tracker is configured — Jira, Azure DevOps,
-  GitHub — or a pasted baseline intent for Local) and refine it to full detail through structured
+  GitHub — or `spec/plans/epic.md` for Local) and refine it to full detail through structured
   elaboration. Trigger it on "refine this intent", "elaborate this Epic", "flesh out the Epic",
   "deepen this intent", "add detail to the Epic", or whenever a thin Epic needs to be brought up
   to a fully-detailed standard before building begins. The skill asks for the Epic reference, fetches
   its current content, runs focused elaboration questions, and updates the Epic in the tracker with all
-  the refined detail (or presents it for the user to save, when Local).
-compatibility: For JIRA/ADO/GITHUB, the corresponding integration (Atlassian MCP / az CLI / gh CLI) must be available. LOCAL requires nothing external.
+  the refined detail (or updates `spec/plans/epic.md` in place, when Local).
+compatibility: For JIRA/ADO/GITHUB, the corresponding integration (Atlassian MCP / az CLI / gh CLI) must be available. LOCAL requires nothing external; it reads and writes spec/plans/epic.md directly.
 ---
 
 # Intent Refinement
@@ -20,11 +20,11 @@ context, NFRs, risks — then write all of that back to the Epic in the configur
 ## What this skill does
 
 0. **Resolve** which tracker is configured (read `## Tracker` from `runtime-artifacts/aire-state.md` if it exists; otherwise ask once for this run).
-1. **Ask** the user for the Epic reference (key/ID/URL for JIRA/ADO/GITHUB; for LOCAL, ask them to paste the current intent content instead — there is nothing external to fetch).
-2. **Fetch** the Epic's current content from the configured tracker.
+1. **Ask** the user for the Epic reference (key/ID/URL for JIRA/ADO/GITHUB; for LOCAL, read `spec/plans/epic.md` if it exists — otherwise ask them to paste the current intent content instead).
+2. **Fetch** the Epic's current content from the configured tracker (or from `spec/plans/epic.md` for LOCAL).
 3. **Assess** what's already there and what's missing against the full intent template.
 4. **Elaborate** through focused question batches (see `references/elaboration-questions.md`).
-5. **Update** the Epic in the tracker with all the refined detail AND the `intake-refined` label/tag (or, for LOCAL, present the finished document), confirm-first before writing.
+5. **Update** the Epic in the tracker with all the refined detail AND the `intake-refined` label/tag (or, for LOCAL, overwrite `spec/plans/epic.md` with the finished document), confirm-first before writing.
 
 ## The single test for "ready"
 
@@ -38,18 +38,21 @@ guesses.
 
 ### Step 1 — Ask for the Epic
 
-If `## Tracker` isn't already recorded in `runtime-artifacts/aire-state.md`, ask once which tracker to use (JIRA / ADO / GITHUB / Local) before continuing. Then ask the user, per that tracker:
+If `## Tracker` isn't already recorded in `runtime-artifacts/aire-state.md`, ask once which tracker to use (JIRA / ADO / GITHUB / Local) before continuing. Then, for LOCAL, check whether `spec/plans/epic.md` already exists:
+- **If it exists**, use it as the Epic content directly — no need to ask the user to paste anything.
+- **If it doesn't exist**, ask the user to paste the current intent content (baseline) instead, since there's nothing on disk to read yet.
+
+For JIRA/ADO/GITHUB, ask the user:
 ```
 Which Epic should we refine?
 [JIRA]   Please provide the Epic key (e.g. PROJ-42) or the full Jira URL.
 [ADO]    Please provide the Epic work item ID or URL.
 [GITHUB] Please provide the Milestone number/URL or tracking issue reference.
-[LOCAL]  Paste the current intent content (baseline) directly — there's no external Epic to fetch.
 ```
 
 ### Step 2 — Fetch and read the Epic
 
-Fetch the Epic per the configured tracker: `getJiraIssue` (JIRA), `az boards work-item show` (ADO), `gh api`/`gh issue view` (GITHUB) — per `common/tracker-sync.md` Section 2. For LOCAL, use the content the user pasted in Step 1 directly — there is no fetch. Read the summary, description, and any
+Fetch the Epic per the configured tracker: `getJiraIssue` (JIRA), `az boards work-item show` (ADO), `gh api`/`gh issue view` (GITHUB) — per `common/tracker-sync.md` Section 2. For LOCAL, use the content read from `spec/plans/epic.md` (or pasted by the user in Step 1, if the file didn't exist) directly — there is no external fetch. Read the summary, description, and any
 existing acceptance criteria or attachments. Note what's already captured and what gaps exist
 relative to the full intent template (`assets/intent-template.md`).
 
@@ -89,15 +92,15 @@ Present it to the user for review:
 
 [Full intent content here]
 
-Does this look right? Type "yes" to update the Epic (or, for Local, to finalize this document), or provide corrections.
+Does this look right? Type "yes" to update the Epic (or, for Local, to write `spec/plans/epic.md`), or provide corrections.
 ```
 
-**Do not update the tracker until the user explicitly approves.**
+**Do not update the tracker (or `spec/plans/epic.md`) until the user explicitly approves.**
 
 ### Step 5 — Update the Epic in the Configured Tracker
 
 On approval, update the Epic in this exact sequence — **every step is mandatory, not optional,
-regardless of how confident you are that the label is already applied** (JIRA/ADO/GITHUB only; LOCAL skips straight to presenting the finished document):
+regardless of how confident you are that the label is already applied** (JIRA/ADO/GITHUB only; LOCAL skips straight to writing `spec/plans/epic.md`):
 
 1. **Re-fetch the Epic's current labels/tags** immediately before writing, so the
    update is based on live state, not the Step 2 snapshot.
@@ -127,25 +130,25 @@ To start building this Epic, type:
 (replace [KEY] with the Epic's tracker ID)
 ```
 
-**For LOCAL**, skip Steps 1–4 above entirely and instead present the finished document in chat:
+**For LOCAL**, skip Steps 1–4 above entirely and instead write the finished document to `spec/plans/epic.md` (overwriting the existing baseline written by intent-intake, or creating it fresh if it doesn't exist), then confirm:
 ```
- Refined intent finalized. Save this yourself — this skill creates no local files.
+ Refined intent finalized and written to spec/plans/epic.md.
 
 [Full intent content here]
 
  **Next Step — Activate the AIRE Framework**
-To start building this, type: using aire [describe the epic, or paste this document]
+To start building this, type: using aire [describe the epic, or reference spec/plans/epic.md]
 ```
 
 **This next-step prompt is mandatory** — always display it after a successful Epic update, and only
-after the label has been verified per Step 4 above.
+after the label has been verified per Step 4 above (or, for LOCAL, after `spec/plans/epic.md` has been written and re-read back to confirm it matches).
 
 ## HARD GUARDRAILS — do not violate
 
-- **No file or directory creation.** Do not create, write, or modify any file or folder in the workspace (reading `## Tracker` from `runtime-artifacts/aire-state.md`, if it exists, is fine — that's a read, not a write). The refined intent lives in the configured tracker only (or in chat, for Local — never a local file).
-- **No local artifacts.** Do not produce `intent.md`, `intent-template.md`, or any other local document as output. `assets/intent-template.md` is a reference shape only — never instantiate it.
-- **Tracker in, tracker out (or chat in, chat out, for Local).** The only I/O is: read the Epic from the configured tracker (or take the user's pasted content, for Local), ask the user questions in chat, then update the Epic in the tracker (or present it, for Local). Nothing else.
-- **Confirm before every tracker write.** Never update the tracker without explicit user approval ("yes"). LOCAL has no write to confirm.
+- **No file or directory creation beyond `spec/plans/epic.md`.** Do not create, write, or modify any other file or folder in the workspace (reading `## Tracker` from `runtime-artifacts/aire-state.md`, if it exists, is fine — that's a read, not a write). The refined intent lives in the configured tracker (JIRA/ADO/GITHUB), or in `spec/plans/epic.md` for Local — nowhere else.
+- **No other local artifacts.** Do not produce `intent-template.md` or any other local document as output beyond `spec/plans/epic.md`. `assets/intent-template.md` is a reference shape only — never instantiate it.
+- **Tracker in, tracker out (or file in, file out, for Local).** The only I/O is: read the Epic from the configured tracker (or from `spec/plans/epic.md`, for Local), ask the user questions in chat, then update the Epic in the tracker (or overwrite `spec/plans/epic.md`, for Local). Nothing else.
+- **Confirm before every write.** Never update the tracker, or overwrite `spec/plans/epic.md`, without explicit user approval ("yes").
 - **🔴 EVERY Epic this skill updates in JIRA/ADO/GITHUB MUST carry the exact label/tag `intake-refined` — no exceptions, not optional, not "if relevant."** This is not a judgment call to make per-Epic; it applies unconditionally to every successful non-LOCAL run of Step 5. The label is applied **in the same write** as the description update (never a separate follow-up call you might skip), it is **appended** to whatever labels the Epic already carries (never replacing them), and its presence is **verified by re-fetching the Epic** after the write — before the "Next Step" prompt is shown. A run that updates the description but cannot confirm the label is NOT a successful run; stop and surface the failure to the user rather than reporting success. See Step 5 for the exact sequence.
 
 ## Quality bar

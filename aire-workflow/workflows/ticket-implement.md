@@ -9,6 +9,7 @@ The router NEVER duplicates, modifies, or shortcuts either target workflow. Afte
 
 May be invoked standalone in a fresh session. Resolve `aire-workflow/` and load:
 - `common/process-overview.md`, `common/session-continuity.md`, `common/question-format-guide.md`
+- **`common/ci-setup-detection.md`** — detect existing AIRE-Helix CI infrastructure (Step 1.5 below)
 
 Do NOT pre-load the bug or enhancement workflow files — load ONLY the one the user selects (saves context). Display the welcome message (`common/welcome-message.md`) once at start — the target workflow MUST NOT display it again.
 
@@ -26,6 +27,26 @@ If `runtime-artifacts/aire-state.md` exists, read it before anything else:
   - Follow `common/session-continuity.md` for resume mechanics in all cases.
 - If it records a DIFFERENT ticket/epic, ask the user which to keep — NEVER silently overwrite.
 - If no state exists, continue to Step 2.
+
+## Step 1.5 — CI Setup Detection + CI/CD Opt-In (runs once, recorded for downstream use)
+
+**Execute this BEFORE routing**, whether resuming or starting fresh:
+
+1. Load `common/ci-setup-detection.md` and execute the detection mechanism (check for the five mandatory CI artifacts).
+2. **If detection reports EXISTS**: record `## CI Setup Status` `Status: exists` plus
+   `## CI/CD Configuration` `Enabled: Yes` `Source: pre-existing` — **do NOT announce or ask
+   anything**, this branch is a silent, automatic check.
+3. **If detection reports MISSING**: ask the CI/CD Setup Opt-In question defined in
+   `common/ci-setup-detection.md` (blocking — wait for the answer) and record `## CI Setup Status`
+   `Status: missing` (yes) or `Status: declined` (no), plus the matching `## CI/CD Configuration`
+   `Enabled: Yes|No`.
+4. Log the detection (and, when asked, the question + raw answer) in `runtime-artifacts/audit.md`
+   with the complete result. The recorded status/flag is read and consumed by the downstream workflow
+   (`bug-fix.md` / `bug-fix-implement.md` / `enhancement-implement.md`) to decide whether to run full
+   CI setup and whether to run the per-fix CI Preflight/Attestation gates.
+
+On **resume**, if `## CI Setup Status` already exists in `aire-state.md` (`exists`, `missing`, or
+`declined`), skip this step and reuse the recorded status — never re-ask.
 
 ## Step 2 — Ticket Capture
 

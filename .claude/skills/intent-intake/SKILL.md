@@ -7,8 +7,8 @@ description: >
   into an intent", or any moment a fuzzy idea needs to become real. It asks upfront whether the user
   has a document to reference or wants to explain in plain English. It gathers a consistent baseline
   — just enough thought to justify an Epic — produces a baseline intent artifact, and pushes
-  the Epic directly to whichever tracker is configured (JIRA/ADO/GITHUB), or presents it for the user to save themselves when Local. It does NOT do deep elaboration or refinement; that happens later, with engineers, in intent-refinement.
-compatibility: For JIRA/ADO/GITHUB, the corresponding integration (Atlassian MCP / az CLI / gh CLI) must be available — pushes the Epic directly to the tracker at the end of intake. LOCAL requires nothing external.
+  the Epic directly to whichever tracker is configured (JIRA/ADO/GITHUB), or writes it to spec/plans/epic.md when Local. It does NOT do deep elaboration or refinement; that happens later, with engineers, in intent-refinement.
+compatibility: For JIRA/ADO/GITHUB, the corresponding integration (Atlassian MCP / az CLI / gh CLI) must be available — pushes the Epic directly to the tracker at the end of intake. LOCAL requires nothing external; it writes spec/plans/epic.md directly.
 ---
 
 # Intent Intake
@@ -74,7 +74,7 @@ A declared unknown is fine — better than a guess. Record unknowns; don't fill 
 
 ## Step 3 — Draft the baseline intent
 
-Using `assets/intent-template.md` as a reference shape, draft the filled baseline intent **in chat only** — do not create any local file. Fill the BASELINE sections, leave the FULL sections blank (those are for intent-refinement). Show the draft to the person for review.
+Using `assets/intent-template.md` as a reference shape, draft the filled baseline intent **in chat only** — do not create any local file yet. Fill the BASELINE sections, leave the FULL sections blank (those are for intent-refinement). Show the draft to the person for review. (For LOCAL, this draft is what gets written to `spec/plans/epic.md` in the hand-off step below, once the person confirms it.)
 
 ## Step 4 — Intake gate
 
@@ -84,7 +84,7 @@ testable criteria; that bar is intentionally not here. Confirm with the person b
 
 ## Hand off — Push Epic to the Configured Tracker
 
-Once the intake gate passes, **push the Epic** using the mechanism for the tracker resolved in Step -1 (JIRA/ADO/GITHUB), or present it for Local. Follow this sequence:
+Once the intake gate passes, **push the Epic** using the mechanism for the tracker resolved in Step -1 (JIRA/ADO/GITHUB), or write it to `spec/plans/epic.md` for Local. Follow this sequence:
 
 1. **Confirm before pushing** (skip entirely for LOCAL — go straight to the LOCAL branch below) — show the user a brief summary of what will be created:
    ```
@@ -99,18 +99,20 @@ Once the intake gate passes, **push the Epic** using the mechanism for the track
    - **JIRA**: `createJiraIssue` — `issueType`: Epic, `summary`: the intent title, `description`: the **complete filled intent artifact** (all BASELINE sections as-is, verbatim — do not summarise or shorten), `labels`: `["intent-intake"]`, `project`: confirm the PROJECT_KEY with the user if not already known.
    - **ADO**: `az boards work-item create --type "Epic" --title "<intent title>" --description "<complete filled intent artifact>" --project "{PROJECT}"`, then add `intent-intake` to `System.Tags`.
    - **GITHUB**: create a Milestone (`gh api repos/{ORG}/{REPO}/milestones --method POST -f title="<intent title>" -f description="<complete filled intent artifact>"`), or a tracking issue labeled `epic` + `intent-intake` if the repo doesn't use Milestones as Epics — ask the user which convention their repo uses if unclear.
-   - **LOCAL**: no push. Present the complete filled intent artifact in chat as the final output and tell the user to save it themselves wherever they track local work — this skill creates no files.
-3. **Verify, don't assume** (JIRA/ADO/GITHUB only): re-fetch the created item and confirm BOTH (a) it is real and resolvable, AND (b) the `intent-intake` label/tag is present, exact string. Some integrations silently drop a labels/tags field passed at create time — do not treat a successful creation response alone as proof it landed. If missing, retry once by updating the item's labels/tags (append `intent-intake` to whatever is there). If it still fails after the retry, stop and tell the user explicitly — do NOT report the intake as complete with the label unconfirmed.
+   - **LOCAL**: no tracker push. Write the complete filled intent artifact to `spec/plans/epic.md` (create the `spec/plans/` directory if it doesn't exist). If `spec/plans/epic.md` already exists, ask the user before overwriting it — never overwrite silently. This is the one and only file this skill writes.
+3. **Verify, don't assume**:
+   - **JIRA/ADO/GITHUB**: re-fetch the created item and confirm BOTH (a) it is real and resolvable, AND (b) the `intent-intake` label/tag is present, exact string. Some integrations silently drop a labels/tags field passed at create time — do not treat a successful creation response alone as proof it landed. If missing, retry once by updating the item's labels/tags (append `intent-intake` to whatever is there). If it still fails after the retry, stop and tell the user explicitly — do NOT report the intake as complete with the label unconfirmed.
+   - **LOCAL**: re-read `spec/plans/epic.md` back and confirm the written content matches what was approved.
 
-After the Epic is live **and the label/tag is confirmed** (or, for LOCAL, after the artifact is presented), tell the person the next step is **intent-refinement**.
+After the Epic is live **and the label/tag is confirmed** (or, for LOCAL, after `spec/plans/epic.md` is written and verified), tell the person the next step is **intent-refinement**.
 
 ## HARD GUARDRAILS — do not violate
 
-- **No file or directory creation.** Do not create, write, or modify any file or folder in the workspace. The intent lives in the configured tracker only (or in chat, for Local — never a local file).
-- **No local artifacts.** Do not save or instantiate `intent-template.md` locally. It is a reference shape — draft the content in chat, then push it (or present it, for Local).
+- **No file or directory creation beyond `spec/plans/epic.md`.** Do not create, write, or modify any other file or folder in the workspace. The intent lives in the configured tracker (JIRA/ADO/GITHUB), or in `spec/plans/epic.md` for Local — nowhere else.
+- **No local artifacts other than the final `spec/plans/epic.md`.** Do not save or instantiate `intent-template.md` locally. It is a reference shape — draft the content in chat, then push it (or, for Local, write the approved draft to `spec/plans/epic.md`).
 - **No runtime-artifacts/audit.md writes.** Do not write to `runtime-artifacts/audit.md` or any other log file.
-- **Tracker push only, no other writes.** The only write action is creating the Epic in the configured tracker (plus, if needed, one retry label/tag update per Step 3 of the hand-off sequence). Reading `## Tracker` from `runtime-artifacts/aire-state.md` (Step -1) is read-only and does not violate this.
-- **Confirm before every tracker write.** Never create an Epic without explicit user approval ("yes"). LOCAL has no write to confirm.
+- **Tracker push (or, for Local, the `spec/plans/epic.md` write) is the only write action.** For JIRA/ADO/GITHUB: creating the Epic in the configured tracker (plus, if needed, one retry label/tag update per Step 3 of the hand-off sequence). For Local: writing `spec/plans/epic.md` (with a confirm-before-overwrite if it already exists). Reading `## Tracker` from `runtime-artifacts/aire-state.md` (Step -1) is read-only and does not violate this.
+- **Confirm before every write.** Never create an Epic without explicit user approval ("yes"). For LOCAL, the Intake gate (Step 4) already secures that approval before `spec/plans/epic.md` is written; if the file already exists, confirm the overwrite separately before touching it.
 - **🔴 EVERY Epic this skill creates in JIRA/ADO/GITHUB MUST carry the exact label/tag `intent-intake` — no exceptions, not optional.** This applies unconditionally to every successful non-LOCAL run, not a per-Epic judgment call. A pre-existing *similar-looking* label elsewhere in the project (`intake`, `intent_intake`, `Intent-Intake`, etc.) is NOT a substitute — the exact string `intent-intake` must be present. Its presence is **verified by re-fetching the created item** (never assumed from the create call's response alone) before the intake is reported complete. A run that creates the Epic but cannot confirm the label is NOT a successful run; stop and surface the failure to the user. See Step 3 of the hand-off sequence for the exact procedure.
 
 ## Bundled resources
