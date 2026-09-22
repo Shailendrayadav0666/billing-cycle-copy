@@ -135,12 +135,28 @@ consequences and it must be attributable.
 Once a Helix provider is bound, pull **before** any planning stage that needs system context — that
 is, before Reverse Engineering is even considered, and before Requirements Analysis reads its inputs.
 
-🔴 **Atlas is the source of current-system truth at the START of EVERY cycle**, when it hasn't already
-been pulled locally (Section 2). Each new cycle that needs a fresh pull gets the deep dive doc from
-Atlas (`spec/plans/atlas-deep-dive.md`) rather than carrying forward, diffing, or folding back anything
-from a prior cycle. There is no per-cycle reverse-engineering delta and nothing to stitch: because the
-truth is always refreshed from Atlas, a cycle never has to reconcile itself against a previous cycle's
-documents. When the cycle's PR merges, the next cycle simply pulls again.
+🔴 **Atlas is the source of current-system truth at the START of EVERY cycle, and its destination at
+the END.** Each new cycle that needs a fresh pull gets the deep dive doc from Atlas
+(`spec/plans/atlas-deep-dive.md`) rather than carrying forward anything from a prior cycle — and when
+the cycle closes, what it changed is published **back** to that same Atlas document, so the next
+cycle's pull already contains it. The loop, in order:
+
+1. **Pull** — the deep dive lands at `spec/plans/atlas-deep-dive.md` (this section).
+2. **Build** — the cycle runs against it as existing-system truth.
+3. **Delta** — `archive-epic` (`agents/archive-epic-agent.md` Step 3) writes what actually shipped to
+   `spec/plans/delta/<CYCLE-ID>-<slug>/delta.md` as a change record — a path-level evidence table plus
+   the problems this cycle resolved — and archives it with the rest of `spec/`.
+4. **Refresh** — after the cycle's PR merges, `stitch-delta` (`agents/stitch-delta-agent.md`) reads that
+   delta **out of the cycle archive** (`archive-epic` already removed the live `spec/`) and refreshes the
+   **whole Atlas document**: every section decided against the **merged code on base**, then the complete
+   body written back via the DOCS tools and one row appended to `aire-archives/stitch-ledger.md`. 🔴 The
+   refresh is bounded by the document's own outline, never by the delta's coverage — that is what keeps
+   the deep dive the current face of the application rather than 90% of it. No local staging copy exists
+   at any point.
+
+🔴 **A cycle still never diffs itself against a previous cycle's documents** — it diffs itself against
+the *pulled* Atlas truth, and the stitch is what keeps that truth current instead of letting it drift
+one cycle behind reality.
 
 | Pull | Via | Lands in | Replaces |
 |---|---|---|---|
@@ -159,6 +175,19 @@ every artifact's provenance.
 🔴 Applies whenever the user directs AIRE to work via Helix MCP for BOTH the Epic and the deep dive
 (e.g. "start working on this using helix mcp"). After the pull attempt in the table above, check the
 two artifacts **independently** — never assume one implies the other:
+
+🔴🔴 **TRACKER TYPE IS NOT AN OVERRIDE — Helix-as-content-source and Tracker-as-push-destination are
+orthogonal.** `## Tracker` → `Type` (JIRA/ADO/GITHUB/LOCAL, per `common/tracker-sync.md`) governs ONLY
+where stories/the Epic get pushed and tracked for status — it says NOTHING about where Epic *content*
+is sourced from. When the user has directed Helix MCP for the Epic, this Section 5.4 gate is
+**MANDATORY and takes priority over `common/tracker-sync.md` Section 2's per-tracker fetch table** —
+including its LOCAL row ("no fetch — ask the user to type a description"). Do NOT read `Type: LOCAL` (or
+any other tracker type) as license to skip this gate, silently fall back to asking the user to type the
+Epic inline, or silently file a non-Epic-typed document under `spec/context-project/new-references/` as
+a quiet substitute. The tracker-sync.md LOCAL fallback applies ONLY when the user never directed Helix
+to source the Epic in the first place (e.g., greenfield, or Helix not required per Section 1). If Helix
+was consulted and no Epic-typed document was found, that is ALWAYS this gate — never a silent
+reclassification, regardless of tracker type.
 
 🔴🔴 **STRICT TYPE MATCH — NO SUBSTITUTION, NO EQUIVALENCE, EVER.** A document counts as "the Epic
 brief" ONLY if Helix/Atlas's own document-type classification for it is exactly Epic/Epic brief. A
@@ -195,14 +224,13 @@ the bracketed values:
  How do you want to proceed?
    A)  You generate the missing [Epic | deep dive | Epic and deep dive] on Atlas/Helix yourself —
          AIRE stops here; re-run once it's generated on the platform. (Recommended)
-   B)  Tell me should I proceed with using the other found documents for [Epic | deep dive | Epic and
-         deep dive] — [for the Epic: AIRE invokes the `intent-intake` skill, handing it the other found
-         document(s) as its reference input, to produce a proper epic-brief.md instead of freehand
-         summarizing them | for the deep dive: AIRE generates atlas-deep-dive.md locally via
-         `planning/reverse-engineering.md`, using those other documents as reference | for both: AIRE
-         invokes `intent-intake` for the Epic and generates the deep dive locally, both using the other
-         found documents as reference]. This choice is recorded in runtime-artifacts/aire-state.md and
-         runtime-artifacts/audit.md.
+   B)  [Epic missing: Manually invoke the `intent-intake` skill — pass it the other found document(s)
+         above (e.g. the PRD) as its reference input.
+         | Deep dive missing: Proceed using the other found documents above as reference — AIRE
+         generates atlas-deep-dive.md locally via `planning/reverse-engineering.md`.
+         | Both missing: Manually invoke the `intent-intake` skill — pass it the other found document(s)
+         above (e.g. the PRD) as its reference input. This choice is recorded in
+         runtime-artifacts/aire-state.md and runtime-artifacts/audit.md.
 
 [Answer]:
 ```
@@ -214,13 +242,16 @@ the bracketed values:
   documents as reference)` for each missing artifact in `runtime-artifacts/aire-state.md` and
   `runtime-artifacts/audit.md`. Generate ONLY the missing piece(s) — an artifact that WAS found on
   Atlas with the exact required type is still pulled verbatim, never regenerated:
-  - **Epic missing** → invoke the `intent-intake` skill, passing it the "other documents found" list
-    (e.g. a PRD) as the reference document it asks for at its own intake step — do not hand-summarize
-    the PRD into `epic-brief.md` directly; let `intent-intake` run its own baseline-gathering flow and
-    produce the Epic through it. For LOCAL tracker, that means `intent-intake` writes `spec/plans/epic.md`
-    per its own contract — copy/link its result into `spec/plans/epic-brief.md` as this file's expected
-    Epic input. For JIRA/ADO/GITHUB, let `intent-intake` push the Epic to the configured tracker as it
-    normally would, then fetch it back into `epic-brief.md` per `common/tracker-sync.md` Section 2.
+  - **Epic missing** → AIRE does NOT generate `epic-brief.md` itself here, and does NOT invoke
+    `intent-intake` on the user's behalf either. It tells the user to manually invoke `intent-intake`
+    themselves, naming the other found document(s) (e.g. a PRD) as the reference input to hand that
+    skill, then HALTS this gate and waits — `intent-intake` runs its own baseline-gathering flow and
+    produces the Epic through it, never a hand-summarized shortcut, never an AIRE-triggered call. For
+    LOCAL tracker,
+    `intent-intake` writes `spec/plans/epic.md` per its own contract — copy/link its result into
+    `spec/plans/epic-brief.md` as this file's expected Epic input once `intent-intake` completes. For
+    JIRA/ADO/GITHUB, `intent-intake` pushes the Epic to the configured tracker as it normally would,
+    then AIRE fetches it back into `epic-brief.md` per `common/tracker-sync.md` Section 2.
   - **Deep dive missing** → generate `atlas-deep-dive.md` locally via the normal
     `planning/reverse-engineering.md` stage, using the "other documents found" list as reference input.
   - 🔴 Every artifact produced via this path carries the line *"Existing-system context derived locally
@@ -266,6 +297,13 @@ a discrepancy to smooth over:
 
 Follow Atlas, amend the AIRE-side artifact to stay truthful, say so plainly, log it. Never the reverse
 — never rewrite an Atlas document to agree with a plan.
+
+🔴 **The ONE sanctioned write path is the post-merge stitch** (`agents/stitch-delta-agent.md`), and it
+does not weaken this rule: it publishes what a cycle **already shipped and merged**, as targeted
+per-section edits derived from the real diff — never a plan, never a prediction, never a reshaping of
+sections the cycle did not touch. Everything outside that path stays read-only. Specifically forbidden,
+in every stage and at cycle close alike: editing an Atlas document so a design artifact stops
+contradicting it, publishing a delta whose cycle PR has not merged, and "tidying" prose while stitching.
 
 ---
 

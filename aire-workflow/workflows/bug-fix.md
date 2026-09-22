@@ -231,7 +231,7 @@ Run the system-level design stages the plan selected (Functional Design → NFR 
 
 **Rubric derivation, `architecture.md`, and CI pipeline generation now happen at Step 8.5 (STOP CHECKPOINT), immediately below, once the last design stage completes (or all were skipped).**
 
-## Step 8.5 —  STOP CHECKPOINT: `architecture.md`, `behavior.feature`, rubrics, CI Pipeline (CONDITIONAL)
+## Step 8.5 —  STOP CHECKPOINT: `architecture.md`, `behavior.feature`, rubrics, the fix's behaviour spec + manual test plan, CI Pipeline (CONDITIONAL)
 
 **Purpose**: this bug fix gets the SAME project-level bootstrap the epic flow gets at its own STOP
 CHECKPOINT (CLAUDE.md) — scoped to ONE fix instead of a whole epic. **CI setup is now conditional** on
@@ -241,7 +241,7 @@ CHECKPOINT (CLAUDE.md) — scoped to ONE fix instead of a whole epic. **CI setup
 - **If CI Setup MISSING** (new repo, user opted IN at the Step 1.5 question): Run full CI setup with smoke test (current behavior).
 - **If CI Setup DECLINED** (new repo, user opted OUT at the Step 1.5 question): Skip full CI setup + smoke test — same as EXISTS, but announced as declined. Architecture and rubrics still proceed normally. `## CI/CD Configuration` records `Enabled: No`, which `bug-fix-implement.md` also reads to skip the CI Preflight and CI Attestation gates.
 
-**Load `common/behavior-spec.md`, `implementation/architecture-doc.md`.** Load `common/ci-pipeline-generation.md`
+**Load `common/behavior-spec.md`, `implementation/architecture-doc.md`, `implementation/specs-and-test-plans.md`.** Load `common/ci-pipeline-generation.md`
 **only if `## CI Setup Status` is "missing"** (i.e. the user opted in) — never for `exists` or `declined`.
 
 Every artifact below is **create-if-missing, never regenerate** (`common/directory-structure.md`
@@ -251,8 +251,8 @@ cycle — reuse it AS-IS and say so; only a genuinely absent artifact gets creat
 1. **MANDATORY**: Log reaching this checkpoint in audit.md.
 2. ** `spec/behavior.feature`** — if absent, create it per `common/behavior-spec.md` Section 3 (the
    cross-story journeys that belong to no single unit, tagged `@REQ-<id>`). This fix's OWN behaviour
-   contract is the separate `spec/behavior/bug-<TICKET-ID>.feature` written at `bug-fix-implement.md`
-   Step 4.5 — never conflate the two. A single-work-unit cycle will typically have no genuine
+   contract is the separate `spec/behavior/bug-<TICKET-ID>.feature` written at Item 4.5 below —
+   never conflate the two. A single-work-unit cycle will typically have no genuine
    cross-unit journey yet; record that explicitly rather than leaving the file empty or copying this
    fix's own scenario into it.
 3. ** `spec/plans/architecture.md`** — if absent, write it per `implementation/architecture-doc.md`,
@@ -269,6 +269,25 @@ cycle — reuse it AS-IS and say so; only a genuinely absent artifact gets creat
    used. 🔴 Never hand-write a generic rubric, never score J1 against a borrowed/unrelated one. Create
    `tests/.evals/rubrics/security-rubric.json` (OWASP-based, `implementation/architecture-doc.md` Section
    4.1) and `tests/.evals/config.json` (eval-framework.md Section 1 template) if absent. Log in runtime-artifacts/audit.md.
+
+4.5. ** THE FIX'S BEHAVIOUR SPEC + MANUAL TEST PLAN (MANDATORY — ONE approval gate, before any code)**
+   per `implementation/specs-and-test-plans.md`. These are the LAST design artifacts of the cycle and
+   the last thing written before any code exists. For this one ticket:
+   - **(a)** `spec/behavior/bug-<TICKET-ID>.feature` per `common/behavior-spec.md` Section 2 — one
+     Gherkin scenario per acceptance criterion, `@AC-n` tagged, failure paths included, **and the
+     scenario that reproduces the defect**. Authored BEFORE the fix because it is the contract, not a
+     description of what was built. 🔴 That is the ONLY spec file this work unit gets.
+   - **(b)** `spec/test-plans/<TICKET-ID>-<title>/` by **invoking the `ve-implement` skill in WORKFLOW
+     MODE** with this ticket (`agents/ve-implement-agent.md` Mode Detection — no story-picker, no
+     `ve/…` branch, no approval checkpoint, no push/PR). Never re-implement its steps inline. The
+     generated files ride Step 9 Item 1's commit.
+   - **Blocking coverage check**: every acceptance criterion has ≥ 1 Gherkin scenario AND ≥ 1 manual
+     test case. A gap is fixed here, not deferred.
+   - **Then present the standardized 2-option completion message and WAIT** for `Request Changes` /
+     `Continue to Next Stage` — DO NOT proceed to Section 5 or Step 9 until the user confirms. Log the
+     prompt and the complete raw response in runtime-artifacts/audit.md.
+   🔴 This is scope derivation, NOT ve's sign-off — ve still runs `/ve-implement` and `ve-list-work`
+   independently, and only `ve-list-work` can approve a test plan or move the ticket to Ready for Testing.
 
 ### 8.5 Section 5 — CI Pipeline Setup (CONDITIONAL on CI Setup Status)
 
@@ -309,7 +328,7 @@ After the design stages complete (or are all skipped), mark in `runtime-artifact
 
 **This is a deliberate BREAK in the flow.** The analysis + design artifacts are everything the ve needs, and the ve must not have to wait for the fix. So before the fix is built:
 
-1. **Commit + push the analysis, design and STOP CHECKPOINT artifacts on the bug branch (automatic — this is what unblocks ve)**: stage `spec/**` (bug-brief, requirements, impact analysis, the single story, `architecture.md`, `behavior.feature`), `spec/plans/**`, `tests/.evals/**` (rubrics, config, scripts, `behavior/`), PLUS `.github/workflows/agentic-eval-pipeline.yml` and `sonar-project.properties` **only when `## CI Setup Status` is `exists` or `missing` (opted in)** — never when `declined`, since neither file exists — the updated `runtime-artifacts/aire-state.md` and `runtime-artifacts/audit.md`; commit on the bug branch with an `AIRE-Version: [N]` trailer (`[N]` read live from `CLAUDE.md`); push to origin. Announce the commit hash + pushed branch and log both in audit.md. 🔴 If the push fails, say so explicitly and tell the user to push manually — **the ve cannot start until this branch is on origin**. Still no `[BUG]` PR here. This step ALWAYS runs, regardless of `## CI Setup Status` — it is what unblocks ve and is unrelated to whether CI infrastructure already exists.
+1. **Commit + push the analysis, design and STOP CHECKPOINT artifacts on the bug branch (automatic — this is what unblocks ve)**: stage `spec/**` (bug-brief, requirements, impact analysis, the single story, `architecture.md`, `behavior.feature`, **Item 4.5's `spec/behavior/bug-<TICKET-ID>.feature` and `spec/test-plans/<TICKET-ID>-<title>/`**), `spec/plans/**`, `tests/.evals/**` (rubrics, config, scripts, `behavior/`), PLUS `.github/workflows/agentic-eval-pipeline.yml` and `sonar-project.properties` **only when `## CI Setup Status` is `exists` or `missing` (opted in)** — never when `declined`, since neither file exists — the updated `runtime-artifacts/aire-state.md` and `runtime-artifacts/audit.md`; commit on the bug branch with an `AIRE-Version: [N]` trailer (`[N]` read live from `CLAUDE.md`); push to origin. Announce the commit hash + pushed branch and log both in audit.md. 🔴 If the push fails, say so explicitly and tell the user to push manually — **the ve cannot start until this branch is on origin**. Still no `[BUG]` PR here. This step ALWAYS runs, regardless of `## CI Setup Status` — it is what unblocks ve and is unrelated to whether CI infrastructure already exists.
 2. **🧪 Pre-handoff smoke test — CONDITIONAL on `## CI Setup Status` (recorded by `ticket-implement` Step 1.5 / `common/ci-setup-detection.md`)**:
    - **IF `## CI Setup Status` = "missing"** (automatic; HARD HALT on exhaustion): per `common/ci-pipeline-generation.md` Section 4.0.6, run `tests/.evals/scripts/smoke-test-epic.{sh,ps1}` against the bug branch + `[TICKET-ID]` just pushed (the script takes any integration branch and ticket ID — "epic" is just its filename). This proves the environment is viable (installs cleanly, the existing test suite runs, self-repair itself works) via a zero-diff scratch PR — it is NOT proof this fix's own gates are correct, only that the environment they run in is. On a pass, the scratch PR merges and deletes automatically, logged in audit.md. On exhaustion, the scratch PR is left open and **the break message below does NOT get presented** until the user resolves it — report with the standard Retry-Limit Report format. This runs exactly once per bug cycle, here — never again for this ticket.
    - **IF `## CI Setup Status` = "exists"** (established AIRE project — CI infrastructure, including `smoke-test-epic.*` itself, was already validated in a prior cycle): **SKIP this smoke test entirely — do not run it, do not ask about it.** Announce: "CI infrastructure already exists — skipping the pre-handoff smoke test." Log the skip (with the CI Setup Status detection timestamp/files it was based on) in audit.md, and proceed straight to the break message. 🔴 Skipping the smoke test does NOT skip or shortcut anything else in Step 8.5 or Step 9 — `architecture.md`, `behavior.feature`, the rubrics, and this step's own commit/push (Item 1) still happen exactly as written.
