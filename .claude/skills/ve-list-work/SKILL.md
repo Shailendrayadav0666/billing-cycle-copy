@@ -2,32 +2,32 @@
 name: ve-list-work
 description: >
   Moves a tracker ticket through the ONE transition this skill performs: `In Development` →
-  `Ready for Testing` — ve sign-off of merged work. Works with whichever tracker is configured
+  `Ready for Testing` — Verification Engineer sign-off of merged work. Works with whichever tracker is configured
   (Jira, Azure DevOps, GitHub, or Local). Pulls the cycle's integration branch — the
   epic branch for epic cycles, the bug/enhancement branch for those cycles, NEVER the base branch —
-  then asks the ve to pick one of
+  then asks the Verification Engineer to pick one of
   three local actions: A) List — merged vs. still-in-development stories, status read LIVE from
   the tracker; B) Approve/Reject — the sign-off decision (one prompt, one decision per item,
-  e.g. `1.1 approve`, `PROJ-103 reject`); approved items get a "ve approved the story"
+  e.g. `1.1 approve`, `PROJ-103 reject`); approved items get a "Verification Engineer approved the story"
   comment + ve-approved label/tag + move to Ready for Testing in the Story Tracker AND the tracker,
-  rejected items get a "ve rejected the story" comment + ve-rejected label/tag and deliberately
-  stay In Development (ve is told to manually log the defect with `/raise-defect`); C) Request
+  rejected items get a "Verification Engineer rejected the story" comment + ve-rejected label/tag and deliberately
+  stay In Development (Verification Engineer is told to manually log the defect with `/raise-defect`); C) Request
   changes to a story's `/ve-implement`-generated test plan — add/adjust a manual test case, traced to an
   acceptance criterion, without touching code, branches, or status. Every run closes with a
   confirm-first Approve/Request-Changes gate before the completion message. Confirm-first
   throughout; every tracker change is verified after (LOCAL updates the local Story Tracker only). Only Option B writes to the Story Tracker and
   `runtime-artifacts/audit.md`; only Option C writes to a story's `/ve-implement` test-plan files; Option A writes nothing.
 when_to_use: >
-  Trigger when the user says: "ve-list-work", "ve list work",
-  "ve-signoff", "ve sign off", "ve signoff", "which stories are merged",
+  Trigger when the user says: "ve-list-work", "Verification Engineer list work",
+  "ve-signoff", "Verification Engineer sign off", "Verification Engineer signoff", "which stories are merged",
   "which stories can I test", "what has dev merged into the epic branch",
   "what has dev merged into the bug branch", "show me merged stories to test",
   "move tested stories to ready for testing", "story is tested move it to ready for testing",
-  "ve done testing story 1.2", "mark story ready for testing",
+  "Verification Engineer done testing story 1.2", "mark story ready for testing",
   "sign off this bug", "sign off this enhancement", "ticket is tested",
-  "ve approved", "ve rejected", "approve the story", "reject the story",
+  "Verification Engineer approved", "Verification Engineer rejected", "approve the story", "reject the story",
   "found a bug in a merged story", "disapprove this story",
-  "change the test plan for this story", "add a test case to the ve test plan",
+  "change the test plan for this story", "add a test case to the Verification Engineer test plan",
   "update the test plan for story 1.2".
 allowed-tools: Read Grep Glob Edit Write Bash
 ---
@@ -46,9 +46,9 @@ their PRs into it.
 
 | Cycle | `Workflow Type` | Integration branch | What merges into it | What gets signed off |
 |-------|-----------------|--------------------|---------------------|----------------------|
-| **Epic** | `epic`, or field absent | the **Epic Branch** (e.g. `epic/PROJ-50-checkout`) | each story's `[STORY]` PR + the ve's `ve/…` test-plan PRs | the epic's stories, one or many |
-| **Bug** | `bug` | the **Bug Branch** (e.g. `bug/PROJ-123-login-timeout`) | the fix commits + the ve's `ve/PROJ-123-…` test-plan PR | the single bug ticket |
-| **Enhancement** | `enhancement` | the **Enhancement Branch** (e.g. `enhancement/PROJ-456-csv-export`) | the enhancement commits + the ve's `ve/PROJ-456-…` test-plan PR | the single enhancement ticket |
+| **Epic** | `epic`, or field absent | the **Epic Branch** (e.g. `epic/PROJ-50-checkout`) | each story's `[STORY]` PR + the Verification Engineer's `ve/…` test-plan PRs | the epic's stories, one or many |
+| **Bug** | `bug` | the **Bug Branch** (e.g. `bug/PROJ-123-login-timeout`) | the fix commits + the Verification Engineer's `ve/PROJ-123-…` test-plan PR | the single bug ticket |
+| **Enhancement** | `enhancement` | the **Enhancement Branch** (e.g. `enhancement/PROJ-456-csv-export`) | the enhancement commits + the Verification Engineer's `ve/PROJ-456-…` test-plan PR | the single enhancement ticket |
 
 🔴 **This skill NEVER runs on the base branch, for ANY cycle type.** All three options (A, B, C) run
 on the cycle branch, and they run **BEFORE** `archive-epic` and **BEFORE** the cycle's PR merges into
@@ -76,7 +76,7 @@ the only menu in this skill:**
 
 ```markdown
 A) List merged stories with status in-development 
-B) Approve / Reject a story after testing (ve sign-off)
+B) Approve / Reject a story after testing (Verification Engineer sign-off)
 C) Request changes to a story's test plan (generated by /ve-implement)
 ```
 
@@ -89,13 +89,13 @@ C) Request changes to a story's test plan (generated by /ve-implement)
 4. **Option B**: prints the same table, then **asks one question**: for each merged item, whether
    the ve **approves** or **rejects** it (bug found) — reported per-item, e.g. `1.1 approve`,
    `1.2 reject`.
-   - **Approved** → tracker comment `ve approved the story` + **`ve-approved`** label/tag + move
-     `🔵 In Development` → `🧪 Ready for Testing` in the Story Tracker **and** the tracker (LOCAL: Story Tracker only). Announce it
+   - **Approved** → tracker comment `Verification Engineer approved the story` + **`ve-approved`** label/tag + move
+     `In Development` → `Ready for Testing` in the Story Tracker **and** the tracker (LOCAL: Story Tracker only). Announce it
      simply as **passed**, and log it in `runtime-artifacts/audit.md`.
-   - **Rejected** → tracker comment `ve rejected the story` (with the ve's finding) + **`ve-rejected`**
-     label/tag. **Status deliberately unchanged** — it stays `🔵 In Development` for the dev team to
+   - **Rejected** → tracker comment `Verification Engineer rejected the story` (with the ve's finding) + **`ve-rejected`**
+     label/tag. **Status deliberately unchanged** — it stays `In Development` for the dev team to
      fix. Tell the ve to manually log the defect with the **`/raise-defect`** skill.
-   - **Epic cycles only**: if that leaves **every** story `🧪 Ready for Testing`, offers
+   - **Epic cycles only**: if that leaves **every** story `Ready for Testing`, offers
      (confirm-first) to move the **Parent Epic** too, then points at `pr-generator` for the Epic
      PR. Bug/enhancement cycles have no Parent Epic and no Epic PR — their `[BUG]`/`[ENH]` PR already
      exists, so they go on to **`archive-epic` on this same cycle branch** (while that PR is still open),
@@ -116,9 +116,10 @@ did not approve, or change the status of anything the ve rejected.
 > status — and only on the ve's explicit approval, after the ve has actually tested the work.
 > Option C is the one place this skill edits those `/ve-implement` artifacts directly, on the ve's request.
 
-> **Relationship to `/playwright-implement`** (opt-in extension): once a story shows both a merged
-> dev PR and merged ve test-plan PR in Step 3's table, `/playwright-implement <story>` can turn the
-> manual steps into executable Playwright automation — run it in a separate terminal, since it's a
+> **Relationship to `/playwright-implement`** (mandatory extension): frontend work units already get
+> their Playwright tests inside the implement workflows. For any other story whose dev PR has merged
+> (its test plan is already on the branch from the STOP checkpoint), `/playwright-implement <story>` can
+> turn the manual steps into executable Playwright automation — run it in a separate terminal, since it's a
 > longer sequential flow, while this skill keeps working the Approve/Reject queue for other stories.
 > It runs **directly on the same integration branch** — no branch of its own, no PR — and pushes
 > straight to that branch after its own confirm-first push gate. This skill's Step 3 surfaces
@@ -172,7 +173,7 @@ did not approve, or change the status of anything the ve rejected.
      (`git checkout <integration-branch>`) — confirm before switching, and never switch while
      there are uncommitted changes.
 3. **Pull the latest**: `git fetch origin` then `git pull --ff-only`. Report what came in
-   (e.g. `⬇ Pulled 4 commits into epic/PROJ-50-checkout`, or `⬇ Pulled 2 commits into main`). If
+   (e.g. `Pulled 4 commits into epic/PROJ-50-checkout`, or `Pulled 2 commits into bug/PROJ-123-login-timeout`). If
    the pull fails (diverged / dirty tree), stop and report — do not force anything.
 4. **Exception — Option C (Step 8) does not need this branch context.** If the user's request
    already makes it obvious they only want to edit a `/ve-implement` test plan (option C), you may still run
@@ -189,7 +190,7 @@ Ask which of the three local actions the ve wants (skip if their request already
  What do you want to do on `<integration-branch>`?
 
    A) List the stories whose dev PR has MERGED and are still In Development  (read-only)
-   B) Approve / Reject a story after testing (ve sign-off)
+   B) Approve / Reject a story after testing (Verification Engineer sign-off)
    C) Request changes to a story's test plan (generated by `/ve-implement`)
 
 [Answer]:
@@ -207,7 +208,11 @@ still in development" → **A**; "story 1.1 approve", "I tested it, it passed", 
 
 ## Step 3: Read the Story Tracker and Classify Every Story — status read LIVE from the tracker
 
-Read `## Story Tracker` in `runtime-artifacts/aire-state.md`. It carries the columns the development
+Read the **resolved** `## Story Tracker` — the shared table in `runtime-artifacts/aire-state.md` plus every
+work-unit fragment `runtime-artifacts/stories/*/state.md` on the pulled integration branch, later
+`Recorded` winning per row (`aire-workflow/common/parallel-work-state.md` Section 4; development
+workflows write their story rows into their own fragments, which reach this branch when their PRs merge;
+a `PR: pending` is resolved live from the story branch). It carries the columns the development
 workflows write:
 
 | Story | Title | Requires | Tracker ID | Status | PR | Merged | Start | End | Recorded |
@@ -227,9 +232,10 @@ it holds one row per story. The classification below is identical either way.
 **🔴 Status comes from the tracker LIVE, not from this file (JIRA/ADO/GITHUB).** For every row that carries a
 non-LOCAL Tracker ID, fetch its current status (`getJiraIssue` / `az boards work-item show` / `gh issue view`, per `common/tracker-sync.md` Section 2) and use THAT as the row's status for this
 run — the local `Status` column can go stale (e.g. someone transitioned it outside this skill).
-If the live tracker status differs from the tracker's `Status` column, treat the drift as a factual
-correction: refresh the tracker's `Status` to match the live value and note the correction (this is not an
-ve decision — only Step 4's approve/reject changes status). LOCAL rows have no external board
+If the live tracker status differs from the tracker's `Status` column, use the live value for this run
+and report the drift. **Option A only reports it — Option A writes nothing.** Option B carries the live
+value into any row it writes, always as the full resolved row (Step 5). Only Step 4's approve/reject is a
+ve decision about status. LOCAL rows have no external board
 to read from — use the tracker's `Status` column for those.
 
 Classify every row using the live status plus merge state:
@@ -244,18 +250,18 @@ Classify every row using the live status plus merge state:
 - 🔴 **Bug / enhancement cycles — do NOT require the `[BUG]`/`[ENH]` PR to be merged.** That PR targets
   the base branch and is still **open** at this point by design (it merges only after `archive-epic`).
   Testability here means the work is present on the cycle branch:
-  1. the fix/enhancement commits are on the branch (the tracker row has `End` set and a `PR` URL — i.e.
-     `bug-fix-implement` / `enhancement-implement` completed and raised the PR), **and**
-  2. the ve's own test-plan PR (`ve/<TICKET-ID>-…` → the cycle branch) has **merged**, so
-     `spec/test-plans/<TICKET-ID>-…/` exists in the working tree.
-  Verify (2) with `gh pr list --base <cycle-branch> --head ve/<TICKET-ID>` (state MERGED) plus the folder's
-  presence. Treat the row as 🟩 MERGED when both hold and the live tracker status is short of `Ready for
+  1. the fix/enhancement commits are on the branch and the `[BUG]`/`[ENH]` PR has been raised (the PR
+     URL in the ticket's resolved row, or live via `gh pr list --head <cycle-branch> --state all`), **and**
+  2. `spec/test-plans/<TICKET-ID>-…/` exists in the working tree — written at the ticket flow's own
+     checkpoint before any code; if the ve reworked it with `/ve-implement`, that `ve/…` PR must have
+     merged into the cycle branch too (`gh pr list --base <cycle-branch> --head ve/<TICKET-ID>`).
+  Treat the row as MERGED (testable) when both hold and the live tracker status is short of `Ready for
   Testing`. If the `[BUG]`/`[ENH]` PR happens to be merged already, that is fine too — but never wait for it.
-  If (2) is missing, classify the row as NOT testable and tell the ve to merge their `/ve-implement`
-  test-plan PR into the cycle branch first — there is no test plan to execute otherwise.
-When `gh` confirms a merge that the tracker still has as `Merged = no`, set the tracker's
-`Merged` column to `yes` and refresh `Recorded` (a factual correction — the **Status** column is
-NOT changed here; only the ve's answer in Step 4 changes status).
+  If (2) is missing, classify the row as NOT testable and say which test-plan folder is absent.
+When `gh` confirms a merge that the tracker still has as `Merged = no`, use `yes` for this run. Option A
+only reports it; Option B writes it as part of the full resolved row it writes in Step 5 (never a
+partial row with a fresh `Recorded` — that would beat a newer fragment row, `common/parallel-work-state.md`
+Section 4). The **Status** column changes only through the ve's answer in Step 4.
 
 **Everything else** — not merged, or already at `Ready for Testing` or beyond — is **simply not
 listed**. It is not a sign-off candidate, so it does not belong in the output. Do NOT print a
@@ -264,13 +270,13 @@ listed**. It is not a sign-off candidate, so it does not belong in the output. D
 **If the Playwright Test Automation extension is enabled** — read `## Extension Configuration` in
 `runtime-artifacts/aire-state.md` per `requirements-analysis.md` Step 5.1's canonical table format
 (`| Extension | Enabled | Decided At |`); find the row where `Extension` is "Playwright Test
-Automation" and check its `Enabled` column for `Yes` — also compute an **Automation** column per
+Automation" and check its `Enabled` column for `Yes` (always `Yes` in current projects — the extension is mandatory; the check only guards older state files) — also compute an **Automation** column per
 row: check for `tests/e2e/<story-slug>/*.spec.ts` at the workspace root and/or
 `spec/test-plans/<TICKET-ID>-<title>/automation-summary.md`. If either exists, show  (with the
 pass/fail count from `automation-summary.md` if present); if the row's manual test steps exist but
 automation doesn't yet, show "— not generated (run `/playwright-implement <story>` in a separate
 terminal)"; if manual test steps don't exist yet either, omit the automation suggestion — there's
-nothing for the Planner to scope to until `/ve-implement` runs first. **If no such row exists, or
+nothing for the Planner to scope to until the test plan exists. **If no such row exists, or
 its `Enabled` column is `No`, omit the Automation column entirely** — do not show it as a permanent
 "—".
 
@@ -278,18 +284,18 @@ its `Enabled` column is `No`, omit the Automation column entirely** — do not s
 Testing). This is the whole of Option A's output, and the same table Option B works from:
 
 ```markdown
-# ve Sign-off — `<integration-branch>` (<epic branch | bug branch | enhancement branch>, up to date)
+# Verification Engineer Sign-off — `<integration-branch>` (<epic branch | bug branch | enhancement branch>, up to date)
 
-## 🟩 Dev PRs MERGED into `<integration-branch>`
+## Dev PRs MERGED into `<integration-branch>`
 
 | # | Story | Tracker ID | Title | PR | Merged on | Manual test steps | Automation | Live status |
 |---|-------|------------|-------|----|-----------|-------------------|------------|-------------|
-| 1 | 1.1 | PROJ-101 | [title] | #12 | [date] | `spec/test-plans/PROJ-101-<title>/`  |  13 passing, 1 fixme | 🔵 In Development |
-| 2 | 1.2 | PROJ-102 | [title] | #15 | [date] | — not generated (run `/ve-implement 1.2`) | — | 🔵 In Development |
+| 1 | 1.1 | PROJ-101 | [title] | #12 | [date] | `spec/test-plans/PROJ-101-<title>/`  |  13 passing, 1 fixme | In Development |
+| 2 | 1.2 | PROJ-102 | [title] | #15 | [date] | — not generated (run `/ve-implement 1.2`) | — | In Development |
 
 (Drop the **Automation** column entirely if the extension is `Disabled`.)
 
-> 🧪 Merged into `<integration-branch>` — execute the manual test steps in each folder above
+> Merged into `<integration-branch>` — execute the manual test steps in each folder above
 > (generate them with `/ve-implement <story>` where missing). You can run them in a separate terminal.
 > Where manual steps exist but automation doesn't yet, run `/playwright-implement <story>` — also
 > in a separate terminal, since it's a longer sequential run (Planner → your approval → Generator →
@@ -348,16 +354,20 @@ Rules for interpreting the answer:
 
 For **each** story the ve APPROVED in Step 4:
 
-1. **Story Tracker** (`runtime-artifacts/aire-state.md` → `## Story Tracker`):
-   - **Status** → `🧪 Ready for Testing`
+1. **Story Tracker** (`runtime-artifacts/aire-state.md` → `## Story Tracker` — the **shared** table; this
+   skill runs on the integration branch, so it is an integration-branch writer). Write the story's
+   **full resolved row** (every column, taken from the resolved view — including the PR URL a fragment
+   holds) with the changes below, so its newer `Recorded` wins over the fragment's older row. Never edit a
+   fragment (`aire-workflow/common/parallel-work-state.md` Section 6):
+   - **Status** → `Ready for Testing`
    - **Merged** → `yes`
    - **End** → today's date (`YYYY-MM-DD`) if not already set
    - **Recorded** → current timestamp (`YYYY-MM-DD HH:MM`), from a real clock
 2. **Tracker** — only if the story's `Tracker ID` column holds a non-LOCAL value (not `—`). Dispatch per `## Tracker` → `Type`, per `common/tracker-sync.md` Section 4/Section 9/Section 10, doing all three (comment, label/tag, transition), in this order:
    - **a) Comment (MANDATORY)** — leading with the exact phrase
-     **`ve approved the story`**: JIRA `addCommentToJiraIssue`, ADO `az boards work-item update --discussion`, GITHUB `gh issue comment`:
+     **`Verification Engineer approved the story`**: JIRA `addCommentToJiraIssue`, ADO `az boards work-item update --discussion`, GITHUB `gh issue comment`:
      ```
-     ve approved the story.
+     Verification Engineer approved the story.
 
      Tested by: [session email]
      Merged PR: <PR URL>
@@ -378,7 +388,7 @@ For **each** story the ve APPROVED in Step 4:
      and label stay on the ticket; say so.
    - LOCAL stories (`Tracker ID = —`/`LOCAL`): update the tracker only — no external comment/label/transition to apply.
 3. Announce each one, simply and plainly — the ve doesn't need the mechanics restated every time:
-   ` Story 1.1 (PROJ-101) — Passed. → 🧪 Ready for Testing (comment + \`ve-approved\` label added, tracker synced).`
+   ` Story 1.1 (PROJ-101) — Passed. → Ready for Testing (comment + \`ve-approved\` label added, tracker synced).`
    Log the full detail (comment text, label, transition verification) in `runtime-artifacts/audit.md` regardless —
    the short form is only what's shown to the ve in chat.
 
@@ -388,7 +398,7 @@ For **each** story the ve APPROVED in Step 4:
 
 ## Step 6: REJECTED stories — comment, label/tag, NO status change  *(Option B only)*
 
-For **each** story the ve REJECTED in Step 4. These stories **stay `🔵 In Development`** — the
+For **each** story the ve REJECTED in Step 4. These stories **stay `In Development`** — the
 ve found a bug, so the work goes back to the dev team. **Do NOT transition them, and do NOT
 change their Status in the Story Tracker.**
 
@@ -399,14 +409,14 @@ change their Status in the Story Tracker.**
    ```
 2. **Tracker** — only if the story's `Tracker ID` column holds a non-LOCAL value (not `—`), dispatched per `## Tracker` → `Type`:
    - **a) Comment (MANDATORY)** — leading with the exact phrase
-     **`ve rejected the story`**: JIRA `addCommentToJiraIssue`, ADO `az boards work-item update --discussion`, GITHUB `gh issue comment`:
+     **`Verification Engineer rejected the story`**: JIRA `addCommentToJiraIssue`, ADO `az boards work-item update --discussion`, GITHUB `gh issue comment`:
      ```
-     ve rejected the story.
+     Verification Engineer rejected the story.
 
      Tested by: [session email]
      Merged PR: <PR URL>
      Test steps: spec/test-plans/<TICKET-ID>-<title>/
-     Finding: [ve's reason from step 1, or "no detail provided"]
+     Finding: [Verification Engineer's reason from step 1, or "no detail provided"]
      Status unchanged — remains In Development for the dev team to fix.
      ```
    - **b) Label/tag (MANDATORY)** — add **`ve-rejected`**, using the same
@@ -415,14 +425,17 @@ change their Status in the Story Tracker.**
    - **c) NO transition.** Never transition a rejected story on any tracker.
    - LOCAL stories (`Tracker ID = —`/`LOCAL`): record the rejection in `runtime-artifacts/audit.md` only — no external comment or
      label to apply.
-3. **Story Tracker**: leave **Status** and **End** untouched. You MAY refresh **Recorded** to now.
-   Nothing else in the row changes.
+3. **Story Tracker**: leave the row untouched — Status, End and Recorded alike. (A partial shared-row
+   write with a fresh `Recorded` would override a newer fragment row.) The rejection lives in the audit
+   trail and the tracker label.
 4. Announce each one:
-   ` Story 1.3 (PROJ-103) — ve rejected (comment + \`ve-rejected\` label added). Status unchanged: 🔵 In Development.`
+   ` Story 1.3 (PROJ-103) — Verification Engineer rejected (comment + \`ve-rejected\` label added). Status unchanged: In Development.`
    `Please manually log the defect using the skill /raise-defect.`
-5. After all rejections, point the ve at the defect flow — a label is not a bug ticket:
+5. After all rejections, point the ve at the next step — a label is not a bug ticket:
    ```
     Please manually log these as tracked defects using the skill: /raise-defect
+    For a bug or enhancement ticket whose PR is still open, the dev can instead fix it on that
+    same PR from your review comments with pr-fix <PR>.
    ```
 
 ---
@@ -434,7 +447,7 @@ branch**. Bug and enhancement cycles run on their own cycle branch, have no Pare
 **skip this step entirely** for them and go to Step 9.
 
 Re-read `## Story Tracker` after Step 5–Step 6. Run this step **only** if **EVERY** story is now
-`🧪 Ready for Testing`. If even one story is `🟢 Ready for Development` or `🔵 In Development`,
+`Ready for Testing`. If even one story is `Ready for Development` or `In Development`,
 **skip this step entirely** — the Epic stays where it is.
 
 Resolve the **Parent Epic** from `## Tracker` in `runtime-artifacts/aire-state.md`:
@@ -442,7 +455,7 @@ Resolve the **Parent Epic** from `## Tracker` in `runtime-artifacts/aire-state.m
   → **skip silently**.
 - Otherwise ask, and wait:
   ```
-   All [N] stories are 🧪 Ready for Testing — the ve has signed off the whole epic.
+   All [N] stories are Ready for Testing — the Verification Engineer has signed off the whole epic.
   Move Parent Epic [EPIC-ID] to "Ready for Testing"? (yes / skip)
   ```
   On **yes**: transition per `common/tracker-sync.md` Section 4 (JIRA: `getTransitionsForJiraIssue` → `transitionJiraIssue`; ADO: `az boards work-item update --state`; GITHUB: swap the status label) → **verify** by
@@ -531,24 +544,24 @@ never close silently.
 **Option A (list only)** — the Step 3 table IS the output. Nothing changed, so add only this
 one-line footer beneath it and stop:
 ```markdown
-➡ Run this skill again and pick **B** once you have tested, or **C** to adjust a test plan.
+Run this skill again and pick **B** once you have tested, or **C** to adjust a test plan.
 ```
 Do not repeat the table, do not restate the branch, do not add a summary block.
 
 **Option B (sign-off)**:
 ```markdown
-# ve sign-off recorded
+# Verification Engineer sign-off recorded
 
-** ve approved → 🧪 Ready for Testing**: [Story 1.1 (PROJ-101), … — or "none this run"]
+** Verification Engineer approved → Ready for Testing**: [Story 1.1 (PROJ-101), … — or "none this run"]
    (comment + `ve-approved` label added on each)
-** ve rejected — stay 🔵 In Development**: [Story 1.3 (PROJ-103), … — or "none this run"]
+** Verification Engineer rejected — stay In Development**: [Story 1.3 (PROJ-103), … — or "none this run"]
    (comment + `ve-rejected` label added on each; no status change — please manually log the
    defect using the skill `/raise-defect`)
-**Still 🔵 In Development (not actioned)**: [merged-but-not-yet-tested, plus open-PR stories]
+**Still In Development (not actioned)**: [merged-but-not-yet-tested, plus open-PR stories]
 **Parent Epic**: [EPIC-KEY → Ready for Testing (verified) / skipped / not applicable]
 **Branch**: `<integration-branch>` — <epic branch | bug branch | enhancement branch> (pulled to latest)
 
-➡ **Next, whenever you are ready:**
+**Next, whenever you are ready:**
    • `/ve-implement <story>` — generate the Test Plan manual steps for a story that has none
    • this skill again (**A**) — check what else is merged and ready to test
    • this skill again (**B**) — after you have tested more merged stories
@@ -558,32 +571,32 @@ Do not repeat the table, do not restate the branch, do not add a summary block.
 **If this run signed off the last outstanding item**, replace the "Next" list above with the
 matching completion handoff — pick by cycle type:
 
-**Epic cycle (integration branch = epic branch), every story now `🧪 Ready for Testing`:**
+**Epic cycle (integration branch = epic branch), every story now `Ready for Testing`:**
 ```markdown
-➡ **NEXT ACTION — one keyword:**
-   1⃣  Confirm you are on the epic branch `<epic-branch>`.
-   2⃣  Type this keyword: /pr-generator
+**NEXT ACTION — one keyword:**
+   1.  Confirm you are on the epic branch `<epic-branch>`.
+   2.  Type this keyword: /pr-generator
        It raises/updates the Epic PR `<epic-branch>` → `<base-branch>` and AUTO-triggers
        archive-epic. Merging that Epic PR completes the cycle.
 
-🔴 Type the keyword `pr-generator` EXACTLY as shown — do not describe what you want in your own
+Type the keyword `pr-generator` EXACTLY as shown — do not describe what you want in your own
    words. Any other phrasing is not a framework trigger and the workflow will not advance.
 ```
 
-**Bug / enhancement cycle (integration branch = the bug/enhancement branch), ticket now `🧪 Ready for Testing`:**
+**Bug / enhancement cycle (integration branch = the bug/enhancement branch), ticket now `Ready for Testing`:**
 ```markdown
-➡ **NEXT ACTIONS — do these in order:**
-   1⃣  Commit + push any test-plan edits you made (Option C) so they are on `<cycle-branch>`
-       — the archive in 2⃣ can only capture what is on the branch.
-   2⃣  Use the skill archive-epic — run it HERE, on `<cycle-branch>`, while the [BUG]/[ENH] PR is
+**NEXT ACTIONS — do these in order:**
+   1.  Commit + push any test-plan edits you made (Option C) so they are on `<cycle-branch>`
+       — the archive in step 2 can only capture what is on the branch.
+   2.  Use the skill archive-epic — run it HERE, on `<cycle-branch>`, while the [BUG]/[ENH] PR is
        still OPEN. It archives the complete spec/, reports/ and runtime-artifacts/, and its commit
-       resides in the open PR. It writes the cycle's RE delta and keeps `atlas-deep-dive.md`, but never stitches — `/stitch-delta` does that on the base branch after the PR merges.
-   3⃣  Merge the [BUG]/[ENH] PR into `<base-branch>`: <pr-url> — this completes the cycle. The next
+       resides in the open PR. It writes the cycle's RE delta, archives it, then removes the live spec/ — the archive is the only copy. It never stitches — `/stitch-delta` does that on the base branch after the PR merges.
+   3.  Merge the [BUG]/[ENH] PR into `<base-branch>`: <pr-url> — this completes the cycle. The next
        cycle pulls fresh current-system truth from Atlas via the Helix MCP.
 
-🔴 archive-epic MUST run BEFORE the PR merges (2⃣ before 3⃣), so its cycle-close archive commit rides
+archive-epic MUST run BEFORE the PR merges (step 2 before step 3), so its cycle-close archive commit rides
    the open PR.
-🔴 Use the skill names EXACTLY as shown — do not describe what you want in your own words.
+Use the skill names EXACTLY as shown — do not describe what you want in your own words.
    Any other phrasing is not a framework trigger and the workflow will not advance.
 ```
 
@@ -596,15 +609,15 @@ matching completion handoff — pick by cycle type:
 **Added/changed**: TC-[PLAN]-[nn], traced to AC-[n]
 **State**: edited on your working tree only — this skill does not commit, push, or open a PR
 
-➡ NEXT ACTIONS:
-   1⃣  Commit and push the edited test plan yourself so the change reaches the branch
+NEXT ACTIONS:
+   1.  Commit and push the edited test plan yourself so the change reaches the branch
        (fold it into this story's existing `ve/<TICKET-ID>-<title>` PR if that PR is still open).
-   2⃣  Execute the manual test steps in `spec/test-plans/<TICKET-ID>-<title>/`
+   2.  Execute the manual test steps in `spec/test-plans/<TICKET-ID>-<title>/`
        against a system built from `<integration-branch>` after the dev's PR has merged.
-   3⃣  Then use this skill again and pick **B** to sign the story off, or **C** to adjust more.
+   3.  Then use this skill again and pick **B** to sign the story off, or **C** to adjust more.
    • Use the skill raise-defect for anything your testing finds.
 
-🔴 Nothing about story or tracker status changed here — only Option B does that.
+Nothing about story or tracker status changed here — only Option B does that.
 ```
 
 Say nothing after the applicable block above.
@@ -616,24 +629,24 @@ Say nothing after the applicable block above.
 Append (never rewrite) one entry to `runtime-artifacts/audit.md`:
 
 ```markdown
-## ve Sign-off (ve-list-work)
+## Verification Engineer Sign-off (ve-list-work)
 **Timestamp**: [ISO 8601 — real clock]
 **User Email**: [current session email — read live from the session context]
 **User Input**: "[complete raw user input]"
 **Mode**: "[A — list only | B — sign-off | C — test-plan edit]"
-**Cycle / Branch**: "[epic | bug | enhancement] — integration branch <integration-branch> (<epic branch | base branch>), pulled to latest"
+**Cycle / Branch**: "[epic | bug | enhancement] — integration branch <integration-branch> (<epic | bug | enhancement> branch), pulled to latest"
 **TRACKER ITEM**: "[each story involved — [PROJ-XXX](<site>/browse/PROJ-XXX) or local Story ID]"
 **Merged stories reported**: "[Story N.M (PROJ-XXX), … or none]"
 **Still in development**: "[Story N.M (PROJ-XXX), … or none]"
-**ve APPROVED (→ 🧪 Ready for Testing)**: "[Story N.M ([PROJ-XXX](<site>/browse/PROJ-XXX)) — comment 've approved the story' added, label `ve-approved` applied, transition verified; … or none / n/a for this mode]"
-**ve REJECTED (stayed 🔵 In Development)**: "[Story N.M ([PROJ-XXX](<site>/browse/PROJ-XXX)) — comment 've rejected the story' added, label `ve-rejected` applied, no transition; finding: [ve's reason]; told to log via /raise-defect; … or none / n/a for this mode]"
+**Verification Engineer APPROVED (→ Ready for Testing)**: "[Story N.M ([PROJ-XXX](<site>/browse/PROJ-XXX)) — comment 'Verification Engineer approved the story' added, label `ve-approved` applied, transition verified; … or none / n/a for this mode]"
+**Verification Engineer REJECTED (stayed In Development)**: "[Story N.M ([PROJ-XXX](<site>/browse/PROJ-XXX)) — comment 'Verification Engineer rejected the story' added, label `ve-rejected` applied, no transition; finding: [Verification Engineer's reason]; told to log via /raise-defect; … or none / n/a for this mode]"
 **Tracker labels/tags applied**: "[ve-approved → PROJ-101, PROJ-102 | ve-rejected → PROJ-103 | none / n/a for LOCAL]"
 **Test-plan edit**: "[Story N.M (PROJ-XXX) — <file> — TC-[PLAN]-[nn] added/changed, traced to AC-[n] | n/a for this mode]"
 **Anomalies (closed-not-merged / PR not found)**: "[… or none]"
 **Epic transition**: "[EPIC-KEY → Ready for Testing (verified) / skipped by user / n/a — epic not complete / n/a — bug or enhancement cycle / n/a for this mode]"
 **Approve / Request Changes gate**: "[Approved / Request Changes → re-did [step] / n/a — Option A]"
 **AI Response**: "[what was changed, with verification results]"
-**Context**: ve-list-work skill (ve sign-off)
+**Context**: ve-list-work skill (Verification Engineer sign-off)
 
 ---
 ```
@@ -664,13 +677,13 @@ the ONLY files this skill writes.** Option A writes nothing at all.
 - 🔴 **Status is read LIVE from the tracker (Step 3) for JIRA/ADO/GITHUB, never trusted from `runtime-artifacts/aire-state.md`
   alone.** The local Story Tracker `Status` column can go stale; the tracker's own fetch is the source of
   truth for any row with a non-LOCAL Tracker ID. Reconcile drift as a factual correction, not an ve decision. LOCAL rows have no external source — the local `Status` column is authoritative.
-- 🔴 **The ve decides.** Anything moves to `🧪 Ready for Testing` ONLY when the ve approves it
+- 🔴 **The ve decides.** Anything moves to `Ready for Testing` ONLY when the ve approves it
   in Step 4. A merged PR alone is NOT sufficient — merging makes it *testable*, ve approval makes
   it *Ready for Testing*. This holds identically for epic stories and bug/enhancement tickets.
 - 🔴 **ALWAYS collect a per-item decision in Step 4** (`approve` or `reject`, Option B only) — the
   ve must get the chance to flag a bug on any item. Never infer a decision from silence, and
   never skip an item present in the 🟩 MERGED table without an explicit decision.
-- 🔴 **Every approval gets BOTH a comment starting `ve approved the story` AND the
+- 🔴 **Every approval gets BOTH a comment starting `Verification Engineer approved the story` AND the
   `ve-approved` label/tag** (Step 5, JIRA/ADO/GITHUB only). Every rejection gets BOTH a comment starting `ve rejected the
   story` AND the `ve-rejected` label/tag (Step 6). Comment and label/tag are mandatory and always
   paired — never one without the other. LOCAL has no external comment/label — the Story Tracker update alone is the record.
@@ -678,7 +691,7 @@ the ONLY files this skill writes.** Option A writes nothing at all.
   the full set back — `ai-generated`, `aire-v[N]` and every other existing label MUST survive.
   Clear the opposite ve label in the same update so an item is never both approved and rejected.
 - 🔴 **A REJECTED item NEVER changes status.** No transition, no Story Tracker `Status`
-  or `End` change — it stays `🔵 In Development` for the dev team. The label and comment are the
+  or `End` change — it stays `In Development` for the dev team. The label and comment are the
   entire tracker-side effect (non-LOCAL). Tell the ve to manually log the defect with the `/raise-defect` skill.
 - 🔴 **The same story can never be both approved and rejected in one run.** If the ve gives it
   both decisions in Step 4, stop and ask which they meant.
@@ -699,7 +712,7 @@ the ONLY files this skill writes.** Option A writes nothing at all.
   follow the `TC-[PLAN]-[nn]` format and AC traceability rules in
   `aire-workflow/implementation/test-plan.md`. It never changes story or tracker status.
 - 🔴 **Parent Epic transition is EPIC-CYCLE ONLY** (confirm-first, and only when every story is
-  `🧪 Ready for Testing`); skip it silently on bug/enhancement cycles, on LOCAL, and when `## Tracker` records
+  `Ready for Testing`); skip it silently on bug/enhancement cycles, on LOCAL, and when `## Tracker` records
   `Parent Epic: none`. Never raise/merge/close PRs, and never touch feature branches.
 - 🔴 **Never update only one side** — the local Story Tracker and the external tracker (when one is configured) must both reflect the sign-off.
 - 🔴 **Options B and C close through the Step 9 Approve / Request Changes gate** before the Step 10

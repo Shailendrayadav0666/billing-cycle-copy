@@ -16,8 +16,9 @@ description: >
   Every PR raised by this skill is tagged with an
   "ai-generated" label and its description names the model that generated it.
   In STANDALONE mode it requires explicit user confirmation before pushing the branch or
-  opening the PR; in WORKFLOW mode (invoked as a step by dev-implement, requirements
-  analysis, remediate, bug-fix-implement, enhancement-implement) the push and PR are
+  opening the PR; in WORKFLOW mode (invoked as a step by dev-implement, epic-enhance,
+  epic-bugfix, pr-fix, bug-fix-implement, enhancement-implement, requirements analysis,
+  remediate or archive-epic) the push and PR are
   AUTOMATIC — the invoking workflow's own gate already authorized them.
 when_to_use: >
   Trigger when the user says: "raise a PR", "create a pull request", "open a PR",
@@ -46,7 +47,7 @@ You are a **release engineer** raising a pull request on behalf of the user.
 
 ## Mode Detection (do this FIRST — decides which procedure runs)
 
-- **Workflow mode** — invoked as a step by another workflow (dev-implement, requirements analysis, remediate, bug-fix-implement, enhancement-implement) with the target branch passed as the argument. Run the **FULL procedure (Phases 1–7)** below, **except Phase 5 — which is SKIPPED in this mode**: the invoking workflow's own gate already authorized the push and the PR, so print the Phase 4 draft as an announcement and proceed straight to Phase 6. **Never ask "Push this branch and open this PR — yes/no?" in workflow mode.**
+- **Workflow mode** — invoked as a step by another workflow (dev-implement, epic-enhance, epic-bugfix, pr-fix, bug-fix-implement, enhancement-implement, requirements analysis, remediate or archive-epic) with the target branch passed as the argument. Run the **FULL procedure (Phases 1–7)** below, **except Phase 5 — which is SKIPPED in this mode**: the invoking workflow's own gate already authorized the push and the PR, so print the Phase 4 draft as an announcement and proceed straight to Phase 6. **Never ask "Push this branch and open this PR — yes/no?" in workflow mode.**
 - **Standalone mode** — invoked directly by the user via a trigger phrase ("raise a PR", "open a PR", etc.). **Read `## Branching` from `runtime-artifacts/aire-state.md` FIRST** (silently — do not show it) to determine whether the target can be auto-resolved from the current branch, THEN decide whether to ask:
 
   **Case 1 — Cycle-close PR (target auto-resolved, DO NOT ask).** The current branch IS the recorded **Epic Branch / Bug Branch / Enhancement Branch**. The target is deterministic — it is the recorded **Base Branch** — so **do NOT ask the user for a target**. Announce the resolved target instead:
@@ -70,7 +71,7 @@ Applies **only** to an ordinary standalone PR — NOT to a cycle-close epic/bug/
 2. **Safety only** (no AIRE lookups): `git status` + `git branch --show-current`; if there are uncommitted changes, ask commit/stash/proceed. If the current branch IS the target, stop. `git fetch origin <target-branch>`. Verify `gh auth status` — if not authed, stop.
 3. **Diff** the current branch against `origin/<target-branch>` (Phase 2) to build the summary.
 4. **Draft** a PR title + body from the diff ONLY (no state/audit context). Prefix: skip the `## Branching` inference — if the type isn't obvious from the branch name, ask the user once "[EPIC] / [STORY] / [BUG] / [ENH]?" or omit if they don't care.
-5. **Confirm** with the user (Phase 5 gate — always required), then **push + create the PR** with BOTH canonical labels `ai-generated` and `aire-v1.0` (Phase 6). Report the PR URL.
+5. **Confirm** with the user (Phase 5 gate — always required), then **push + create the PR** with BOTH canonical labels `ai-generated` and `aire-v[N]` (Phase 6). Report the PR URL.
 6. **STOP.** Do NOT evaluate or run Phase 7 (archive) in this mode.
 
 > Phases 1–7 below are the **FULL procedure** — used by workflow mode and by a standalone **cycle-close** PR. An ordinary standalone PR uses only the Fast Path steps referenced above.
@@ -120,12 +121,16 @@ Applies **only** to an ordinary standalone PR — NOT to a cycle-close epic/bug/
 
 ## Phase 3: AIRE Context — runtime-artifacts/aire-state.md and runtime-artifacts/audit.md
 
-This project tracks work in two files under `spec/`. Use them to ground the PR summary in
+This project tracks work in two shared files under `runtime-artifacts/`, plus one pair of fragment files
+per work unit — `runtime-artifacts/stories/<unit-key>/audit.md` and `state.md`
+(`aire-workflow/common/parallel-work-state.md`). For a work-unit PR (`[STORY]`, `[BUG]`, `[ENH]`) read
+**that unit's fragment first** — its audit trail and Story Tracker row live there; for an `[EPIC]` PR read
+the resolved view (shared files plus every fragment). Use them to ground the PR summary in
 **what was actually planned and recorded**, not just the raw diff.
 
 1. Read `runtime-artifacts/aire-state.md`:
    - Extract the **Story Tracker** table. Identify which Story rows have status
-     `🧪 Ready for Testing` or `🔵 In Development` that fall within the current branch's scope
+     `Ready for Testing` or `In Development` that fall within the current branch's scope
      (match by story IDs mentioned in commit messages, branch name, or changed file paths).
    - Note the dependency context (`Requires`) for those stories.
 2. Read `runtime-artifacts/audit.md`:
@@ -182,20 +187,20 @@ prose. If the invoking workflow passed no scorecard path, write exactly:
 
 ---
  Generated with AI — Model: **[MODEL NAME]**
- AIRE Framework: **v1.0**
+ AIRE Framework: **v[N]**
 ```
 
 Determine `[MODEL NAME]` from the current session (e.g., "Claude Sonnet 5", "Claude Opus 4.8") —
 never leave this as a placeholder in the final PR.
 
-The framework version is **hardcoded to `1.0`** here (footer `v1.0`) for maximum labeling accuracy — this is a deliberate exception to the "read `[N]` at runtime" rule (see the CLAUDE.md version-logging list, which registers this file as a manual-update location). **When the framework version is bumped in CLAUDE.md, this literal `2.3` MUST be updated here manually.**
+The framework version is read **at runtime** from the "AIRE Framework Version" line in `CLAUDE.md` (footer `v[N]`, label `aire-v[N]`) — the same convention as every other file. Never hardcode it.
 
 ---
 
 ## Phase 5: User Confirmation (STANDALONE MODE ONLY)
 
 > 🔴 **WORKFLOW MODE — SKIP THIS PHASE ENTIRELY.** When this skill was invoked as a step by
-> dev-implement, requirements analysis, remediate, bug-fix-implement or enhancement-implement, the
+> dev-implement, epic-enhance, epic-bugfix, pr-fix, bug-fix-implement, enhancement-implement, requirements analysis, remediate or archive-epic, the
 > user has ALREADY authorized the push and the PR by invoking that workflow (those workflows have no
 > approval gates; the requirements flow's authorization is its requirements.md approval). Asking again is the same decision twice. Announce instead — print the
 > target branch, the push that is about to happen, the Phase 4 draft and the labels — then go
@@ -207,7 +212,7 @@ Present to the user:
 1. The target branch and current branch.
 2. Whether the branch will be pushed (and with `-u` if it has no upstream yet).
 3. The full PR title and body draft from Phase 4.
-4. The labels that will be applied: `ai-generated` and `aire-v1.0` (the framework version is hardcoded to `1.0` here — bump manually when CLAUDE.md's version changes).
+4. The labels that will be applied: `ai-generated` and `aire-v[N]` (`[N]` read live from `CLAUDE.md`).
 
 Ask explicitly: **"Push this branch and open this PR with these contents — yes/no?"**
 Do not proceed to Phase 6 without an explicit yes. If the user asks for edits, revise the draft
@@ -227,7 +232,7 @@ and re-confirm.
 2. **GUARDRAIL — always apply OUR canonical labels, regardless of any pre-existing similar labels.**
    The two labels this skill applies are EXACTLY (never a variant, never a substitute):
    - **`ai-generated`** (exact name shown)
-   - **`aire-v1.0`** — the FULL framework version including the minor (never the major only, never `aire-v1`). This is **hardcoded to `1.0`** for accuracy; bump it manually here when CLAUDE.md's version changes (this file is registered in CLAUDE.md's manual-update list).
+   - **`aire-v[N]`** — the FULL framework version including the minor, read live from `CLAUDE.md` (never the major only, never `aire-v1`).
 
    A repo may already carry a *similar but different* label — e.g. `AI Generated`, `ai_generated`, `AI-Generated`, `bot`, `automated`, or one auto-added by another tool. **That does NOT satisfy this skill's requirement.** Do NOT reuse, rename, or substitute such a label, and do NOT let it cause you to skip creating ours. Always ensure our two exact labels exist and are the ones applied to the PR.
 
@@ -238,7 +243,7 @@ and re-confirm.
 
    # Create ONLY if the exact name is absent (gh label create errors on an existing name):
    gh label create "ai-generated" --description "Pull request generated by an AI agent" --color "8A2BE2"
-   gh label create "aire-v1.0" --description "Developed with AIRE framework v1.0" --color "1D76DB"
+   gh label create "aire-v[N]" --description "Developed with AIRE framework v[N]" --color "1D76DB"
    ```
    If the exact label already exists, keep it as-is (do not recreate). If only a *similar* label exists, still create OUR exact label. Both exact labels MUST be present before Step 3 applies them.
 3. Create the PR using a HEREDOC for the body (never inline the multi-line body as a flag argument):
@@ -248,7 +253,7 @@ and re-confirm.
      --head <current-branch> \
      --title "<title from Phase 4>" \
      --label "ai-generated" \
-     --label "aire-v1.0" \
+     --label "aire-v[N]" \
      --body "$(cat <<'EOF'
    <body from Phase 4>
    EOF
@@ -256,26 +261,26 @@ and re-confirm.
    ```
 4. 🔴 **VERIFY THE LABELS LANDED — do not assume `--label` on `gh pr create` was honored.** Immediately
    after creation, read the PR back: `gh pr view <n-or-url> --json labels --jq '.labels[].name'`. If
-   either exact label (`ai-generated`, `aire-v1.0`) is missing, apply it now:
-   `gh pr edit <n-or-url> --add-label "ai-generated" --add-label "aire-v1.0"`, then re-verify. **Never
-   report the PR as done, and never write "labels applied: ai-generated, aire-v1.0" into
+   either exact label (`ai-generated`, `aire-v[N]`) is missing, apply it now:
+   `gh pr edit <n-or-url> --add-label "ai-generated" --add-label "aire-v[N]"`, then re-verify. **Never
+   report the PR as done, and never write "labels applied: ai-generated, aire-v[N]" into
    `runtime-artifacts/audit.md`, on the basis of having passed `--label` flags** — record only what
    reading the PR's actual labels back showed. A claim in the audit trail that does not match the PR is
    a defect in the audit trail — this is the same discipline `dev-implement.md` Section D already
    applies to the eval scorecard ("VERIFY IT LANDED — do not assume").
 5. Report the PR URL returned by `gh pr create` back to the user.
 6. **If a PR for this branch ALREADY EXISTS** (found via `gh pr list --head <branch>` — see Execution Rule 7): do not create a duplicate. Push any new commits (the open PR tracks the branch and updates automatically) and, if the summary changed, update the PR body via `gh pr edit` (append — never wipe the existing description). **Standalone mode**: get the user's confirmation first. **Workflow mode**: do it automatically, announcing what was pushed/updated.
-   - **🔴 Re-sync the version label to the current framework version (`aire-v1.0`).** An already-open PR may carry a stale `aire-v*` label (e.g. `aire-v1` from when it was first raised). Ensure the exact label `aire-v1.0` exists (create it per Step 2 if absent), then reconcile the PR's labels:
+   - **🔴 Re-sync the version label to the current framework version (`aire-v[N]`).** An already-open PR may carry a stale `aire-v*` label (e.g. `aire-v1` from when it was first raised). Ensure the exact label `aire-v[N]` exists (create it per Step 2 if absent), then reconcile the PR's labels:
      ```
-     # Current version label to apply (hardcoded aire-v1.0):
-     gh pr edit <pr-number-or-url> --add-label "aire-v1.0" --add-label "ai-generated"
+     # Current version label to apply (aire-v[N], read live from CLAUDE.md):
+     gh pr edit <pr-number-or-url> --add-label "aire-v[N]" --add-label "ai-generated"
 
      # Remove any OTHER aire-v* labels on this PR that differ from the current one:
-     #   list the PR's labels, and for each label matching ^aire-v that is NOT aire-v1.0:
+     #   list the PR's labels, and for each label matching ^aire-v that is NOT aire-v[N]:
      gh pr view <pr-number-or-url> --json labels --jq '.labels[].name'
      gh pr edit <pr-number-or-url> --remove-label "aire-v<OLD>"
      ```
-     Only touch `aire-v*` labels (and ensure `ai-generated` is present) — never strip a user's or another tool's unrelated labels. Announce the relabel (e.g. ` Updated version label: aire-v1 → aire-v1.0`).
+     Only touch `aire-v*` labels (and ensure `ai-generated` is present) — never strip a user's or another tool's unrelated labels. Announce the relabel (e.g. ` Updated version label: aire-v1 → aire-v[N]`).
    - Report the existing PR URL. **This path counts as a successful Phase 6** — it flows into Phase 7 exactly like a fresh creation.
 7. **Do NOT end the turn here.** Proceed IMMEDIATELY to Phase 7 — its evaluation is mandatory whether a new PR was just created OR an existing PR for this branch was found/updated, with no exceptions.
 
@@ -283,20 +288,20 @@ and re-confirm.
 
 ## Phase 7: Auto-Trigger Archive (🔴 MANDATORY EVALUATION — never skip silently)
 
-🔴 **EPIC CYCLES ONLY.** The archive auto-trigger applies **exclusively to an Epic → Base PR**. **Bug and Enhancement cycles archive MANUALLY** — on a `[BUG]` or `[ENH]` → Base PR, NEVER invoke `archive-epic`; print the manual reminder in Step 4 below instead. (Why: ve's `/ve-implement` test-plan PR and `ve-list-work` Option C amendments land on the bug/enhancement branch on their own schedule, so an archive taken at PR time silently omits `spec/test-plans/...` or misses later test-plan edits. The operator archives once everything has landed — see `workflows/bug-fix-implement.md` Step 12 / `workflows/enhancement-implement.md` Step 19.)
+🔴 **EPIC CYCLES ONLY.** The archive auto-trigger applies **exclusively to an Epic → Base PR**. **Bug and Enhancement cycles archive MANUALLY** — on a `[BUG]` or `[ENH]` → Base PR, NEVER invoke `archive-epic`; print the manual reminder in Step 4 below instead. (Why: Verification Engineer's `/ve-implement` test-plan PR and `ve-list-work` Option C amendments land on the bug/enhancement branch on their own schedule, so an archive taken at PR time silently omits `spec/test-plans/...` or misses later test-plan edits. The operator archives once everything has landed — see `workflows/bug-fix-implement.md` Step 12 / `workflows/enhancement-implement.md` Step 19.)
 
 **This phase MUST be executed after every Phase 6 run — whether a NEW PR was created or an EXISTING open PR for this branch was found/updated.** An already-open Epic → Base PR triggers the archive the same way a fresh one does (if archive-epic already ran for this cycle — e.g., the archive folder already exists — archive-epic's own idempotency/collision checks handle that; still invoke it). Skipping the *trigger* is allowed when conditions fail; skipping the *evaluation* is NEVER allowed. You must show the evaluation to the user so a miss is visible, not silent.
 
-**🔴 Step 0 — Re-sync the version label to the current framework version (`aire-v1.0`, hardcoded) (ALWAYS, every run).** Before the archive checklist below, reconcile the PR's version label so it always reflects the current framework version — this runs on EVERY Phase 6 outcome (new PR OR existing PR found/updated), not just the "existing PR" path. Ensure the exact label `aire-v1.0` exists (create it per Phase 6 Step 2 if absent), then reconcile the PR's labels — identical to Phase 6 Step 5's re-sync:
+**🔴 Step 0 — Re-sync the version label to the current framework version (`aire-v[N]`, read live from CLAUDE.md) (ALWAYS, every run).** Before the archive checklist below, reconcile the PR's version label so it always reflects the current framework version — this runs on EVERY Phase 6 outcome (new PR OR existing PR found/updated), not just the "existing PR" path. Ensure the exact label `aire-v[N]` exists (create it per Phase 6 Step 2 if absent), then reconcile the PR's labels — identical to Phase 6 Step 6's re-sync:
 ```
-# Current version label to apply (aire-v1.0):
-gh pr edit <pr-number-or-url> --add-label "aire-v1.0" --add-label "ai-generated"
+# Current version label to apply (aire-v[N]):
+gh pr edit <pr-number-or-url> --add-label "aire-v[N]" --add-label "ai-generated"
 
 # Remove any OTHER aire-v* labels on this PR that differ from the current one:
 gh pr view <pr-number-or-url> --json labels --jq '.labels[].name'
 gh pr edit <pr-number-or-url> --remove-label "aire-v<OLD>"
 ```
-Only touch `aire-v*` labels (and ensure `ai-generated` is present) — never strip a user's or another tool's unrelated labels. If the label was already current, this is a no-op; if it changed, announce it (e.g. ` Updated version label: aire-v1 → aire-v1.0`).
+Only touch `aire-v*` labels (and ensure `ai-generated` is present) — never strip a user's or another tool's unrelated labels. If the label was already current, this is a no-op; if it changed, announce it (e.g. ` Updated version label: aire-v1 → aire-v[N]`).
 
 **Evaluate and PRINT this checklist** (fill in actual values) immediately after reporting the PR URL:
 
@@ -331,7 +336,7 @@ Only touch `aire-v*` labels (and ensure `ai-generated` is present) — never str
 **Step 4 — If condition 2 FAILS because this is a BUG or ENHANCEMENT cycle** (`[BUG]`/`[ENH]` → Base PR): do **NOT** invoke `archive-epic`. State the FAIL in the checklist and print exactly this reminder, then end:
 ```
  Bug/Enhancement cycle — the archive is MANUAL and was NOT run.
-   Run `archive-epic` yourself once ALL ve work for this ticket has merged into
+   Run `archive-epic` yourself once ALL Verification Engineer work for this ticket has merged into
    `<cycle-branch>`.
 ```
 This reminder is the ONE exception to the "no next step" rule below — it exists because nothing else will tell the user the archive is now theirs to run.
@@ -364,7 +369,8 @@ This reminder is the ONE exception to the "no next step" rule below — it exist
 6. **If `gh` is not authenticated or the repo has no `origin` remote**, stop and explain — do not
    attempt workarounds like manual API calls with tokens.
 7. **One PR per run** — if a PR already exists for this branch (`gh pr list --head <branch>`),
-   show it to the user and ask whether to update it instead of creating a duplicate. Updating
+   never create a duplicate: update it (Phase 6 step 6). STANDALONE shows it to the user first and
+   asks whether to update it; WORKFLOW MODE updates it automatically and announces it. Updating
    the existing PR (or even just confirming it's current) still counts as completing Phase 6 —
    the run MUST continue into Phase 7.
 8. **Never open a PR whose title lacks the `[EPIC]`, `[STORY]`, `[BUG]` or `[ENH]` prefix** — resolve the PR type
@@ -374,7 +380,7 @@ This reminder is the ONE exception to the "no next step" rule below — it exist
    found/updated), the archive auto-trigger checklist MUST be evaluated and printed before
    the turn ends. Ending the turn after Phase 6 without the Phase 7 checklist is an incomplete
    run of this skill.
-10. **Always apply our exact canonical labels (`ai-generated` and `aire-v1.0`)** — a pre-existing
+10. **Always apply our exact canonical labels (`ai-generated` and `aire-v[N]`)** — a pre-existing
     similar label (`AI Generated`, `ai_generated`, `AI-Generated`, `bot`, `automated`, or any tool-added variant) is
     NOT a substitute and MUST NOT cause label creation to be skipped. Decide existence by EXACT name
     match (never by fuzzy `gh label list --search`), create ours if the exact name is absent, and

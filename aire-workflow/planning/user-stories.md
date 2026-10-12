@@ -107,7 +107,7 @@ value on its own, keep the thinnest useful end-to-end slice instead of a pure-pl
 
 Before writing it into the plan, **do the analysis** so the suggestion is grounded, not arbitrary:
 - Read the Parent Epic brief (`spec/plans/epic-brief.md`) and `spec/plans/requirements.md` (if present).
-- Read `## Context References` in `runtime-artifacts/aire-state.md`. **IF `Use References: Yes`**, load all listed reference paths — UX wireframes inform story scope (one screen/flow per story), API specs inform endpoint boundaries, etc. Use them as inputs when counting capabilities and deciding story boundaries.
+- Read the `New References` fields of `## Context Project` in `runtime-artifacts/aire-state.md`. **IF `New References: Yes`**, load all listed reference paths — UX wireframes inform story scope (one screen/flow per story), API specs inform endpoint boundaries, etc. Use them as inputs when counting capabilities and deciding story boundaries.
 - Count the distinct capabilities / functional requirements (REQ-IDs), user journeys, and personas involved, and gauge their complexity.
 - **Apply the Step 1.5 Story Slicing Rules (SPIDR) to that count** — for each capability, count how many separate Rules / Paths / Interfaces / Data-variations / Steps / CRUD-verbs it contains; each becomes its own candidate story rather than a sub-bullet of one larger story.
 - Compute a **recommended story count** that (a) keeps each story small, single-purpose, and INVEST-compliant against the Step 1.5 hard sizing ceilings, and (b) yields **≥ `team_size` (= 2) independently workable stories** so no developer is left idle.
@@ -244,7 +244,7 @@ Only the Step 12 auto-approval note is logged here. This stage records no approv
 
 **🔴 Do NOT ask how the stories should be created.** The mode is a **fixed framework default:
 `all-at-once`** — every story is generated together in a single pass, with no per-story approval
-loop and no final story-set approval.
+loop. The complete set then goes through **GATE 1** (Step 21), the one story-set approval.
 
 - [ ] Record `story_creation_mode: all-at-once` in `runtime-artifacts/aire-state.md` without prompting.
 - [ ] Log in `runtime-artifacts/audit.md` that the mode was defaulted to `all-at-once` (no question presented).
@@ -263,22 +263,22 @@ loop and no final story-set approval.
 - [ ] Use the story breakdown approach specified in the plan
 - [ ] **Generate ALL stories together in one pass** (`story_creation_mode: all-at-once`, Step 14.5) — never one at a time, never pausing for a per-story approval:
 
-** Epic header rule (BOTH creation modes — applies when stories.md is first created)**:
+** Epic header rule (applies when stories.md is first created)**:
 - [ ] The VERY FIRST line of `spec/plans/stories.md` MUST be the Parent Epic header:
   ```markdown
   EPIC TICKET: [full Epic URL/reference, e.g. https://<site>.atlassian.net/browse/PROJ-50, or a local description for LOCAL]
   ```
   Read the Epic URL from `## Tracker` in `runtime-artifacts/aire-state.md` (Epic URL line). If no Parent Epic is recorded at creation time, write `EPIC TICKET: none (no Parent Epic recorded)` — and when an Epic is later resolved during the tracker push (Step 25), UPDATE this header line with the full Epic URL/reference in the same interaction. All stories are appended BELOW this header.
 
-** Requirements traceability rule (BOTH creation modes — applies to every story generated)**:
+** Requirements traceability rule (applies to every story generated)**:
 - [ ] EVERY story written to `stories.md` carries a `**Covers**: REQ-F-xx, REQ-NF-yy` line naming the requirement IDs from `spec/plans/requirements.md` its acceptance criteria implement (`common/requirements-traceability.md` Rule 2). A story with an empty `Covers` is invalid — fix it before presenting the story. For multi-requirement stories, an AC-level breakdown (`AC-n → REQ-ID`) is encouraged. When a requirement is split across stories for parallelism, the integration behavior between the slices MUST be owned by an explicit AC on one of them.
 
-- [ ] Generate ALL stories together in one pass, write them to `stories.md` beneath the Epic header, then continue to Step 17. **No approval is requested at any point** — the complete set is announced at Step 20 and pushed to the configured tracker automatically (Part 3).
+- [ ] Generate ALL stories together in one pass, write them to `stories.md` beneath the Epic header, then continue to Step 17. No per-story approval is requested — the complete set is announced at Step 20 and waits for **GATE 1** (Step 21); only after "Approve & Continue" is it pushed to the configured tracker (Part 3).
 
 ## Step 17: Update Progress
 - [ ] Mark the completed step as [x] in the story generation plan
 - [ ] Update `runtime-artifacts/aire-state.md` current status
-- [ ] **Populate the Story Tracker**: add one row per generated story to the `## Story Tracker` table in `runtime-artifacts/aire-state.md`. Columns: Story ID, Title, **Requires = `TBD`** (assigned next stage), `Tracker ID` = `—`, `Status` = `🟢 Ready for Development` (the initial status for every new story), Start/End blank, `Recorded` = current timestamp. Use the table format defined in `planning/dependency-graph-generation.md` (Story Tracker Table Format section).
+- [ ] **Populate the Story Tracker**: add one row per generated story to the `## Story Tracker` table in `runtime-artifacts/aire-state.md`. Columns: Story ID, Title, **Requires = `TBD`** (assigned next stage), `Tracker ID` = `—`, `Status` = `Ready for Development` (the initial status for every new story), Start/End blank, `Recorded` = current timestamp. Use the table format defined in `planning/dependency-graph-generation.md` (Story Tracker Table Format section).
 - [ ] Save all generated artifacts
 
 ## Step 18: Continue or Complete Generation
@@ -338,7 +338,7 @@ that the plan intended it to.
      3. **Formatted Workflow Message** (mandatory): Always end with this exact format:
 
 ```markdown
-> ** <u>**REVIEW REQUIRED:**</u>**  
+> **<u>REVIEW REQUIRED:</u>**  
 > The user stories and personas are at: `spec/plans/stories.md` and `spec/plans/personas.md`
 
 > ** <u>**WHAT'S NEXT?**</u>**
@@ -442,7 +442,7 @@ source of truth for the actual per-tracker commands, not re-derived here.
 
 ## Step 28: Log the Push
 - [ ] Append to `runtime-artifacts/audit.md`: that the push ran automatically after story generation, the PROJECT_KEY (and how it was derived), the Parent Epic key, the created issue keys, the transitions applied, and the story→Epic links, with timestamps.
-- [ ] **No confirmation is required in this turn** — the push is part of the automatic story stage. Everything created is still **verified** after the fact (Steps 26/26a/26b) and any failure STOPS the run and is reported. For LOCAL, log that the push was skipped by design (Type: LOCAL) instead.
+- [ ] **No further confirmation is asked** — GATE 1 approval already authorised the push. Everything created is still **verified** after the fact (Steps 26/26a/26b) and any failure STOPS the run and is reported. For LOCAL, log that the push was skipped by design (Type: LOCAL) instead.
 
 ---
 

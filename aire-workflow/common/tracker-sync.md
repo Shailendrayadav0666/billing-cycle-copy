@@ -31,12 +31,12 @@ Every file in the framework that used to hardcode "Jira" as the only tracker ado
 Executed by `planning/workspace-detection.md`, immediately after Session Identity Capture and before Parent Epic Capture — this MUST be known before the Epic can be resolved. **Skip entirely and reuse the recorded value** if `runtime-artifacts/aire-state.md` already contains a `## Tracker` section (resumed project) — never re-ask.
 
 ```markdown
- Which issue tracker should aire use for this project?
+Which issue tracker should aire use for this project?
 
-A) 🔷 Jira            — stories/epics pushed via the Atlassian MCP
-B) 🔶 Azure DevOps    — work items pushed via the `az boards` CLI
-C)  GitHub          — issues/milestones pushed via the `gh` CLI
-D)  Local only      — no external tracker; everything tracked in runtime-artifacts/aire-state.md
+A) Jira            — stories/epics pushed via the Atlassian MCP
+B) Azure DevOps    — work items pushed via the `az boards` CLI
+C) GitHub           — issues/milestones pushed via the `gh` CLI
+D) Local only       — no external tracker; everything tracked in runtime-artifacts/aire-state.md
 
 [Answer]:
 ```
@@ -145,18 +145,18 @@ Update the story file / `stories.md` header and the Story Tracker `Tracker ID` c
 
 ## 4. Status Transitions (the "Tracker Sync Rule")
 
-The Story Tracker's three valid statuses (`🟢 Ready for Development` → `🔵 In Development` → `🧪 Ready for Testing`) map onto each tracker as follows. **Applies at every point a story/ticket's status changes** — story pick, PR raise, PR merge + ve sign-off, Parent Epic sync, and the bug/enhancement single-ticket flows.
+The Story Tracker's three valid statuses (`Ready for Development` → `In Development` → `Ready for Testing`) map onto each tracker as follows. **Applies at every point a story/ticket's status changes** — story pick, PR raise, PR merge + ve sign-off, Parent Epic sync, and the bug/enhancement single-ticket flows.
 
 | Tracker Status | JIRA | ADO (`System.State`) | GITHUB (label swap, issue stays `open`) | LOCAL |
 |---|---|---|---|---|
-| 🟢 Ready for Development | Transition to "Ready for Development" (`getTransitionsForJiraIssue` → `transitionJiraIssue`) | `az boards work-item update --id X --state "New"` (or the project's nearest equivalent — verify via `az boards work-item show` / process metadata, announce any substitution) | `gh issue edit N --repo ORG/REPO --remove-label "status:in-development" --remove-label "status:ready-for-testing" --add-label "status:ready-for-dev"` | Update the Story Tracker only |
-| 🔵 In Development | `transitionJiraIssue -> "In Development"` | `az boards work-item update --id X --state "Active"` | swap label to `status:in-development` | Update the Story Tracker only |
-| 🧪 Ready for Testing | `transitionJiraIssue -> "Ready for Testing"` | `az boards work-item update --id X --state "Resolved"` (or nearest equivalent) | swap label to `status:ready-for-testing` | Update the Story Tracker only |
+| Ready for Development | Transition to "Ready for Development" (`getTransitionsForJiraIssue` → `transitionJiraIssue`) | `az boards work-item update --id X --state "New"` (or the project's nearest equivalent — verify via `az boards work-item show` / process metadata, announce any substitution) | `gh issue edit N --repo ORG/REPO --remove-label "status:in-development" --remove-label "status:ready-for-testing" --add-label "status:ready-for-dev"` | Update the Story Tracker only |
+| In Development | `transitionJiraIssue -> "In Development"` | `az boards work-item update --id X --state "Active"` | swap label to `status:in-development` | Update the Story Tracker only |
+| Ready for Testing | `transitionJiraIssue -> "Ready for Testing"` | `az boards work-item update --id X --state "Resolved"` (or nearest equivalent) | swap label to `status:ready-for-testing` | Update the Story Tracker only |
 
 **Sync rule** (replaces "Jira Sync Rule" everywhere it was named):
 - If **Tracker ID = `—`/`LOCAL`**: update ONLY the local Story Tracker. No external call of any kind.
 - If **Tracker ID is a real JIRA/ADO/GITHUB identifier**: ALSO transition the tracker issue via the row above, per the type in `## Tracker`. **VERIFY** the transition landed (re-fetch/re-view the issue) before considering the change complete.
-- **Exception — story pick and PR-merge transitions are automatic** (no confirmation): the `🟢→🔵` transition at story pick and the `🔵→🧪` transition on confirmed PR merge apply to the tracker AND the local tracker WITHOUT asking — both verified + announced. Any OTHER transition (e.g., the Parent Epic moving) remains confirm-first.
+- **Exception — the claim is automatic** (no confirmation): the `Ready for Development → In Development` transition at story pick applies to the tracker AND the local tracker WITHOUT asking — verified + announced. The `In Development → Ready for Testing` move is made ONLY by `ve-list-work` Option B, after the PR has merged and the ve has tested it; no implement workflow ever makes it. Any OTHER transition (e.g., the Parent Epic moving) remains confirm-first.
 - **Epic status sync**: same triggers as before (first story → In Development is automatic; last story → Ready for Testing is confirm-first) — apply via the same per-type row, targeting the Parent Epic's ID instead of the story's.
 - **NEVER silently update only one side** when a non-LOCAL Tracker ID exists — local tracker and the external tracker must always agree.
 

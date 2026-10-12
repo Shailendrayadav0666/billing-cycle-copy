@@ -35,10 +35,10 @@ All paths below are relative to the resolved rule details directory.
 - The main workflow stays the orchestrator: it confirms the report and scope, spawns remediation, updates the Story Tracker, and handles all confirm-first tracker transitions (workflow never touches the board without confirmation, for any tracker type).
 
 ## Per-story / all-stories flow when invoked
-1. **Check for reports** — `reports/reviews/story-*-code-review-v*.md` (story-wise) and `all-stories-code-review-v*.md` (all stories together; distinct filename so it is unmistakably intakeable here). If none exist, **STOP**: "Run Code Review first to produce a report to remediate from."
+1. **Check for reports** — `reports/reviews/<key>-code-review-v*.md` for every work-unit key (`story-*`, `bug-*`, `enhancement-*`) and `all-stories-code-review-v*.md` (all stories together; distinct filename so it is unmistakably intakeable here). If none exist, **STOP**: "Run Code Review first to produce a report to remediate from."
 2. **Ask which report to remediate** — DO NOT guess. Enumerate the newest version per story plus the newest all-stories report (grouped: story reports, all-stories reports and let the user choose — story-wise remediation from a story report, or a full sweep from an all-stories report.)
 3. Load and execute all steps from `implementation/remediate.md` (load review target context → build backlog → **confirm scope and HALT — standalone mode only; skipped in the automatic loop** → fix → unit test → green (run only the in-scope story's unit tests), 🔴/🟠 mandatory → annotate report in place).
-4. **Do NOT change the Story Tracker status.** Remediate edits code but does not introduce a status of its own — every story it touches stays `🔵 In Development` (it moves to `🧪 Ready for Testing` only when its PR is **merged**, promoted by the `ve-list-work` skill once ve has tested it). Record the fixes and evidence in the report and runtime-artifacts/audit.md, not a status change.
+4. **Do NOT change the Story Tracker status.** Remediate edits code but does not introduce a status of its own — every story it touches stays `In Development` (it moves to `Ready for Testing` only when its PR is **merged**, promoted by the `ve-list-work` skill once ve has tested it). Record the fixes and evidence in the report and runtime-artifacts/audit.md, not a status change.
 5. **Recommend re-review** (`workflows/code-review.md`) — required if any 🔴 was fixed.
 6. **Offer a PR of the changes** (standalone invocations only): the "After Remediation" next-step menu in `implementation/remediate.md` includes option 2⃣ — "Satisfied with the remediation? Raise a PR of these changes". If chosen, invoke the **`pr-generator` skill** (`.claude/skills/pr-generator`) as-is (it confirms before push/PR) per Step 7. **The automatic loop shows NO menu at all** — the invoking workflow raises the PR itself once the review is clean.
 
@@ -57,7 +57,7 @@ All paths below are relative to the resolved rule details directory.
 
 ## Tracker Sync Rule (reminder)
 
-Remediate does **NOT** change the story status — every story it touches stays `🔵 In Development` — so there is normally no tracker transition to perform here. If a remediation ever does drive a status change, the **Tracker Sync Rule** in `CLAUDE.md` (mechanics in `common/tracker-sync.md` Section 4) applies (confirm-first, verify, never update only one side).
+Remediate does **NOT** change the story status — every story it touches stays `In Development` — so there is normally no tracker transition to perform here. If a remediation ever does drive a status change, the **Tracker Sync Rule** in `CLAUDE.md` (mechanics in `common/tracker-sync.md` Section 4) applies (confirm-first, verify, never update only one side).
 
 ---
 

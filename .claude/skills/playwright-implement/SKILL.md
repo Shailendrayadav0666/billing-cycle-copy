@@ -8,20 +8,20 @@ description: >
   Flow: Prerequisite Gate (Playwright + its agents installed, local frontend server up, fixture data
   seeded) -> Seed Test Gate (derive/confirm tests/e2e/seed.spec.ts with the user before the Planner runs)
   -> invoke the real Planner agent, scoped strictly to this story's UI-relevant manual test cases ->
-  a mandatory user Approval Gate on the Planner's own plan output (tests/playwright-specs/<story-slug>.md) -> invoke
+  a mandatory user Approval Gate on the Planner's own plan output (spec/playwright-specs/<story-slug>.md) -> invoke
   the real Generator agent per scenario (writes tests/e2e/<story-slug>/*.spec.ts) -> local execution via
   `npx playwright test tests/e2e/<story-slug>/ --headed` -> invoke the real Healer agent on any failure
   (its own loop, never shortcut; a test.fixme() outcome is a candidate product defect signal, routed
   to raise-defect) -> a confirm-first Push Gate, then commits and pushes directly to the integration
   branch (epic/bug/enhancement) -- no branch of its own, no PR; the Push Gate is this skill's only
-  review checkpoint before that branch changes. Runs only after both the dev's PR and /ve-implement's
-  own PR have already merged into that branch, so its Planner/Generator have the real code and the
-  manual test docs to work from. UI/browser only -- Playwright's shipped agents carry no API/request-fixture
+  review checkpoint before that branch changes. Standalone, it runs only once the dev's work and the
+  story's test plan are both on that branch (and any open /ve-implement rework PR has merged), so its
+  Planner/Generator have the real code and the manual test docs to work from. UI/browser only -- Playwright's shipped agents carry no API/request-fixture
   tooling, so backend/API manual test cases stay manual-only, always. Additive only -- never modifies
   /ve-implement's manual, black-box test steps, and never touches Story Tracker or tracker status.
-  Only runs when the Playwright Test Automation extension is opted into during Requirements Analysis.
+  The Playwright Test Automation extension is always mandatory (recorded `Enabled = Yes` at workflow start).
   TWO MODES: STANDALONE (the user types /playwright-implement — everything above applies as written,
-  post-merge, with the both-merges gate, the Approval Gate and the Push Gate), and WORKFLOW (invoked as
+  post-merge, with the prerequisites gate, the Approval Gate and the Push Gate), and WORKFLOW (invoked as
   a step by dev-implement / bug-fix-implement / enhancement-implement with mode: workflow and the story
   passed in — pre-PR, on the work unit's own branch: the story-picker, the both-merges gate, the branch
   checkout, the Approval Gate and the Push Gate are all SKIPPED, the seed auto-derives, the app is

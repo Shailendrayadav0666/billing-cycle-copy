@@ -202,7 +202,7 @@ Users may request changes to the execution plan or stage execution during the wo
 **Example**: "We need to split the Payment story into Payment and Billing"
 
 **Handling**:
-1. **Assess Impact**: Check the Story Tracker for which stories are already implemented (`🧪 Ready for Testing`) vs `🔵 In Development` vs `🟢 Ready for Development`.
+1. **Assess Impact**: Check the Story Tracker for which stories are already implemented (`Ready for Testing`) vs `In Development` vs `Ready for Development`.
 2. **Explain Consequences**:
    - Adding story: plan and implement the new story (and map its `requires` dependencies)
    - Removing story: redistribute its functionality to other stories or drop it

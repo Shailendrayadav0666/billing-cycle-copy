@@ -1,9 +1,9 @@
 # Story Selection - Detailed Steps
 
-**Purpose**: Before generating code, determine WHICH story is being implemented — the user types the story's **Tracker ID** (a Jira key, an ADO work item ID, a GitHub issue number) or, for a `LOCAL` tracker, the local Story ID (`N.M`) directly — run the Doability Gate, and move it from `🟢 Ready for Development` to `🔵 In Development` **automatically** (picking the story is the claim — no confirmation is asked for this transition, on any tracker or the local tracker).
+**Purpose**: Before generating code, determine WHICH story is being implemented — the user types the story's **Tracker ID** (a Jira key, an ADO work item ID, a GitHub issue number) or, for a `LOCAL` tracker, the local Story ID (`N.M`) directly — run the Doability Gate, and move it from `Ready for Development` to `In Development` **automatically** (picking the story is the claim — no confirmation is asked for this transition, on any tracker or the local tracker).
 
 **Story statuses** (the only valid Story Tracker statuses — see the Story Status Lifecycle in `CLAUDE.md`):
-`🟢 Ready for Development` → (this stage, on `dev-implement`) → `🔵 In Development` (stays here through code gen, review, PR raise, PR review) → (after the PR is **MERGED**) → `🧪 Ready for Testing`.
+`Ready for Development` → (this stage, on `dev-implement`) → `In Development` (stays here through code gen, review, PR raise, PR review) → (after the PR is **MERGED**) → `Ready for Testing`.
 
 **Runs**: At the start of Code Generation (Step 0), once per story, when the user invokes `dev-implement`. Mandatory.
 
@@ -16,7 +16,7 @@
 
 ## Step 0: No Bulk PR-Merge Reconciliation Here (by design)
 
-Story Selection does **NOT** scan every `🔵 In Development` story and promote it to `🧪 Ready for Testing`
+Story Selection does **NOT** scan every `In Development` story and promote it to `Ready for Testing`
 Instead, dependency readiness is checked **live, per prerequisite, only for the story being selected** — see the **Doability Gate (Step 4)** below. Nothing in this step mutates the Story Tracker or the external tracker.
 
 ## Step 1: Verify Tracker Availability
@@ -54,7 +54,7 @@ or the Story ID (e.g. 1.2) if the tracker is Local:
 ## Step 4:  Doability Gate (MANDATORY — live PR-merge check; `dev-implement` NEVER merges anything)
 - [ ] Look up the chosen story in `dependency-graph.yml` → read its `requires`. No `requires` (or empty) → doable, skip to Step 5.
 - [ ] For EACH story in `requires`, resolve doability directly:
-  - If its Story Tracker `Status` already reads `🧪 Ready for Testing` → doable, no further check needed for this prerequisite.
+  - If its Story Tracker `Status` already reads `Ready for Testing` → doable, no further check needed for this prerequisite.
   - Otherwise, read its recorded `PR` column. If a PR URL is present, check its real state LIVE:
     ```
     gh pr view <PR-URL-or-number> --json state,mergedAt,baseRefName,isDraft,reviewDecision,mergeable,mergeStateStatus,author,reviews
@@ -69,15 +69,15 @@ or the Story ID (e.g. 1.2) if the tracker is Local:
 
        [list every unmet prerequisite]
 
-  ➡ Merge Story [X.Y]'s PR into the epic branch yourself, then run `dev-implement`
+  Merge Story [X.Y]'s PR into the epic branch yourself, then run `dev-implement`
      again to develop Story [N.M].
   ```
-  Log the block (which prerequisite(s) and their live-checked PR state) in runtime-artifacts/audit.md, then END this `dev-implement` run. No story/tracker status has changed at this point — Step 5 (the move to `🔵 In Development`) has not run yet. The user re-invokes `dev-implement` once the blocking PR(s) are merged.
+  Log the block (which prerequisite(s) and their live-checked PR state) in runtime-artifacts/audit.md, then END this `dev-implement` run. No story/tracker status has changed at this point — Step 5 (the move to `In Development`) has not run yet. The user re-invokes `dev-implement` once the blocking PR(s) are merged.
 - [ ] If every prerequisite resolves doable, proceed to Step 5. This live check is authoritative and agrees with the branch-cut dependency-merge check in `common/branching-strategy.md` Section 3 (which remains as a defense-in-depth safety net at branch-creation time, e.g. if a merge were undone between this gate and the branch cut).
 
 ## Step 5: Move Story to In Development (AUTOMATIC — no confirmation)
 
-**Picking a story IS the claim.** Once the user selects the story and the Doability Gate passes, move it to `🔵 In Development` automatically — do NOT ask the user to confirm the tracker transition or the local tracker update. Dispatch per `common/tracker-sync.md` Section 4 (transition) and Section 5 (assignment):
+**Picking a story IS the claim.** Once the user selects the story and the Doability Gate passes, move it to `In Development` automatically — do NOT ask the user to confirm the tracker transition or the local tracker update. Dispatch per `common/tracker-sync.md` Section 4 (transition) and Section 5 (assignment):
 
 - [ ] If the selected story has a non-LOCAL Tracker ID, transition immediately:
   - **JIRA**: `@atlassian transitionJiraIssue [TRACKER-ID] -> "In Development"`, add comment `"Development started via aire (story moved to In Development)."`
@@ -93,17 +93,33 @@ or the Story ID (e.g. 1.2) if the tracker is Local:
   5. **LOCAL**: no assignee concept — skip; optionally note the operator's session email as a comment on the Story Tracker row.
   6. **VERIFY** (JIRA/ADO/GITHUB): fetch the issue back and confirm the assignee matches. If the identity resolves to NO account (or multiple ambiguous matches), do NOT guess — leave the assignee unchanged, warn the user (` Could not resolve <identity> to a tracker account — story left unassigned; assign manually.`), and log the failure in runtime-artifacts/audit.md. Assignment failure is NON-blocking: development proceeds either way.
 - [ ] Announce the change to the user (informational, not a question): "🔵 Story [N.M] claimed — [Tracker Type] [TRACKER-ID or 'local tracker'] moved to In Development, assigned to [session email/username]."
-- [ ] **🔷 EPIC → In Development (AUTOMATIC — first story only)**: If this is the FIRST story to move to `🔵 In Development` (no other story in the Story Tracker is `🔵 In Development` or `🧪 Ready for Testing`), also transition the **Parent Epic** (from `## Tracker` in `runtime-artifacts/aire-state.md`) to "In Development" using the same per-type mechanism as above, targeting the Epic's ID instead of the story's.
+- [ ] **🔷 EPIC → In Development (AUTOMATIC — first story only)**: If this is the FIRST story to move to `In Development` (no other story in the **resolved** Story Tracker — shared table plus fragments, `common/parallel-work-state.md` Section 4 — is `In Development` or `Ready for Testing`, and the Parent Epic is not already In Development on the tracker, read live), also transition the **Parent Epic** (from `## Tracker` in `runtime-artifacts/aire-state.md`) to "In Development" using the same per-type mechanism as above, targeting the Epic's ID instead of the story's.
   Verify the transition landed (retry with the exact state/label name if rejected), announce it ("🔷 Epic [EPIC-ID] moved to In Development — development has started."), and log it in runtime-artifacts/audit.md. Skip silently if `## Tracker` records `Parent Epic: none`, if `Type: LOCAL`, or the Epic is already In Development (or beyond).
-- [ ] These are the ONLY automatic transitions in the workflow (story → In Development on pick, plus the Epic → In Development on the first pick) — every OTHER status change (e.g., `🧪 Ready for Testing`) still follows the confirm-first Tracker Sync Rule.
+- [ ] These are the ONLY automatic transitions in the workflow (story → In Development on pick, plus the Epic → In Development on the first pick) — `Ready for Testing` is set ONLY by `ve-list-work` Option B after the PR merges; every other status change follows the confirm-first Tracker Sync Rule.
 
 ## Step 6: Update Story Tracker (AUTOMATIC — no confirmation)
-- [ ] In `runtime-artifacts/aire-state.md` `## Story Tracker`, for the selected story set (without asking):
-  - **Status** → `🔵 In Development` (moved from `🟢 Ready for Development`)
+
+🔴 **Parallel-safe state** (`common/parallel-work-state.md`): the claim is written to the story's own
+fragment, never to the shared file — create `runtime-artifacts/stories/story-<N.M>/state.md` (and
+`audit.md`) now, copy the story's row from the resolved Story Tracker into its `## Story Tracker Row`,
+and apply the changes below to that row. Held entries from Steps 2–5 are written to the fragment's
+`audit.md` with their original timestamps. Every "Story Tracker" / "audit.md" write in this step means
+the fragment.
+
+- [ ] In the fragment's `## Story Tracker Row` (`runtime-artifacts/stories/story-<N.M>/state.md`), for the selected story set (without asking):
+  - **Status** → `In Development` (moved from `Ready for Development`)
   - **Start** → today's date (`YYYY-MM-DD`) if not already set
   - **Recorded** → current timestamp (`YYYY-MM-DD HH:MM`)
-- [ ] Append to `runtime-artifacts/audit.md`: the selected story, the automatic status change `🟢 Ready for Development → 🔵 In Development` (tracker + local, with verification result), and the assignee set (email/username + resolved account, or the resolution failure) with timestamps. The entry MUST include the `**TRACKER ITEM**:` field — the story's Tracker ID as a clickable link where applicable (`[PROJ-XXX](<site-base-url>/browse/PROJ-XXX)` for JIRA, the issue/work-item URL for ADO/GITHUB), or the local Story ID when `Tracker ID = —`/`LOCAL` (see the Audit Entry Format in `workflows/dev-implement.md`).
-- [ ] The story now **stays `🔵 In Development`** through Code Generation, the automated Code Review, any Remediate loop, the PR raise, and the auto PR Review — it moves to `🧪 Ready for Testing` ONLY when its PR is **MERGED** into the epic branch, promoted exclusively by the `ve-list-work` skill, after ve has tested it. (dev-implement/story-selection only ever live-check a prerequisite's PR at the Doability Gate — they never promote this story's own tracker status.)
+- [ ] 🔴 **Write the `## Claim` block** in the same fragment `state.md` (`common/parallel-work-state.md` Section 3.2), from the RESULTS of Step 5's verified calls — never before they ran:
+  ```markdown
+  ## Claim
+  - Tracker: <JIRA|ADO|GITHUB> <TRACKER-ID> · In Development — verified <ISO timestamp>   (LOCAL: `- Tracker: LOCAL — no external claim`)
+  - Assignee: <accountId | login | email> — verified <ISO timestamp>   (or: `unresolved — <identity>, user warned <ISO timestamp>`; LOCAL: `- Assignee: LOCAL — n/a`)
+  - Parent Epic: <moved to In Development — verified <ISO timestamp> | already In Development | not the first work unit | skipped — none/LOCAL>
+  ```
+  A non-LOCAL story whose `Tracker:` line does not say `verified` has NOT been claimed: go back to Step 5 and make the calls (the Atlassian MCP / `az` / `gh` tools are available — "not executed this session" is not an outcome). The story branch (dev-implement Step 1.5) is cut only after this block is complete, and the work-unit guard refuses the commit without it (`common/work-unit-artifacts.md` Section 6.2).
+- [ ] Append to the fragment `runtime-artifacts/stories/story-<N.M>/audit.md` (never the shared `runtime-artifacts/audit.md`): the selected story, the automatic status change `Ready for Development → In Development` (tracker + local, with verification result), and the assignee set (email/username + resolved account, or the resolution failure) with timestamps. The entry MUST include the `**TRACKER ITEM**:` field — the story's Tracker ID as a clickable link where applicable (`[PROJ-XXX](<site-base-url>/browse/PROJ-XXX)` for JIRA, the issue/work-item URL for ADO/GITHUB), or the local Story ID when `Tracker ID = —`/`LOCAL` (see the Audit Entry Format in `workflows/dev-implement.md`).
+- [ ] The story now **stays `In Development`** through Code Generation, the automated Code Review, any Remediate loop, the PR raise, and the auto PR Review — it moves to `Ready for Testing` ONLY when its PR is **MERGED** into the epic branch, promoted exclusively by the `ve-list-work` skill, after ve has tested it. (dev-implement/story-selection only ever live-check a prerequisite's PR at the Doability Gate — they never promote this story's own tracker status.)
 
 ## Step 7: Hand Off to Code Generation
 - [ ] Return the resolved story (ID, title, acceptance criteria, Tracker ID/link if any) to Code Generation Part 1.
@@ -114,13 +130,13 @@ or the Story ID (e.g. 1.2) if the tracker is Local:
 ## Critical Rules
 - 🔴 Story selection is **tracker-driven** — the user types the story's Tracker ID (JIRA key / ADO work item ID / GitHub issue number) or, for `Type: LOCAL`, the local Story ID directly. If the configured tracker's integration (Atlassian MCP / `az` / `gh`) is unavailable, STOP — except LOCAL, which never requires an integration.
 - 🔴 NEVER guess which story to implement — always ask the user to type the ID and wait.
-- 🔴 NEVER bypass the Doability Gate — all of a story's `requires` must be confirmed **MERGED** via `gh pr view` at gate time (or already `🧪 Ready for Testing` in the tracker). Any prerequisite that remains unmerged →  STOP the run with a clear message naming it (never loop back silently, never let the user bypass it).
+- 🔴 NEVER bypass the Doability Gate — all of a story's `requires` must be confirmed **MERGED** via `gh pr view` at gate time (or already `Ready for Testing` in the tracker). Any prerequisite that remains unmerged →  STOP the run with a clear message naming it (never loop back silently, never let the user bypass it).
 - 🔴 **`dev-implement` NEVER MERGES A PR, EVER — not automatically, not with confirmation, not even when it is already approved.** A prerequisite's PR approval is always a manual human action performed outside this workflow (GitHub / the tracker's PR UI); merging it is likewise always the user's own action. The Doability Gate only ever reads PR state — it has no merge step of any kind. When the blocking prerequisite is already approved, the stop message says so, so the user knows merging it (themselves) is all that's left.
-- 🔴 This gate never writes to the prerequisite's Story Tracker row at all — it only reads live PR state. `Merged`/`Recorded` reflect the user's own merge once it happens; `Status`/`End` change only when `ve-list-work` promotes it to `🧪 Ready for Testing`.
-- 🔴 The ONLY valid Story Tracker statuses are `🟢 Ready for Development`, `🔵 In Development`, and `🧪 Ready for Testing`. This stage moves the story to `🔵 In Development` only.
+- 🔴 This gate never writes to the prerequisite's Story Tracker row at all — it only reads live PR state. `Merged`/`Recorded` reflect the user's own merge once it happens; `Status`/`End` change only when `ve-list-work` promotes it to `Ready for Testing`.
+- 🔴 The ONLY valid Story Tracker statuses are `Ready for Development`, `In Development`, and `Ready for Testing`. This stage moves the story to `In Development` only.
 - 🔴 ALWAYS take the ID the user types at development time — do not assume it. Once typed, **do NOT ask them to confirm it** ("Implement this story? yes/no" is removed): show the fetched issue and proceed to the Doability Gate. Re-ask only when the ID is invalid or resolves to the wrong issue.
-- 🔴 The `🟢 Ready for Development → 🔵 In Development` transition is AUTOMATIC on story pick — apply it to the configured tracker AND the Story Tracker without asking, ALWAYS verify the transition landed (non-LOCAL), and announce it. All OTHER tracker transitions remain confirm-first per the Tracker Sync Rule.
+- 🔴 The `Ready for Development → In Development` transition is AUTOMATIC on story pick — apply it to the configured tracker AND the Story Tracker without asking, ALWAYS verify the transition landed (non-LOCAL), and announce it. All OTHER tracker transitions remain confirm-first per the Tracker Sync Rule.
 - 🔴 On every story pick, ALWAYS set the assignee to the operator who invoked `dev-implement`, per `common/tracker-sync.md` Section 5 (automatic, verified where applicable, logged). If the identity can't be resolved, leave unassigned, warn, and continue — assignment failure never blocks development. LOCAL has no assignee concept.
-- 🔴 When the FIRST story of the epic moves to `🔵 In Development`, ALWAYS also transition the Parent Epic (from `## Tracker`) to "In Development" automatically — verify (non-LOCAL), announce, and log it.
+- 🔴 When the FIRST story of the epic moves to `In Development`, ALWAYS also transition the Parent Epic (from `## Tracker`) to "In Development" automatically — verify (non-LOCAL), announce, and log it.
 - 🔴 ALWAYS record the selected story (and its Start/Recorded timestamps) in the Story Tracker before code generation begins.
 - 🔴 When a project/repo identifier is needed (e.g., a "pick from the tracker" search), FIRST reuse the value recorded in `runtime-artifacts/aire-state.md` `## Tracker` → `Project Key / Repo / Org`; ask the user only if none is recorded — never hard-code it.

@@ -8,7 +8,7 @@ When a user returns to continue work on an existing aire project, present this p
 
 Based on your runtime-artifacts/aire-state.md, here's your current status:
 - **Project**: [project-name]
-- **Current Phase**: [PLANNING/IMPLEMENTATION/OPERATIONS]
+- **Current Phase**: [PLANNING/IMPLEMENTATION]
 - **Current Stage**: [Stage Name]
 - **Last Completed**: [Last completed step]
 - **Next Step**: [Next step to work on]
@@ -24,7 +24,7 @@ B) Review a previous stage ([Show available stages])
 ```
 
 ## MANDATORY: Session Continuity Instructions
-1. **Always read runtime-artifacts/aire-state.md first** when detecting existing project
+1. **Always read runtime-artifacts/aire-state.md first** when detecting existing project — **as the resolved view**: the shared file plus every work-unit fragment `runtime-artifacts/stories/*/state.md` present (`common/parallel-work-state.md` Section 4). **Resuming a work-unit workflow** (`dev-implement`, `epic-enhance`, `epic-bugfix`, `pr-fix`, `bug-fix-implement`, `enhancement-implement` Phase B) reads that unit's own `state.md` `## Progress` and `## Self-Healing Counters` and its `audit.md` first, and continues writing only those fragment files
 2. **Resolve the Session Identity** (silent, email-only, tool-free — per the Session Identity Capture rules in the root workflow file): read the current session email LIVE from the environment context. NO confirmation question and NO stored state — the email is recorded ONLY in runtime-artifacts/audit.md, NEVER in runtime-artifacts/aire-state.md (do not create or update a `## Session Identity` section; if an older run left one, ignore it).
    All runtime-artifacts/audit.md entries in this session carry `**User Email**:` with the current session email — at every approval flow this field records who approved. A different developer resuming the project automatically logs under their own email. Email only; never record a name.
 3. **Parse current status** from the workflow file to populate the prompt
@@ -33,12 +33,12 @@ B) Review a previous stage ([Show available stages])
    - **Requirements Analysis**: Read requirements.md, spec/spec-generation/requirement-verification-questions.md
    - **User Stories**: Read stories.md, personas.md, spec/spec-generation/story-generation.md, the `## Story Tracker` in runtime-artifacts/aire-state.md (statuses, requires, Tracker IDs), AND the `## Tracker` section in runtime-artifacts/aire-state.md (Type, Parent Epic ID/URL, Project Key / Repo / Org) — required so a resumed session can still link pushed stories to the Parent Epic provided at workflow start, and knows which tracker to dispatch to without re-asking
    - **Dependency Graph**: Read `spec/plans/dependency-graph.yml` (`requires`/`enables`) and the `## Dependency Graph` section in runtime-artifacts/aire-state.md
-   - **Application Design**: Read application-design artifacts (components.md, component-methods.md, services.md)
-   - **Implementation Design**: System-level design artifacts live under `spec/plans/` in
-     `functional-design/`, `nfr-requirements/`, `nfr-design/`, and `infrastructure-design/`
-     subdirectories. On resume, load whichever of these exist. The exact files in each
-     subdirectory are enumerated by the corresponding implementation stage rules.
-   - **At the STOP CHECKPOINT / Code Generation (`dev-implement`)**: If runtime-artifacts/aire-state.md shows `Design complete — awaiting dev-implement`, remind the user to type `dev-implement` to build a story. On resuming a `dev-implement` session, read the Story Tracker + dependency-graph.yml to recompute the currently ready stories, and re-check the Doability Gate before continuing any in-progress story.
+   - **Application Design**: Read `spec/plans/application-design.md` (components, methods, services and dependencies, merged)
+   - **Implementation Design**: Read the flat system-level design docs in `spec/plans/` —
+     `functional-design.md`, `nfr.md` (NFR Requirements + NFR Design sections),
+     `infrastructure-design.md` and, once the STOP CHECKPOINT has run, `architecture.md`. A stage that
+     was skipped has no file; load whichever exist (`common/directory-structure.md`).
+   - **At the STOP CHECKPOINT / Code Generation (`dev-implement`)**: If runtime-artifacts/aire-state.md shows `Design complete — awaiting dev-implement`, remind the user to type `dev-implement` to build a story. On resuming a `dev-implement` session, read the resolved Story Tracker (shared table + `runtime-artifacts/stories/*/state.md` fragments, `common/parallel-work-state.md`) + dependency-graph.yml to recompute the currently ready stories, and re-check the Doability Gate before continuing any in-progress story.
    - **Code Stages**: Read all code files, plans, the Story Tracker, dependency-graph.yml, AND all previous artifacts
 5. **Smart Context Loading by Stage**:
    - **Early Stages (Workspace Detection, Reverse Engineering)**: Load workspace analysis

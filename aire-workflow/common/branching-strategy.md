@@ -61,7 +61,7 @@ Runs after Story Selection resolves the story and the Doability Gate passes, BEF
    ```
 3. **Select the base for the story branch** (dependency-merge check):
    - Read the story's `requires` from `dependency-graph.yml`.
-   - For EACH prerequisite story, determine whether its story branch has been **MERGED into the epic branch** (`gh pr view <dep-branch> --json state,mergedAt`, or `git branch --merged <epic-branch>`). In the normal `dev-implement` flow the Doability Gate ran first and already checked this live (`implementation/story-selection.md` Step 4) — the gate never merges anything itself, so anything still unmerged here is exactly what the Doability Gate already stopped on. Note: `🧪 Ready for Testing` now means the dep's PR has been **MERGED** (a story is not promoted to Ready for Testing until its PR merges — see the Story Status Lifecycle in `CLAUDE.md`), so the Doability Gate and this git-level check now agree; this remains the authoritative merge check and stays as a safety net (e.g. a merge undone, or a status set out of band).
+   - For EACH prerequisite story, determine whether its story branch has been **MERGED into the epic branch** (`gh pr view <dep-branch> --json state,mergedAt`, or `git branch --merged <epic-branch>`). In the normal `dev-implement` flow the Doability Gate ran first and already checked this live (`implementation/story-selection.md` Step 4) — the gate never merges anything itself, so anything still unmerged here is exactly what the Doability Gate already stopped on. Note: `Ready for Testing` now means the dep's PR has been **MERGED** (a story is not promoted to Ready for Testing until its PR merges — see the Story Status Lifecycle in `CLAUDE.md`), so the Doability Gate and this git-level check now agree; this remains the authoritative merge check and stays as a safety net (e.g. a merge undone, or a status set out of band).
    - **Case A — no prerequisites, or ALL prerequisites merged into the epic branch**: cut from the epic branch:
      ```
      git checkout -b story/<N.M>-<kebab-title> <epic-branch>
@@ -72,10 +72,10 @@ Runs after Story Selection resolves the story and the Doability Gate passes, BEF
         It depends on story [X.Y], whose branch `story/X.Y-...` is NOT yet merged
         into the epic branch — its code would be missing from any branch cut now.
 
-     ➡ Merge story [X.Y]'s PR into the epic branch first, then run `dev-implement`
+     Merge story [X.Y]'s PR into the epic branch first, then run `dev-implement`
         again to start Story [N.M]. (Unmerged prerequisites: [list all])
      ```
-     Do NOT create a story branch. Do NOT cut from the unmerged dependency's branch. Log the warning in runtime-artifacts/audit.md, revert the story's status from `🔵 In Development` back to `🟢 Ready for Development` in the Story Tracker (and the external tracker, verified) since development is not starting, and END the `dev-implement` run — the user re-invokes it after merging.
+     Do NOT create a story branch. Do NOT cut from the unmerged dependency's branch. Log the warning in runtime-artifacts/audit.md, revert the story's status from `In Development` back to `Ready for Development` in the Story Tracker (and the external tracker, verified) since development is not starting, and END the `dev-implement` run — the user re-invokes it after merging.
 4. Verify the branch is active (`git branch --show-current`), record the story branch name + base used in runtime-artifacts/audit.md, and carry it forward as the commit/push/PR target. (This is a self-check, not a user prompt.)
 
 ## 4. Story PR (dev-implement Section D)

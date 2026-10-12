@@ -4,6 +4,7 @@
 
 ### Rule: Never Ask Questions in Chat
 **CRITICAL**: You must NEVER ask questions directly in the chat. ALL questions must be placed in dedicated question files.
+**Exceptions (CLAUDE.md "Question Format")**: Tracker Selection, Context Opt-In, the CI/CD Opt-In and the Atlas Artifact Sync Opt-In are asked in chat only, and the CI/SonarQube setup gate is emitted verbatim as plain text. Workflow-internal one-line prompts that a rule file defines inline (for example `yes / skip`) are also asked in chat.
 
 ### Question File Format
 

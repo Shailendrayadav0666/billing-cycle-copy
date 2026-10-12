@@ -21,7 +21,7 @@ Application Design focuses on:
 
 ### 1. Analyze Context
 - Read `spec/plans/requirements.md` and `spec/plans/stories.md`
-- Read `## Context References` in `runtime-artifacts/aire-state.md`. **IF `Use References: Yes`**, load all listed reference paths — UX wireframes/mockups define the component structure and UI layout; API specs define service interfaces; architecture diagrams inform component dependencies. Use them as primary design inputs alongside requirements and stories.
+- Read the `New References` fields of `## Context Project` in `runtime-artifacts/aire-state.md`. **IF `New References: Yes`**, load all listed reference paths — UX wireframes/mockups define the component structure and UI layout; API specs define service interfaces; architecture diagrams inform component dependencies. Use them as primary design inputs alongside requirements and stories.
 - Identify key business capabilities and functional areas
 - Determine design scope and complexity
 

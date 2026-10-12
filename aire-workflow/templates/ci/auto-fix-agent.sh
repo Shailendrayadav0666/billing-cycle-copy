@@ -111,7 +111,7 @@ LIMIT=$(command -v jq >/dev/null 2>&1 && [ -f "$CONFIG" ] && jq -r '.retryLimitF
 COUNTER="${RUN_DIR}/self-repair-attempt"
 attempt=$(( ( $([ -f "$COUNTER" ] && cat "$COUNTER" || echo 0) ) + 1 ))
 if [ "$attempt" -gt "$LIMIT" ]; then
-  report_and_exit "retry limit ${LIMIT} reached — 3 retries ended. Please suggest next steps. Unresolved: ${GATES[*]}" 1
+  report_and_exit "SELF-REPAIR LIMIT REACHED (${LIMIT} of ${LIMIT} attempts) — I could not fix this on my own. Unresolved gates: ${GATES[*]}. Evidence: ${EVIDENCE_DIR}/ and this run's eval-results artifact. To take over: (1) reproduce locally with the failing gate's command from tests/.evals/config.json, (2) fix the code on this PR's branch — never by skipping a test, suppressing a finding or lowering a threshold — and push, or (3) leave a PR comment describing the problem and type pr-fix <PR number> in Claude Code to have it fixed and re-verified on this PR." 1
 fi
 echo "$attempt" > "$COUNTER"
 

@@ -28,7 +28,7 @@ This workflow may be invoked standalone. Resolve the rule details directory  (ch
 - `common/process-overview.md`, `common/session-continuity.md`, `common/content-validation.md`
 - The detailed reviewer steps from `implementation/code-review.md`
 - `agents/code-security-review-agent.md` — the automated Security Baseline review run in Phase 2.5, **scoped to the diff**. Its 🔴 Critical / 🟠 High findings on the changed surface become real `SEC-ISS-XXX` findings that drive the verdict and get auto-fixed by the remediate loop; 🟡/🔵 and pre-existing findings are advisory only. (The agent also loads `extensions/security/baseline/security-baseline.md` itself.)
-- `common/eval-framework.md` Section 4–Section 5 — the J1/J2 judge scores are computed inside this review and reported in the Review Summary. 🔴 **They are output only**: never a 🔴/🟠 finding, never part of the verdict, never fed to remediation, never re-scored within a run.
+- `common/eval-framework.md` Section 4–Section 5 — the J1/J2 judge scores are computed inside this review and reported in the Review Summary. 🔴 **They are blocking gates with their own threshold**: below minimum → SH-LOOP-6 (N/A passes). They are never a Blocker/High finding, never part of the AC verdict, never fed to the SH-LOOP-5 remediation, and never re-scored within a pass.
 
 All paths below are relative to the resolved rule details directory.
 
@@ -50,7 +50,7 @@ All paths below are relative to the resolved rule details directory.
    ** NO TEST RE-RUN (auto-run from `dev-implement`)**: dev-implement's Unit Test & Coverage gate already ran the full unit test suite to ≥90% coverage in the same run, and — when the story touches an API layer — the API & Contract Testing Gate already ran its checklist to a full pass. Do NOT re-execute the tests or re-measure coverage here — reuse the evidence dev-implement passes in (tests X/X passing + coverage %; the API & Contract `evidence-manifest.md` when applicable; also recorded in runtime-artifacts/audit.md) for the report's "Tests Reviewed / Coverage" and "API & Contract Tests" fields, and verify tests only statically (they exist and cover the ACs).
 2. Load and execute all steps from `implementation/code-review.md` (Phase 0 history check → Phase 1 prep → Phase 2 checklist → Phase 3 findings → Phase 4 report/verdict).
 3. **Produce the report** at the appropriate path per the review target.
-4. **Do NOT change the Story Tracker status.** Code Review is read-only and does not introduce a status of its own — a story under review stays `🔵 In Development`. (The story only moves to `🧪 Ready for Testing` later, when its PR is **merged** — promoted by the `ve-list-work` skill once ve has tested it.) Record the verdict and findings, not a status change.
+4. **Do NOT change the Story Tracker status.** Code Review is read-only and does not introduce a status of its own — a story under review stays `In Development`. (The story only moves to `Ready for Testing` later, when its PR is **merged** — promoted by the `ve-list-work` skill once ve has tested it.) Record the verdict and findings, not a status change.
 5. **If 🔴 Blocker or 🟠 High issues found**: when auto-run from a development workflow, return the verdict and let that workflow's **auto-remediate loop (SH-LOOP-5, capped at 3 rounds)** fix the findings immediately (no recommendation, no prompt). When run standalone, recommend **Remediate** as the next step.
 6. The review report's verdict (clean / findings by severity) is the output the user acts on — it does not by itself advance the story's status.
 
@@ -64,7 +64,7 @@ All paths below are relative to the resolved rule details directory.
 
 ## Tracker Sync Rule (reminder)
 
-Code Review does **NOT** change the story status — the story stays `🔵 In Development` — so there is normally no tracker transition to perform here. If a review ever does drive a status change, the **Tracker Sync Rule** in `CLAUDE.md` (mechanics in `common/tracker-sync.md` Section 4) applies (confirm-first, verify, never update only one side).
+Code Review does **NOT** change the story status — the story stays `In Development` — so there is normally no tracker transition to perform here. If a review ever does drive a status change, the **Tracker Sync Rule** in `CLAUDE.md` (mechanics in `common/tracker-sync.md` Section 4) applies (confirm-first, verify, never update only one side).
 
 ---
 

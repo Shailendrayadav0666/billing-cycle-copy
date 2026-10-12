@@ -39,7 +39,7 @@ Determine non-functional requirements for the whole system and make tech stack c
 - **Usability Requirements** - Ask about user experience, accessibility, and interface requirements
 
 ### Step 4: Store Plan
-- Save as `spec/spec-generation/nfr-generation.md`
+- Save as `spec/spec-generation/nfr-requirements-generation.md` (NFR Design keeps its own plan file, so neither overwrites the other)
 - Include all [Answer]: tags for user input
 
 ### Step 5: Collect and Analyze Answers
@@ -51,8 +51,7 @@ Determine non-functional requirements for the whole system and make tech stack c
 - **Do not proceed until ALL ambiguities are resolved**
 
 ### Step 6: Generate NFR Requirements Artifacts
-- Create `spec/plans/nfr.md`
-- Create `spec/plans/nfr.md`
+- Create `spec/plans/nfr.md` with a `## NFR Requirements` section (NFR Design later appends its own `## NFR Design` section to the same file)
 
 ### Step 7: Present Completion Message
 - Present completion message in this structure:

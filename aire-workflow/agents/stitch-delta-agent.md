@@ -143,8 +143,9 @@ Resolve the Helix MCP provider per `common/helix-atlas-integration.md` Section 3
 
 1. List the solution documents available to this session (the Helix DOCS listing tool).
 2. **Match the deep dive for this estate** — the archived `spec/plans/atlas-deep-dive.md` opens with the
-   provenance block naming the server, estate and document it was pulled from. Use that first, then the
-   title/type match.
+   provenance block naming the server, estate and document it was pulled from. Use that first, then a
+   title containing "Deep Dive" (document type is not checked — `common/helix-atlas-integration.md`
+   Section 5.4).
 3. **Exactly one match** → bind it; record `document_id` and `version`.
 4. **Several plausible matches** → 🔴 ask which one, listing what you found. Writing an estate's analysis
    into the wrong org document is worse than one question.
@@ -158,7 +159,7 @@ Resolve the Helix MCP provider per `common/helix-atlas-integration.md` Section 3
       Nothing was written. The deltas stay in their archives and stay pending, so this run
       repeats as-is once Helix is connected.
 
-    ➡ Connect Helix (or generate the deep dive on Atlas), then re-run /stitch-delta on <base-branch>.
+    Connect Helix (or generate the deep dive on Atlas), then re-run /stitch-delta on <base-branch>.
    ```
 
 ---
@@ -321,9 +322,9 @@ resolved with the reason per section, the grounding commands run, the `document_
 - **Ledger**: `aire-archives/stitch-ledger.md` — [N] row(s) appended
 - **PR**: [URL] — `stitch-delta/<name>` → `<base-branch>`
 
-➡ NEXT ACTION:
-   1⃣  Review and merge the PR above — it carries the ledger row(s) and the audit trail.
-   2⃣  The next cycle pulls this refreshed deep dive from Atlas as its existing-system truth.
+NEXT ACTION:
+   1.  Review and merge the PR above — it carries the ledger row(s) and the audit trail.
+   2.  The next cycle pulls this refreshed deep dive from Atlas as its existing-system truth.
 ```
 
 Substitute every placeholder. Output **nothing after this block**.

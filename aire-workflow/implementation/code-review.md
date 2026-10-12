@@ -32,7 +32,7 @@ Options:
 
 **Then, based on the answer, resolve the review target:**
 - **Story**: identify the story number (e.g., N.M) and confirm it exists in the Story Tracker.
-- **All stories**: every story in the `## Story Tracker` whose implementation has begun — Status `🔵 In Development` or `🧪 Ready for Testing` — is in scope. **EXCLUDED**: `🟢 Ready for Development` stories (no code yet). Note that a `🔵 In Development` story may still be mid-build (actively claimed by a developer, or awaiting its PR) — call this out so the user knows the review reflects its current, possibly-incomplete state. List the in-scope story IDs AND the excluded IDs (with reason) back to the user before starting.
+- **All stories**: every story in the resolved Story Tracker (the shared `## Story Tracker` plus the `runtime-artifacts/stories/*/state.md` fragments, `common/parallel-work-state.md`) whose implementation has begun — Status `In Development` or `Ready for Testing` — is in scope. **EXCLUDED**: `Ready for Development` stories (no code yet). Note that a `In Development` story may still be mid-build (actively claimed by a developer, or awaiting its PR) — call this out so the user knows the review reflects its current, possibly-incomplete state. List the in-scope story IDs AND the excluded IDs (with reason) back to the user before starting.
 
 ---
 
@@ -68,7 +68,7 @@ Before reviewing, ALWAYS check for a previous report matching the review target,
    - [ ] Note what is IN and OUT of scope
 
    **If reviewing all stories:**
-   - [ ] Read the `## Story Tracker` in `runtime-artifacts/aire-state.md` — enumerate every in-scope story (Status `🔵 In Development` or `🧪 Ready for Testing`; exclude `🟢 Ready for Development`)
+   - [ ] Read the resolved Story Tracker (shared `## Story Tracker` + unit fragments) — enumerate every in-scope story (Status `In Development` or `Ready for Testing`; exclude `Ready for Development`)
    - [ ] For every in-scope story, read its acceptance criteria from `spec/plans/stories.md`
    - [ ] Read `spec/plans/application-design.md` (if Application Design ran) and `spec/plans/epic-brief.md` (if captured) for structural context — used only to locate code
    - [ ] Identify all implementation files (from `reports/ticket-summary/` summaries and workspace code)
@@ -87,7 +87,8 @@ Before reviewing, ALWAYS check for a previous report matching the review target,
 - [ ] **Genuine defects only**: report a bug, crash, security hole, or broken flow ONLY when it prevents an AC/requirement from actually working (e.g., the AC's flow throws, auth required by the story is absent, data required by an AC is never persisted)
 - [ ] **Tests as AC evidence — STATIC check only, never re-run**: verify unit tests covering the ACs exist by READING them (they were generated + executed to ≥90% coverage during Code Generation's Unit Test & Coverage step). **Do NOT re-execute the unit test suite or re-measure coverage in this review** — when invoked via `dev-implement`, the gate just ran in the same session; reuse the passed-in/audit-recorded results (tests X/X passing, coverage %) as the report's evidence. Report a finding ONLY if an AC has no verification at all — do not nitpick test style or demand extra tests beyond the ACs
 - [ ] **API & Contract Tests as evidence — STATIC check only, never re-run**: when the story/ticket touches an API layer, verify the API & Contract Testing Gate ran by READING `reports/api-contract-test-evidence/<story-or-ticket-evidence-folder>/evidence-manifest.md` — confirm every new/changed endpoint has a checklist entry (functional, response-code validation, role-based authorization 401/403, error-response validation, request validation, response contract validation) marked  Pass or N/A with a stated reason. **Do NOT re-execute these tests in this review** — reuse the recorded evidence. Report a finding ONLY if the gate should have applied (the code adds/changes an endpoint) but no evidence folder/manifest exists, or a checklist item is missing with no N/A reason — this is a Not Met/Partially Met finding against the relevant AC, not a style nitpick
-- [ ] 🔴 **Playwright provenance — STATIC check, and a genuine finding when it fails.** When the diff adds or changes anything under `tests/e2e/`, verify those specs were produced by the real Playwright Generator, not hand-written: (a) `runtime-artifacts/audit.md` records a `playwright-implement` skill invocation for this work unit, (b) a matching `tests/playwright-specs/<story-slug>.md` Planner plan exists, and (c) no new spec carries a disclosure comment (`hand-authored`, `not agent-generated`, `agents are not installed`, `same precedent as`). **Any of those failing is a 🔴 Blocker** — the UI acceptance criteria are not actually verified by a browser, so the ACs they claim to cover are **Not Met**. 🔴 Do NOT accept "functionally equivalent", "disclosed", or "a prior story did the same" as mitigation; the remedy is to run the gate properly via the skill, not to annotate it.
+- [ ] 🔴 **Playwright provenance — STATIC check, and a genuine finding when it fails.** When the diff **ADDS** any spec under `tests/e2e/`, verify those specs were produced by the real Playwright Generator, not hand-written: (a) `runtime-artifacts/audit.md` records a `playwright-implement` skill invocation for this work unit, (b) a matching `spec/playwright-specs/<story-slug>.md` Planner plan exists, and (c) no new spec carries a disclosure comment (`hand-authored`, `not agent-generated`, `agents are not installed`, `same precedent as`). **Any of those failing is a 🔴 Blocker** — the UI acceptance criteria are not actually verified by a browser, so the ACs they claim to cover are **Not Met**. 🔴 Do NOT accept "functionally equivalent", "disclosed", or "a prior story did the same" as mitigation; the remedy is to run the gate properly via the skill, not to annotate it.
+  - 🔴 **Resolving (b) for a spec this unit only MODIFIED, never added** — `spec/` is cycle-scoped (`common/directory-structure.md`): `archive-epic` mirrors it into `aire-archives/<type>/<ID>-<slug>/spec/` and deletes the live tree, while `tests/e2e/` persists on base. So a spec shipped by an **earlier, closed cycle** legitimately has **no live plan** — its plan is in that cycle's archive. Resolve the plan as **live `spec/playwright-specs/<story-slug>.md` OR `aire-archives/<type>/<ID>-<slug>/spec/playwright-specs/<story-slug>.md`**; found in either satisfies (b). 🔴 **Missing from BOTH is the forgery signal** — that is what (b) actually tests, and it keeps full Blocker strength. A modified pre-existing spec whose plan is in the archive is **not** a provenance finding; judge that change on its own merits (see Step 11e — a red pre-existing spec is a regression to fix in the code or a **declared** supersede, never a spec quietly healed into agreement).
 - [ ] **Extension compliance** — if any extensions are enabled in `runtime-artifacts/aire-state.md`, verify applicable rules (mark N/A where not relevant); violations of enabled extension rules are genuine findings
 
 **Explicitly OUT of scope** (do NOT check, do NOT report): code style, naming, formatting, file organization, magic numbers, comment/documentation quality, SOLID/DRY/refactoring opportunities, performance ideas not required by an AC/NFR, and any "good to have" suggestion. If everything traces to Met with no defects → verdict is  APPROVED with zero issues.
@@ -102,7 +103,7 @@ The AIRE **Security Baseline is always mandatory and blocking** for every projec
   - the **attack surface those files reach** — the entry points, auth boundaries, data stores and external calls on the changed paths (Step 1 "map the attack surface", narrowed to the diff)
   - Rules that cannot apply to the changed surface are marked **N/A with the reason** — never silently dropped
   - The **full-codebase** audit remains the standalone `code-security-review` skill's job, unchanged
-- [ ] **Write the security report** to `reports/code-security-reviews/security-review-YYYY-MM-DD.md` per the agent's report structure (append a `-2` counter if one exists for today), noting in its header that the scan scope was this work unit's diff, not the full codebase
+- [ ] **Write the security report** to `reports/code-security-reviews/<key>-security-review-v<X>.md` (the work unit's key and this review's version — `common/work-unit-artifacts.md` E8; the dated name is only for the standalone full-repo audit) per the agent's report structure, noting in its header that the scan scope was this work unit's diff, not the full codebase
 - [ ] **Map severities into THIS review's two reportable levels** and fold them into the issue list of Phase 3:
   | Security agent severity | Becomes | Behaviour |
   |---|---|---|
@@ -137,7 +138,7 @@ Per `common/eval-framework.md` Section 4:
 - [ ] 🔴 **The scores are still NOT 🔴/🟠 findings.** They gate through their own threshold, not through the issue list — so the anti-loop protection in rules 3, 5 and 10 stays intact
 
 ## Phase 4: Record the Verdict (NO Status Change)
-- [ ] **Code Review is read-only and does NOT change the Story Tracker status.** A story under review stays `🔵 In Development` — the ONLY valid statuses are `🟢 Ready for Development`, `🔵 In Development`, and `🧪 Ready for Testing`, and the move to `🧪 Ready for Testing` happens only when the PR is raised via `dev-implement`. Do NOT set or demote any status here.
+- [ ] **Code Review is read-only and does NOT change the Story Tracker status.** A story under review stays `In Development` — the ONLY valid statuses are `Ready for Development`, `In Development`, and `Ready for Testing`, and the move to `Ready for Testing` is made only by `ve-list-work` Option B, after the PR has merged. Do NOT set or demote any status here.
 - [ ] Update only the review report and the audit trail — never the tracker Status column. (You MAY refresh the story row's `Recorded` timestamp to note that a review ran, but leave `Status` unchanged.)
 - [ ] Because no status changes, there is normally **no tracker transition** in this phase. If your team's process nonetheless requires a board move on review completion, apply the **Tracker Sync Rule** (`common/tracker-sync.md` Section 4, confirm-first, verify) — but do NOT change the local tracker Status.
 - [ ] Log the review verdict ( APPROVED /  APPROVED WITH COMMENTS /  CHANGES REQUESTED) and the full findings list by severity in `runtime-artifacts/audit.md` with timestamps
@@ -180,9 +181,9 @@ Per `common/eval-framework.md` Section 4:
 **Tests Reviewed**: [Yes/No — statically; suite NOT re-run]  **Coverage**: [X]% (from Code Generation's Unit Test & Coverage gate — not re-measured)
 **API & Contract Tests**: [Applicable — X/X endpoints checklist-complete | N/A — no API layer touched] (from the API & Contract Testing Gate — not re-run)
 **Static Eval Gate (D1–D7)**: [PASS | N/A per check] (from the Static Eval Gate — not re-run; cites `reports/eval-evidence/<key>/eval-summary.md`)
-**Security Baseline (SECURITY-01…16, diff-scoped)**: [X]/16 checked · [N] compliant · [N] N/A · Findings: [N] 🔴 / [N] 🟠 (blocking, in the issue list) · [N] 🟡 / [N] 🔵 (advisory) · [N] pre-existing (not this change) → report: `reports/code-security-reviews/security-review-YYYY-MM-DD.md`
-**Eval Scores (informational — NOT gates, NOT findings)**: Architecture [0.NN | N/A — reason] (ref [0.NN]) · Security [0.NN] (ref [0.NN])
-**Overall Assessment**: [2-3 sentences — strictly on AC/requirement completion. Do NOT let the scores influence the verdict.]
+**Security Baseline (SECURITY-01…16, diff-scoped)**: [X]/16 checked · [N] compliant · [N] N/A · Findings: [N] Blocker / [N] High (blocking, in the issue list) · [N] Medium / [N] Low (advisory) · [N] pre-existing (not this change) → report: `reports/code-security-reviews/<key>-security-review-v<X>.md`
+**Judge Gates (blocking — Phase 3.5; never findings)**: J1 Architecture [0.NN | N/A — reason] (min [0.NN]) [PASS | FAIL] · J2 Security [0.NN] (min [0.NN]) [PASS | FAIL]
+**Overall Assessment**: [2-3 sentences — strictly on AC/requirement completion. The judge scores block through their own threshold (Phase 3.5, SH-LOOP-6), not through this verdict.]
 
 ## AC & Requirements Verification
 [One table per in-scope story. EVERY acceptance criterion and mapped requirement gets a row — this is the core of the report.]
@@ -197,12 +198,12 @@ Per `common/eval-framework.md` Section 4:
 ## Issues Found
 [For all-stories reviews: group issues under one `## Story N.M` section per story, and prefix IDs per story — e.g. `S1.2-ISS-001` — so Remediate can map every issue to its story.]
 
-### ISS-001: [Title] 🔴 Blocker
+### ISS-001: [Title] Blocker
 **AC/Requirement**: [the specific AC or requirement this fails]  **File**: `path/file.ext:45-52`
 **Issue**: [how the AC/requirement is not met, or the defect that breaks it]
 **Suggested Fix**: [code or description]
 
-### SEC-ISS-001: [Title] 🔴 Blocker
+### SEC-ISS-001: [Title] Blocker
 **Security Rule**: SECURITY-XX — [rule name] · **Criteria violated**: [the specific verification item]
 **File**: `path/file.ext:45-52` · **Reference**: [CWE-XX / OWASP AXX]
 **Issue**: [the vulnerability and what an attacker could achieve]
@@ -211,15 +212,15 @@ Per `common/eval-framework.md` Section 4:
 [If there are NO issues, write "No issues — all acceptance criteria and requirements verified as Met; diff is clean against SECURITY-01…16." Do not pad this section.]
 
 ## Security — Advisory (non-blocking)
-[🟡 Medium / 🔵 Low security findings on the changed surface, and any **pre-existing** 🔴/🟠 on lines this work unit did not touch — each with its SECURITY-XX rule and file:line. **These are NOT findings**: they do not affect the verdict and are never sent to remediation. Recommend `/raise-defect` for the pre-existing ones. Write "None." if empty.]
+[Medium / Low security findings on the changed surface, and any **pre-existing** Blocker/High on lines this work unit did not touch — each with its SECURITY-XX rule and file:line. **These are NOT findings**: they do not affect the verdict and are never sent to remediation. Recommend `/raise-defect` for the pre-existing ones. Write "None." if empty.]
 
 ## Issue Summary
 | # | ID | Severity | AC/Requirement or SECURITY rule | File | Status |
 |---|-----|----------|----------------|------|--------|
-| 1 | ISS-001 | 🔴 Blocker | AC-2 (Story 1.2) | auth.ext:45 | Must Fix |
-| 2 | SEC-ISS-001 | 🟠 High | SECURITY-05 (Input Validation) | api/user.ext:88 | Must Fix |
+| 1 | ISS-001 | Blocker | AC-2 (Story 1.2) | auth.ext:45 | Must Fix |
+| 2 | SEC-ISS-001 | High | SECURITY-05 (Input Validation) | api/user.ext:88 | Must Fix |
 
-**Counts**: Blockers: [a] | High: [b] — of which security: [c] 🔴 / [d] 🟠 · Advisory (non-blocking): [e]
+**Counts**: Blockers: [a] | High: [b] — of which security: [c] Blocker / [d] High · Advisory (non-blocking): [e]
 
 ## Approval Status
 **Decision**: [APPROVED / APPROVED WITH COMMENTS / CHANGES REQUESTED]
@@ -245,6 +246,8 @@ Per `common/eval-framework.md` Section 4:
 
 ## After Review — Mandatory Next-Step Output
 
+**STANDALONE only.** Inside an implement workflow (automatic mode, `workflows/code-review.md`) skip this block entirely — no menu, no prompt; the invoking workflow routes on the verdict itself.
+
 After writing the report, present ONLY this block (do not improvise code edits):
 
 ```
@@ -252,13 +255,13 @@ After writing the report, present ONLY this block (do not improvise code edits):
    Target: [Story N.M | All Stories]
    ACs verified: [met]/[total] Met | [p] Partially Met | [n] Not Met
    Status: [ APPROVED |  APPROVED WITH COMMENTS |  CHANGES REQUESTED]
-   Issues: [a] 🔴 | [b] 🟠
+   Issues: [a] Blocker | [b] High
 
-▶ Next step:
-1⃣  Remediate         ← required if  CHANGES REQUESTED
+Next step:
+1.  Remediate         ← required if  CHANGES REQUESTED
                                               recommended if  APPROVED WITH COMMENTS
                                               N/A if  APPROVED
-2⃣  Implement / review the next story        ← if  APPROVED
+2.  Implement / review the next story        ← if  APPROVED
 
 Type your choice (1 / 2).
 ```

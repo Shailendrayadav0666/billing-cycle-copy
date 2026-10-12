@@ -12,7 +12,7 @@ when enabled), **before** the design commit, the smoke test and the Development 
 |---|---|---|
 | Epic | `CLAUDE.md` MANDATORY STOP **Step 1.7** | EVERY story in the `## Story Tracker` |
 | Bug | `workflows/bug-fix.md` **Step 8.5 Item 4.5** | the single ticket (`bug-<TICKET-ID>`) |
-| Enhancement | `workflows/enhancement-implement.md` **Step 8.5 Item 4.5** | the single ticket (`enh-<TICKET-ID>`) |
+| Enhancement | `workflows/enhancement-implement.md` **Step 8.5 Item 4.5** | the single ticket (`enhancement-<TICKET-ID>`) |
 
 **Load this file when**: executing that step, or when an implement workflow needs the backfill rule
 (Section 5) because an artifact this stage owns is missing.
@@ -36,9 +36,9 @@ Writing them here buys three things the per-unit placement could not:
 3. **One coherent pass over the whole cycle.** Cross-unit gaps in the acceptance criteria surface
    while every story is in view, instead of one story at a time.
 
-🔴 **This stage does NOT replace ve's own `/ve-implement` run, and it is NOT ve sign-off.** ve still
-runs the skill per work unit on its own schedule to review, refine and PR the plans, and
-`ve-list-work` Option B remains the only sign-off path.
+🔴 **This stage is NOT ve sign-off.** The plans it writes are the ones the ve executes once each work
+unit's code is on its branch; `ve-list-work` Option B remains the only sign-off path. `/ve-implement`
+stays available for optional rework of a plan, on the ve's own schedule — nothing requires it.
 
 ---
 
@@ -51,7 +51,7 @@ Section 2 — that file is the authority for content, tagging and style; nothing
 |---|---|
 | Epic | `spec/behavior/story-<N.M>.feature`, one per story |
 | Bug | `spec/behavior/bug-<TICKET-ID>.feature` |
-| Enhancement | `spec/behavior/enh-<TICKET-ID>.feature` |
+| Enhancement | `spec/behavior/enhancement-<TICKET-ID>.feature` |
 
 - One `Scenario` per acceptance criterion, minimum; every scenario tagged `@AC-<n>`; failure paths
   covered; steps stated as business behaviour with concrete, checkable values.
@@ -85,7 +85,7 @@ For **each** work unit in scope, invoke the skill (Skill tool) with that story/t
   covers the whole set instead,
 - still writes `spec/test-plans/<TICKET-ID>-<title>/` and its `runtime-artifacts/audit.md` entry
   exactly as usual, stamped
-  `Mode: workflow (invoked by the STOP CHECKPOINT specs & test-plans stage) — no ve approval, no ve branch, no ve PR`.
+  `Mode: workflow (invoked by the STOP CHECKPOINT specs & test-plans stage) — no Verification Engineer approval, no Verification Engineer branch, no Verification Engineer PR`.
 
 **Already present** → reuse as-is and say so; never overwrite a folder ve already produced.
 
@@ -109,7 +109,7 @@ Present the **standardized 2-option completion message** below, then **WAIT**. �
 
 [One line per work unit: unit — scenarios/ACs — test plans generated, plans marked N/A with reasons]
 
-> ** <u>**REVIEW REQUIRED:**</u>**  
+> **<u>REVIEW REQUIRED:</u>**  
 > Behaviour contracts: `spec/behavior/`
 > Manual test plans:   `spec/test-plans/`
 
@@ -183,17 +183,17 @@ assumption: on story 1.1's branch, `spec/behavior/` now also holds 1.2 … 1.N, 
 exist yet.
 
 **So a feature file is only ACTIVE for B2/B3 once its work unit has been implemented**, resolved by
-`tests/.evals/behavior/run.sh` from the `## Story Tracker` in `runtime-artifacts/aire-state.md`:
+`tests/.evals/behavior/run.sh` from the **resolved** Story Tracker — the shared `## Story Tracker` in `runtime-artifacts/aire-state.md` plus every `runtime-artifacts/stories/*/state.md` fragment (`common/parallel-work-state.md` Section 4), because claims live in the fragments:
 
 | Tracker state of that unit | In B2/B3? |
 |---|---|
-| `🟢 Ready for Development` (not started) | 🔴 **No** — excluded, and named in the run's output |
-| `🔵 In Development` / `🧪 Ready for Testing` | Yes |
-| No tracker row, or no state file at all | Yes (conservative — preserves legacy behaviour) |
+| `Ready for Development` (not started) | 🔴 **No** — excluded, and named in the run's output |
+| `In Development` / `Ready for Testing` | Yes |
+| No row in the shared table or any fragment, or no state file at all | Yes (conservative — preserves legacy behaviour) |
 
 - **B1 is unaffected** — it runs THIS unit's own contract, named by `AIRE_STORY_KEY`.
 - **An empty active set is an earned `N/A`** (exit 3), not a failure: correct for the first story of a
-  cycle, where every other unit is still `🟢 Ready for Development`.
+  cycle, where every other unit is still `Ready for Development`.
 - **A branch that is not a work unit** — a `ci/**` infrastructure branch (the epic pre-handoff smoke
   PR) or a `ve/**` test-docs branch — has no contract of its own, so **every tier is `N/A`** there.
   This is what keeps the zero-diff smoke test honest now that feature files exist before any story:

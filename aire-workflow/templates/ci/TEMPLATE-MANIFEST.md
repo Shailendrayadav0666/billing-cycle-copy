@@ -25,6 +25,7 @@
 | `auto-fix-agent.sh` / `.ps1` | `tests/.evals/scripts/auto-fix-agent.{sh,ps1}` | none — reads the manifest |
 | `validate-pipeline.sh` / `.ps1` | `tests/.evals/scripts/validate-pipeline.{sh,ps1}` | none — reads the manifest |
 | `smoke-test-epic.sh` / `.ps1` | `tests/.evals/scripts/smoke-test-epic.{sh,ps1}` | none — reads the manifest. Run ONCE at the STOP CHECKPOINT (ci-pipeline-generation.md Section 4.0.6), never per story |
+| `resolve-eval-key.sh` / `.ps1` | `tests/.evals/scripts/resolve-eval-key.{sh,ps1}` | none — maps the PR head branch to its evidence key (`story-<N.M>` / `bug-<ID>` / `enhancement-<ID>`); called by the `setup` and `self-repair` jobs |
 | `behavior/run.sh` | `tests/.evals/behavior/run.sh` | none |
 | `behavior/Containerfile` | `tests/.evals/behavior/Containerfile` | `${SLOT}` for the base image |
 | `sonar-project.properties.tmpl` | `sonar-project.properties` | `${SLOT}` markers only |
@@ -120,7 +121,7 @@ identically — the five slots that used to carry per-repo stack facts are repla
   == 'true'`, using `steps.readmanifest.outputs.<stack>_version` for the pinned version. Nothing is ever
   added or removed from this file for a new stack — only **enabled**, by a fact the manifest already
   carries (`common/eval-framework.md` Section 1.1's `stack`/`runtimeVersion` fields).
-- **`Install dependencies`**, **`Compile / build`** and (verify job only) **`Stage 2: unit + coverage`**
+- **`Install dependencies`**, **`Compile / build`** and (the `unit-coverage` job only) **`Stage 2: unit + coverage`**
   each call the ONE fixed `tests/.evals/scripts/ci-manifest-runner.sh {install,build,coverage}
   "${{ steps.basesha.outputs.sha }}"` — which reads the merged manifest at RUN TIME (`config.json`'s
   `ci.roots[]` + every `tests/.evals/ci-manifest.d/*.json` fragment), iterates every root, diff-scopes
@@ -129,7 +130,7 @@ identically — the five slots that used to carry per-repo stack facts are repla
   deduped eval tools from every root's `toolInstallCommands`, replacing the old separately-generated
   "Install eval tools" block.
 - **This is byte-identical in the `self-repair` job** — there is no longer a separate
-  `${SELF_REPAIR_SETUP_STEPS}` slot to keep in sync with the verify job's copy, because there is no
+  `${SELF_REPAIR_SETUP_STEPS}` slot to keep in sync with the gate jobs' copy, because there is no
   per-repo generated text left in either job to diverge. Section 3.1's "same tools" rule is now
   structural, not a runtime check (validated by V27's structural-fidelity check instead of a separate
   slot-equality diff).

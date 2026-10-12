@@ -123,7 +123,10 @@ through option B's same recorded outcome. Never invent an option C.
   block, in `runtime-artifacts/aire-state.md`, and in `runtime-artifacts/audit.md`, then run the normal
   `planning/reverse-engineering.md` stage to **generate** the reverse-engineering artifacts locally.
   🔴 Every downstream artifact derived this way carries the line *"Existing-system context derived
-  locally; Atlas was not consulted."*
+  locally; Atlas was not consulted."* After this cycle's PR merges, the user runs **`/stitch-delta-local`**
+  on base (not `/stitch-delta`). It refreshes the local RE docs into `aire-archives/local-re/spec/plans/`,
+  and the next cycle restores them from there and skips reverse engineering
+  (`agents/stitch-delta-local-agent.md`).
 
 🔴 Log the prompt and the raw user response in `runtime-artifacts/audit.md`. This is a real decision with downstream
 consequences and it must be attributable.
@@ -160,7 +163,7 @@ one cycle behind reality.
 
 | Pull | Via | Lands in | Replaces |
 |---|---|---|---|
-| **Deep dive document** — one `.md` document covering the estate/scope | DOCS tool | `spec/plans/atlas-deep-dive.md`, verbatim | Locally generated RE artifacts |
+| **Deep dive document** — one `.md` document covering the estate/scope, identified by a title containing "Deep Dive" (document type not checked, Section 5.4) | DOCS tool | `spec/plans/atlas-deep-dive.md`, verbatim | Locally generated RE artifacts |
 | **Epic brief** — the tracking item's summary/description/acceptance criteria, when the user is working via Helix MCP rather than a configured tracker fetch | DOCS tool | `spec/plans/epic-brief.md`, verbatim | The tracker-driven fetch in `common/tracker-sync.md` Section 2 |
 | **Targeted answers** — a specific contract, schema, or flow a stage needs | SEARCH / GRAPH | Quoted inline in the consuming artifact, with the citation | Guessing |
 
@@ -189,12 +192,17 @@ to source the Epic in the first place (e.g., greenfield, or Helix not required p
 was consulted and no Epic-typed document was found, that is ALWAYS this gate — never a silent
 reclassification, regardless of tracker type.
 
-🔴🔴 **STRICT TYPE MATCH — NO SUBSTITUTION, NO EQUIVALENCE, EVER.** A document counts as "the Epic
-brief" ONLY if Helix/Atlas's own document-type classification for it is exactly Epic/Epic brief. A
-document counts as "the deep dive" ONLY if its type classification is exactly deep dive. **A PRD, a
-"Quick Orient" / software-archaeology analysis, a README, a design doc, or ANY other document type is
-NEVER treated as equivalent, close enough, or a stand-in — no matter how similar its content looks, and
-no matter how confident the match feels.** Do not silently pull, rename, or reinterpret a
+🔴🔴 **STRICT MATCH — NO SUBSTITUTION, NO EQUIVALENCE, EVER.**
+- **Epic brief**: a document counts ONLY if Helix/Atlas's own document-type classification for it is
+  exactly Epic/Epic brief.
+- **Deep dive**: a document counts ONLY if its **title contains "Deep Dive"** (case-insensitive, e.g.
+  `Deep Dive: OTT Billing.md`). 🔴 **Its document type is NOT checked.** Atlas has no deep-dive type
+  and files deep dives under other types such as `analysis`, so a type check can never pass. Several
+  titles match → list them and ask which one (Section 3 ambiguity rule).
+
+**A PRD, a "Quick Orient" / software-archaeology analysis, a README, a design doc, or ANY other
+document that fails the rule above is NEVER treated as equivalent, close enough, or a stand-in — no
+matter how similar its content looks, and no matter how confident the match feels.** Do not silently pull, rename, or reinterpret a
 differently-typed document as if it satisfies the Epic brief or deep dive requirement, and do not
 narrate it as "the Epic and deep dive equivalents" or similar softening language. If Atlas holds only
 differently-typed documents for this scope, that IS the missing case (row 2/3/4 below) — those
@@ -255,7 +263,7 @@ the bracketed values:
   - **Deep dive missing** → generate `atlas-deep-dive.md` locally via the normal
     `planning/reverse-engineering.md` stage, using the "other documents found" list as reference input.
   - 🔴 Every artifact produced via this path carries the line *"Existing-system context derived locally
-    from [list the other-document names used]; no document typed exactly as the Epic brief / deep dive
+    from [list the other-document names used]; no Epic-typed document / no document titled "Deep Dive"
     was found on Atlas."*
 
 🔴 Log the prompt, the "other documents found" list, and the raw user response in
@@ -305,6 +313,11 @@ sections the cycle did not touch. Everything outside that path stays read-only. 
 in every stage and at cycle close alike: editing an Atlas document so a design artifact stops
 contradicting it, publishing a delta whose cycle PR has not merged, and "tidying" prose while stitching.
 
+**Opt-in artifact mirror (separate from the stitch).** When the user opts in
+(`common/atlas-artifact-sync.md`), the framework also creates and replaces documents, but only inside
+that cycle's own team folder in Atlas. It never edits the deep dive or any document outside that folder,
+so everything this section protects stays read-only.
+
 ---
 
 ## 6. Effect on the Reverse Engineering stage
@@ -334,7 +347,7 @@ whether they are reading reviewed estate truth or a fresh AI derivation.
 ## Existing-System Context
 - **Workspace type**: brownfield | greenfield | migration
 - **Helix MCP**: connected | not connected | declined by user
-- **Source**: atlas (local file) | atlas | local-generation
+- **Source**: atlas (local file) | atlas | local-generation | local-re (restored from aire-archives/local-re/)
 - **Components in scope**: <list>
 - **Atlas deep dive doc**: spec/plans/atlas-deep-dive.md | not found | not fetched
 - **Recorded**: <ISO 8601 timestamp>

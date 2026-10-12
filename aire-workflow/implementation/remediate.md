@@ -10,7 +10,8 @@
 **DEV** — fixes code based on a review report; every fix lands with a unit test.
 
 ## Before Starting
-- [ ] **Check for reports** (do NOT read yet): `reports/reviews/story-*-code-review-v*.md` and `reports/reviews/all-stories-code-review-v*.md`
+- [ ] **Automatic mode** (the SH-LOOP-5 loop of an implement workflow): the report is passed in — `story-<N.M>-`, `bug-<TICKET-ID>-` or `enhancement-<TICKET-ID>-code-review-v<X>.md` — so skip this check and Step 1.
+- [ ] **Standalone — check for reports** (do NOT read yet): `reports/reviews/<key>-code-review-v*.md` for every work-unit key (`story-*`, `bug-*`, `enhancement-*`) and `reports/reviews/all-stories-code-review-v*.md`
 - [ ] If none exist, **STOP**: "Run Code Review (implementation/code-review.md) first to produce a report to remediate from."
 
 ---
@@ -24,10 +25,10 @@ Which report should I remediate from?
 
  CODE REVIEW REPORTS (reports/reviews/):
   STORY REPORTS (fix one story):
-  1. story-1.2-code-review-v2.md      —  CHANGES REQUESTED  (2 🔴, 1 🟠)
-  2. story-2.1-code-review-v1.md      —  APPROVED WITH COMMENTS (0 🔴, 3 🟠)
+  1. story-1.2-code-review-v2.md      —  CHANGES REQUESTED  (2 Blocker, 1 )
+  2. story-2.1-code-review-v1.md      —  APPROVED WITH COMMENTS (0 Blocker, 3 )
   ALL-STORIES REPORTS (fix across all stories):
-  3. all-stories-code-review-v1.md    —  CHANGES REQUESTED  (1 🔴, 4 🟠)
+  3. all-stories-code-review-v1.md    —  CHANGES REQUESTED  (1 Blocker, 4 )
 
 Type your choice (e.g., "1"):
 ```
@@ -50,16 +51,16 @@ Read the chosen report end-to-end before touching code.
   - ** AUTOMATIC MODE — invoked by a workflow** (`dev-implement`, `bug-fix-implement`, `enhancement-implement` auto-remediate loop): **SKIP the confirmation entirely.** Every 🔴/🟠 finding is in scope by definition, nothing is deferred, and the invoking workflow has no approval gate. Announce the backlog and start fixing:
     ```
      Auto-remediating <report> — fixing all findings:
-       🔴 ISS-001 — [AC-2, Story 1.2 — summary]   🟠 ISS-002 — [AC-3, Story 1.2 — summary]
+       ISS-001 — [AC-2, Story 1.2 — summary]   ISS-002 — [AC-3, Story 1.2 — summary]
     ```
   - **STANDALONE MODE — the user typed `remediate`**: summarize the plan and **HALT** until the user confirms (deferring an issue requires explicit user consent):
     ```
     Remediation plan from <report>:
-      Will fix:  🔴 ISS-001 — [AC-2, Story 1.2 — summary]   🟠 ISS-002 — [AC-3, Story 1.2 — summary]
+      Will fix:  ISS-001 — [AC-2, Story 1.2 — summary]   ISS-002 — [AC-3, Story 1.2 — summary]
      Proceed? (yes / adjust scope / cancel)
     ```
     Do NOT touch code before this confirmation.
-- [ ] **Do NOT change the Story Tracker status.** Every story being remediated stays `🔵 In Development` — the ONLY valid statuses are `🟢 Ready for Development`, `🔵 In Development`, and `🧪 Ready for Testing`. You MAY refresh `Recorded` → now to note that remediation started, but leave `Status` unchanged.
+- [ ] **Do NOT change the Story Tracker status.** Every story being remediated stays `In Development` — the ONLY valid statuses are `Ready for Development`, `In Development`, and `Ready for Testing`. You MAY refresh `Recorded` → now to note that remediation started, but leave `Status` unchanged.
 
 ## Step 4 — Remediate Per Issue
 
@@ -77,7 +78,7 @@ Iterate the backlog in severity order (🔴 → 🟠). For EACH issue:
 - [ ] **Never create a separate remediation log file** — all evidence lives inside the source report (one source of truth)
 
 ## Step 6 — Record Remediation Outcome (NO Status Change)
-- [ ] **Do NOT change the Story Tracker status.** Every story covered by the remediation stays `🔵 In Development` (it moves to `🧪 Ready for Testing` only when its PR is **merged** — promoted by the `ve-list-work` skill once ve has tested it). You MAY refresh `Recorded` → now, but leave `Status` unchanged.
+- [ ] **Do NOT change the Story Tracker status.** Every story covered by the remediation stays `In Development` (it moves to `Ready for Testing` only when its PR is **merged** — promoted by the `ve-list-work` skill once ve has tested it). You MAY refresh `Recorded` → now, but leave `Status` unchanged.
 - [ ] Because no status changes, there is normally **no tracker transition** here. If your team's process requires a board comment/move on remediation, apply the **Tracker Sync Rule** (`common/tracker-sync.md` Section 4/Section 10, confirm-first, verify) with an evidence comment (tests X/X; coverage %) — but do NOT change the local tracker Status.
 - [ ] Log the remediation outcome — findings fixed by severity, files changed, unit-test evidence — in `runtime-artifacts/audit.md` with timestamps
 
@@ -89,7 +90,7 @@ Iterate the backlog in severity order (🔴 → 🟠). For EACH issue:
 ```markdown
 > ##  Remediation Status:  Resolved
 > - **Remediated**: [YYYY-MM-DD] by DEV (aire)
-> - **Fixed**: [N] issue(s) — 🔴 [a] / 🟠 [b]
+> - **Fixed**: [N] issue(s) — [a] / [b]
 > - **Deferred (with user consent)**: [M] — see Remediation Section
 > - **Tests**: [P/P] passing | **Coverage**: [Z]%
 ```
@@ -108,7 +109,7 @@ Iterate the backlog in severity order (🔴 → 🟠). For EACH issue:
 ```markdown
 ---
 # Remediation — [YYYY-MM-DD]
-**Severity Scope**: 🔴 Blocker + 🟠 High
+**Severity Scope**: Blocker + High
 **Target**: [Story N.M | All Stories]
 
 ## Issues Remediated
@@ -129,7 +130,7 @@ Iterate the backlog in severity order (🔴 → 🟠). For EACH issue:
 - API & Contract tests (if applicable): [Y/Y] passing
 
 ## Next Steps
-- [ ] Re-request Code Review (implementation/code-review.md) — required if any 🔴 fixed
+- [ ] Re-request Code Review (implementation/code-review.md) — required if any fixed
 ```
 
 > **Re-runs**: if a Remediation Section dated today already exists, replace it; older dates are kept (append a new dated section). Always update the top banner to the latest state.
@@ -153,20 +154,20 @@ Iterate the backlog in severity order (🔴 → 🟠). For EACH issue:
 ** AUTOMATIC MODE (invoked by a workflow's auto-remediate loop)**: present NO menu and ask NOTHING. Report the round's outcome and hand control straight back to the invoking workflow, which re-runs Code Review automatically:
 ```
  Auto-remediation round complete — <report filename>
-   Fixed: [X] (🔴[a] 🟠[b])
+   Fixed: [X] ([a] [b])
    Tests: [P/P] | Coverage: [Z]%
-➡ Re-running automated Code Review.
+Re-running automated Code Review.
 ```
 
 **STANDALONE MODE (the user typed `remediate`)**: present the menu:
 ```
  Remediation complete — <report filename>
-   Fixed: [X] (🔴[a] 🟠[b])  |  Deferred: [Y]
+   Fixed: [X] ([a] [b])  |  Deferred: [Y]
    Tests: [P/P] | Coverage: [Z]%
 
-▶ Next step:
-1⃣  Code Review (implementation/code-review.md)  ← required if any 🔴 was fixed
-2⃣  Satisfied with the remediation? Raise a PR of these changes (Step 7)
+Next step:
+1.  Code Review (implementation/code-review.md)  ← required if any was fixed
+2.  Satisfied with the remediation? Raise a PR of these changes (Step 7)
 
 Type your choice (1 / 2).
 ```

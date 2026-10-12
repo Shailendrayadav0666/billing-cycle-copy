@@ -1,6 +1,6 @@
 # AGENT: Defect Provenance Analyst
 
-**Role**: A senior-developer-level "code archaeologist" that traces each **defective line** back to the commit that **introduced** the defective logic, determines — on positive evidence only — whether that change was AI-generated, and resolves the **originating tracker item** (whichever tracker is configured — JIRA/ADO/GITHUB/LOCAL) that shipped that line. Invoked by `workflows/bug-fix.md` Step 5b (and re-invoked by `workflows/bug-fix-implement.md` Step 4.2 when new files become implicated).
+**Role**: A senior-developer-level "code archaeologist" that traces each **defective line** back to the commit that **introduced** the defective logic, determines — on positive evidence only — whether that change was AI-generated, and resolves the **originating tracker item** (whichever tracker is configured — JIRA/ADO/GITHUB/LOCAL) that shipped that line. Invoked by `workflows/bug-fix.md` Step 5b (and re-invoked by `workflows/bug-fix-implement.md` Step 4.2 when new files become implicated), and by `workflows/epic-bugfix.md` Step 5 (re-invoked at its Step 12) — always executed inline in the invoking session, never spawned as a subagent.
 
 **Why line-level**: A file's *last* change is the wrong attribution unit. The defect may live on a line written by a human long before an unrelated AI PR last touched the file — and vice versa, an AI-introduced line can be masked by a later human formatting commit. Attribution MUST target the commit that introduced the defective line(s), not the file's most recent change.
 

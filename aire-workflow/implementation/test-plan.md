@@ -20,9 +20,10 @@
 
 **🔴 WRITTEN EARLY, EXECUTED AFTER MERGE — AND NOTHING IS EVER DEPLOYED.** These steps are
 *authored* as soon as the design stages finish (no code needed). They are *executed* by the ve
-once the story's code is **merged into the epic branch** (epic cycles) or the **base branch**
-(bug/enhancement cycles). At that point the code has **not** been deployed to any environment, so
-every plan below must assume the ve **checks out the merged branch, builds it, and runs it
+once the story's code is **merged into the epic branch** (epic cycles), or once the fix code is
+generated and **on the bug/enhancement branch** (bug/enhancement cycles, before that PR merges). At
+that point the code has **not** been deployed to any environment, so every plan below must assume the
+ve **checks out that branch, builds it, and runs it
 locally, using the project's own build documentation** (its README / CONTRIBUTING / Makefile). That
 local instance is the system under test. **Do NOT generate build instructions** — the project
 already owns them, they are identical for every story, and they trace to no acceptance criterion.
@@ -89,7 +90,9 @@ If the story has **no non-LOCAL Tracker ID** (local-only story), use the Story I
 
 **🔴 One folder per story — never write another story's artifacts into it, and never overwrite an
 existing story folder.** If the folder already exists, this story's Test Plan artifacts have
-already been generated: report that and ask whether to **refresh** (regenerate) or **stop**.
+already been generated: STANDALONE, report that and ask whether to **refresh** (regenerate) or
+**stop**; in WORKFLOW MODE, reuse the existing plan as-is and report it as reused (never ask, never
+overwrite).
 
 ---
 
@@ -123,7 +126,7 @@ summary.
 Present the applicability decision to ve before writing files:
 
 ```markdown
-# 🧪 Test Plan — [TICKET-ID] [Story title]
+# Test Plan — [TICKET-ID] [Story title]
 
 **Acceptance criteria found**: AC-1 … AC-[n]
 **Requirements covered**: [REQ-IDs]
@@ -210,8 +213,8 @@ a build manual):
 ## System Under Test
 | Item | Value |
 |------|-------|
-| Branch | [epic branch, e.g. `epic/PROJ-50-checkout` — base branch for bug/enhancement cycles] |
-| This story's merged PR | [PR URL / number] |
+| Branch | [epic branch, e.g. `epic/PROJ-50-checkout` — the bug/enhancement branch for bug/enhancement cycles] |
+| This story's PR | [PR URL / number — merged for epic stories; open for bug/enhancement tickets] |
 | Confirm the story is in the build | `git log --oneline \| grep [TICKET-ID]` |
 | How to build & run it | **Follow the project's own build docs** (README / CONTRIBUTING / Makefile). This plan does not restate them. |
 | Local base URL / port | [from the design artifacts, or  TO CONFIRM] |
@@ -260,11 +263,11 @@ a build manual):
 ## Applicable Test Plans
 | Test Plan | Artifact | Cases | Status |
 |-----------|----------|-------|--------|
-| Integration | integration-test-steps.md | [n] | ⬜ Not run |
-| E2E | e2e-test-steps.md | [n] | ⬜ Not run |
-| API | api-test-steps.md | [n] | ⬜ Not run |
+| Integration | integration-test-steps.md | [n] | Not run |
+| E2E | e2e-test-steps.md | [n] | Not run |
+| API | api-test-steps.md | [n] | Not run |
 | Contract | — | — | N/A — [reason] |
-| Security | security-test-steps.md | [n] | ⬜ Not run |
+| Security | security-test-steps.md | [n] | Not run |
 | Performance | — | — | N/A — [reason] |
 | Accessibility | — | — | N/A — [reason] |
 
@@ -276,10 +279,10 @@ a build manual):
 
 **Coverage check**: [n]/[n] acceptance criteria have at least one test case.  / 
 
-## Execution Record (filled in by ve when the story is tested)
+## Execution Record (filled in by Verification Engineer when the story is tested)
 | Test case | Run date | Result | Defect raised |
 |-----------|----------|--------|---------------|
-| TC-API-01 | | ⬜ Pass / Fail | |
+| TC-API-01 | | Pass / Fail | |
 
 ## Open Questions
 - TO CONFIRM: [each unresolved detail, with who should answer it]
@@ -296,7 +299,7 @@ present completion — add the missing cases first.
 # Test Plan Ready — [TICKET-ID] [Story title]
 
  **Artifacts**: `spec/test-plans/<TICKET-ID>-<title-kebab>/`
-🧪 **Test plans generated**: [list] ([n] manual test cases total)
+**Test plans generated**: [list] ([n] manual test cases total)
  **Coverage**: [n]/[n] acceptance criteria covered
  **Not applicable**: [list with reasons]
 
@@ -310,7 +313,7 @@ present completion — add the missing cases first.
 > 🔴 **WORKFLOW MODE exception** (`ve-implement-agent.md` Mode Detection): **SKIP this checkpoint
 > entirely.** The invoking implement workflow has no approval gates, and this content is being
 > generated as *scope for automated UI tests*, not as ve's reviewed test plan. Record
-> `**Approve / Request Changes checkpoint**: Approved (automatic — workflow mode, no ve review)` in
+> `**Approve / Request Changes checkpoint**: Approved (automatic — workflow mode, no Verification Engineer review)` in
 > the Step 7 audit entry and hand control straight back to the caller. 🔴 Never present this
 > auto-approved content as ve-signed-off: ve's own standalone `/ve-implement` run and `ve-list-work`
 > remain the only sign-off path.
@@ -324,16 +327,25 @@ present completion — add the missing cases first.
 [Answer]:
 ```
 
-- On **Approve** → proceed to **Step 8** (log the run in `runtime-artifacts/audit.md`).
+- On **Approve** → proceed to **Step 7** (log the run in `runtime-artifacts/audit.md`).
 - On **Request Changes** → ask what to adjust (which plan, which case, what's missing), apply the
   change, regenerate the affected artifact(s) and the coverage table, then re-present this same
-  Step 7 completion message and checkpoint. Never close the run without landing on this checkpoint first.
+  Step 6 completion message and checkpoint. Never close the run without landing on this checkpoint first.
 
 ---
 
 ## Step 7: Log the Run in runtime-artifacts/audit.md
 
-Append (never rewrite) one entry to `runtime-artifacts/audit.md`:
+🔴 **Which file** (`common/parallel-work-state.md`): **standalone mode** runs on its own `ve/<TICKET-ID>-…`
+branch, in parallel with the developers' branches, so it appends to its own fragment
+**`runtime-artifacts/stories/ve-<TICKET-ID>/audit.md`** (with `**Unit**: "ve-<TICKET-ID>"`) and never
+the shared `runtime-artifacts/audit.md` — its `[TEST]` PR then cannot conflict with any story PR or with
+ve sign-offs on the integration branch. **Workflow mode** writes wherever the invoking workflow writes:
+the shared file at the STOP checkpoint (an integration-branch writer), the invoking story's fragment
+when `dev-implement` / `epic-enhance` / `epic-bugfix` / `pr-fix` backfill a plan. Before the standalone
+commit, run the State Isolation Check (Section 5.5) for unit key `ve-<TICKET-ID>`.
+
+Append (never rewrite) one entry to that file:
 
 ```markdown
 ## Test Plan (ve-implement skill)
@@ -342,7 +354,7 @@ Append (never rewrite) one entry to `runtime-artifacts/audit.md`:
 **User Input**: "[complete raw user input]"
 **Story**: "[Story ID N.M] — [title] — [PROJ-XXX](<site>/browse/PROJ-XXX) or local Story ID"
 **Output folder**: `spec/test-plans/<TICKET-ID>-<title-kebab>/`
-**ve branch / PR**: "ve/<TICKET-ID>-<title-kebab> → PR <url> into <Epic Branch | Bug Branch | Enhancement Branch>" — STANDALONE only; in WORKFLOW mode write exactly "none — workflow mode, files written on <current branch> and carried by the caller's commit"
+**Verification Engineer branch / PR**: "ve/<TICKET-ID>-<title-kebab> → PR <url> into <Epic Branch | Bug Branch | Enhancement Branch>" — STANDALONE only; in WORKFLOW mode write exactly "none — workflow mode, files written on <current branch> and carried by the caller's commit"
 **Test plans generated**: "[list of applicable plans, with case counts] — N/A plans: [list with reasons]"
 **Coverage**: "[n]/[n] acceptance criteria covered"
 **Approve / Request Changes checkpoint**: "[Approved / Request Changes → re-did [what] → re-approved]"
@@ -374,13 +386,14 @@ Tracker, story status, or tracker status — those remain `ve-list-work`'s job.
   is no branch and no PR — the files are written on the current branch and the caller commits them.
   Either way, this file itself defines content, not git steps.
 - 🔴 **One story per run**, into its own `spec/test-plans/<TICKET-ID>-<title>/` folder. Never
-  overwrite another story's folder; ask before refreshing an existing one.
+  overwrite another story's folder; standalone, ask before refreshing an existing one (workflow mode reuses it).
 - 🔴 **Every test case traces to an AC; every AC has ≥1 test case.** The coverage check in the
   summary is a blocking checkpoint.
 - 🔴 **Runs in parallel with development.** Never wait for the DEV's code, branch, PR, or merge to
   *author* these steps.
 - 🔴 **No deployed environment — ever.** The ve *executes* these steps after the story merges into
-  the epic branch (epic cycles) or base branch (bug/enhancement cycles), by **building that branch
+  the epic branch (epic cycles), or once the fix code is on the bug/enhancement branch
+  (bug/enhancement cycles), by **building that branch
   from source and running it locally**. Every precondition, URL, port and command must reflect that
   locally built, locally running instance. Never write a step that assumes a dev/QA/staging
   deployment, a shared base URL, or an already-running service.

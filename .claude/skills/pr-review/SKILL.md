@@ -7,7 +7,7 @@ description: >
   comments on specific lines tagged Blocker / Issue / Nit / Question / Praise, an overall
   summary assessment, and a "Suggested for human review" section. Read-only on source code —
   it comments, it does not edit code. Standalone runs require explicit confirmation before
-  posting and let the user pick the review event; when auto-invoked from dev-implement it
+  posting and let the user pick the review event; when auto-invoked from an implement workflow it
   posts automatically as a plain COMMENT review (no formal approve/request-changes, no
   confirmation prompt — the same identity raised the PR, so a formal review is impossible).
 when_to_use: >
@@ -33,7 +33,7 @@ automatic by design**.
 
 - **STANDALONE** (user typed a trigger phrase): all phases apply as written — ask which PR
   (Phase 0), confirm before posting (Phase 5), let the user choose the review event.
-- **AUTO MODE — invoked automatically by `dev-implement` right after it raises a story PR**:
+- **AUTO MODE — invoked automatically by an implement workflow (`dev-implement`, `epic-enhance`, `epic-bugfix`, `pr-fix`, `bug-fix-implement`, `enhancement-implement`) right after it raises or updates a PR**:
   - The PR is passed in — Phase 0's "which PR" question is skipped.
   - **Post automatically as a plain COMMENT review only** (summary + inline comments).
     **NEVER** use `--approve` or `--request-changes`, and **do NOT ask the user** whether or
@@ -79,9 +79,13 @@ For the chosen PR number `<N>`:
 
 ## Phase 2: AIRE Context — Ground the Review
 
-This project tracks work in `spec/`. Use these to check the PR against **what was
+This project tracks the current cycle's work in `spec/` and `runtime-artifacts/` (archived to
+`aire-archives/` at cycle close). Use these to check the PR against **what was
 actually planned**, not just the raw diff.
 
+0. Work-unit PRs keep their audit trail and Story Tracker row in `runtime-artifacts/stories/<unit-key>/`
+   (`aire-workflow/common/parallel-work-state.md`) — read that fragment first, then the shared files
+   below as the resolved view.
 1. Read `runtime-artifacts/aire-state.md` — find the **Story Tracker** rows in this PR's scope
    (match by Story IDs in the branch name, PR title, commit messages, or changed
    file paths). Note each story's status, `Requires`, and Epic link.
@@ -99,15 +103,15 @@ Go through the diff hunk by hunk. For each concern, decide **where** it belongs 
 comment on the exact file+line) and **what severity** it is. Use these labels as a prefix
 on every comment so the author can triage at a glance:
 
-- **🔴 Blocker** — must be fixed before merge: correctness bugs, security holes, data loss,
+- **Blocker** — must be fixed before merge: correctness bugs, security holes, data loss,
   broken acceptance criteria, missing tests for new logic, secrets committed.
-- **🟠 Issue** — should be fixed: real problems that aren't merge-blocking on their own
+- **Issue** — should be fixed: real problems that aren't merge-blocking on their own
   (edge cases, error handling gaps, unclear logic, missing validation).
-- **🟡 Nit** — minor, non-blocking: style, naming, small readability improvements. Prefix
+- **Nit** — minor, non-blocking: style, naming, small readability improvements. Prefix
   with "Nit:" and make clear it's optional.
 - ** Question** — you need author intent before judging: "Why this approach over X?",
   "Is this path reachable?". Ask instead of assuming.
-- **🟢 Praise** — call out genuinely good decisions. Sparingly and honestly.
+- **Praise** — call out genuinely good decisions. Sparingly and honestly.
 
 What to look for, weighted to this framework:
 - **Acceptance-criteria coverage** — does the code actually satisfy the story it claims to?
@@ -147,12 +151,12 @@ A list of `path:line — <label> <comment>` entries you intend to post on specif
 - [How it maps to the Story Tracker rows, or the "no entries matched" note from Phase 2]
 
 ### Findings
-- 🔴 Blockers: [count] — [one-line each]
-- 🟠 Issues: [count] — [one-line each]
-- 🟡 Nits: [count]
+- Blockers: [count] — [one-line each]
+- Issues: [count] — [one-line each]
+- Nits: [count]
 - Questions: [count]
 
-### ‍ Suggested for human review
+### Suggested for human review
 The 2–3 areas where human judgment matters most (design trade-offs, security-sensitive
 paths, anything the AI is not confident about). Be explicit that these need a person.
 
@@ -168,7 +172,7 @@ never leave it as a placeholder.
 
 ## Phase 5: Confirm Before Posting (STANDALONE only — SKIPPED in AUTO MODE)
 
-**AUTO MODE (from `dev-implement`): skip this phase entirely** — do not ask anything; go
+**AUTO MODE (from an implement workflow): skip this phase entirely** — do not ask anything; go
 straight to Phase 6 and post as a plain COMMENT review.
 
 **STANDALONE**: Ask explicitly: **"Post this review to PR #<N> — the inline comments and the summary above — yes/no?"**

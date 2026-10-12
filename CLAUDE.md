@@ -34,6 +34,7 @@ Every rule-file reference below (e.g. `common/process-overview.md`) is relative 
   existing-system truth instead of re-deriving it. **Blocking on brownfield/migration work.**
 - `common/behavior-spec.md` — where Gherkin contracts live and the three-tier behaviour gate
 - `common/eval-framework.md` — the D1–D7 static gates and **blocking** J1/J2 judge gates
+- `common/parallel-work-state.md` — per-work-unit audit/state fragments (parallel-safe bookkeeping)
 
 **Loaded on demand (do NOT load at start):**
 - `common/ci-pipeline-generation.md` — at the STOP CHECKPOINT, when the CI pipeline is generated
@@ -65,16 +66,19 @@ diagram syntax · ASCII art diagrams (`common/ascii-diagram-standards.md`) · sp
 - 🔴 **NEVER write the section-sign character "§" (U+00A7) in ANY file** — rule files, docs, specs,
   code, commit messages, PR bodies, tracker items. Write `Section 3` or just the number — "§" renders
   inconsistently across terminals, trackers and diff views.
+- 🔴 **In every message to the user, tracker comment and PR text, write "Verification Engineer" — never
+  the shorthand "ve".** Identifiers keep it (`ve-list-work`, `/ve-implement`, `ve/…` branches, labels).
 
 ## MANDATORY: Question Format
 **CRITICAL**: Follow `common/question-format-guide.md` for all question formatting — multiple-choice
 (A–E), the `[Answer]:` tag, answer validation and ambiguity resolution.
 
-🔴 **Two questions are CHAT-ONLY and never get a question `.md` file**: **Tracker Selection**
-(`common/tracker-sync.md`) and **Context Opt-In** (`planning/workspace-detection.md` Step 4.7). Ask
+🔴 **Four questions are CHAT-ONLY, never a question `.md` file**: **Tracker Selection**
+(`common/tracker-sync.md`), **Context Opt-In** (`planning/workspace-detection.md` Step 4.7), **CI/CD Opt-In** (Step 1.2),
+**Atlas Artifact Sync Opt-In** (`common/atlas-artifact-sync.md`). Ask
 conversationally, persist only the ANSWER (to `runtime-artifacts/aire-state.md` + `audit.md`).
 
-🔴 **The Section 4.1.2 CI/SonarQube setup gate (`common/ci-pipeline-generation.md`) is a THIRD, stricter
+🔴 **The Section 4.1.2 CI/SonarQube setup gate (`common/ci-pipeline-generation.md`) is a stricter
 exception — never summarize it, in a file, in chat, or via a multiple-choice tool.** It is a literal,
 multi-paragraph setup-instruction block (`claude setup-token` steps, SonarCloud/Community steps, exact
 secret names, how to add them in GitHub) the user must follow verbatim elsewhere; compressing it
@@ -99,6 +103,8 @@ workflow, stage, agent and skill. Non-negotiables:
   Never estimated, incremented, or copied forward.
 - **Append only, chronological, to the END** of `runtime-artifacts/audit.md`. 🔴 NEVER overwrite the
   file with its own contents plus additions — that duplicates the entire history.
+- 🔴 **Parallel-safe state**: work-unit runs write audit and state ONLY to
+  `runtime-artifacts/stories/<unit-key>/`, never the shared files — `common/parallel-work-state.md`.
 
 # PLANNING PHASE
 
@@ -140,28 +146,24 @@ Type, Parent Epic, Epic URL, Project Key/Repo/Org). Rules:
 
 1. **MANDATORY**: Log the initial user request (complete raw input) in runtime-artifacts/audit.md, and
    stamp `**User Email**:` on every audit entry (silent, email-only — `common/audit-logging.md`)
-2. Load and execute all steps from `planning/workspace-detection.md`:
-   - Check for existing runtime-artifacts/aire-state.md (resume if found)
-   - Scan workspace for existing code; determine brownfield or greenfield
-   - **Resolve the code root** — if brownfield code doesn't live in `src/`, record `## Code Root` in
-     runtime-artifacts/aire-state.md per `common/directory-structure.md` and announce it. Never
-     mass-move an existing tree.
-   - Check for existing RE artifacts anywhere in the repo (standard folder/file names); reuse and
-     skip regeneration if found
-2.5. **HELIX MCP GATE (`common/helix-atlas-integration.md`)**: on **brownfield**, or when the
-   request/Epic indicates **migration, re-platform, port, legacy rewrite or integration with an
-   existing system**, Atlas is the source of existing-system truth. Resolve a Helix provider at
-   runtime (never hardcode tool names) and record the binding. **If none resolves, emit the connect
-   gate verbatim and HALT** — the user connects Helix, supplies exported Atlas docs, or approves local
-   generation. Log the prompt and raw response. On greenfield with no existing system referenced, skip silently.
-3. **Ask Tracker Selection, then capture the Parent Epic** (both only AFTER the state check; skip
-   Tracker Selection if `## Tracker` is already recorded): apply the rules above, then, if the request
-   has an Epic link/key, write/merge `## Tracker` and fetch epic-brief.md per the configured tracker
-4. **Create the Epic branch (automatic)**: per workspace-detection.md Step 4.5 /
-   `common/branching-strategy.md` — record the base branch, create `epic/<EPIC-ID>-<title>`, record
-   `## Branching` in runtime-artifacts/aire-state.md. All work happens here; story branches cut from it
-5. Determine next phase: Reverse Engineering (if brownfield and no artifacts) OR Requirements Analysis
-6. **MANDATORY**: Log findings in runtime-artifacts/audit.md, then present the completion message
+2. Execute `planning/workspace-detection.md` — **its step order is the single source of truth**:
+   a. State check (resume if `runtime-artifacts/aire-state.md` exists)
+   b. **Tracker Selection** (skip if `## Tracker` is recorded), then **Parent Epic Capture** per the
+      rules above — with an Epic link/key, write/merge `## Tracker` and fetch epic-brief.md
+   c. Scan for code (brownfield/greenfield); **resolve the code root** — brownfield code outside `src/`
+      is recorded once as `## Code Root` (`common/directory-structure.md`), never mass-moved; reuse
+      existing RE artifacts found anywhere in the repo
+   d. **HELIX MCP GATE (`common/helix-atlas-integration.md`)**: on **brownfield**, or when the
+      request/Epic indicates **migration, re-platform, port, legacy rewrite or integration with an
+      existing system**, Atlas is the source of existing-system truth. Resolve a Helix provider at
+      runtime (never hardcode tool names) and record the binding. **If none resolves, emit the connect
+      gate verbatim and HALT** — the user connects Helix, supplies exported Atlas docs, or approves local
+      generation. Log the prompt and raw response. Greenfield, no existing system: skip silently.
+   e. **Epic branch (automatic)** per `common/branching-strategy.md` — record the base branch, create
+      `epic/<EPIC-ID>-<title>`, record `## Branching`. All work happens here; story branches cut from it
+   f. Context folder + **Context Opt-In** (chat-only)
+3. Determine next phase: Reverse Engineering (if brownfield and no artifacts) OR Requirements Analysis
+4. **MANDATORY**: Log findings in runtime-artifacts/audit.md, then present the completion message
    (formats in workspace-detection.md) and proceed automatically
 
 ## Reverse Engineering (CONDITIONAL — Brownfield Only)
@@ -281,7 +283,7 @@ Mechanics: `common/tracker-sync.md` Section 4. Whenever a story's status changes
 
 **🔷 Epic Status Sync** (skip silently when `Parent Epic: none` or `Type: LOCAL`):
 - **First story starts** → also transition the Parent Epic to "In Development" — automatic, verified, announced, logged.
-- **All stories done** (every PR merged, last story at `🧪 Ready for Testing`) → **confirm-first** to
+- **All stories done** (every PR merged, last story at `Ready for Testing`) → **confirm-first** to
   move the Epic to "Ready for Testing". If any PR is still open, do NOT move it — report the open PRs
   and keep everything In Development.
 
@@ -289,6 +291,12 @@ Mechanics: `common/tracker-sync.md` Section 4. Whenever a story's status changes
 gave explicit approval — but still verified.
 
 🔴 **NEVER** silently update only one side. Local and external trackers must stay in sync.
+
+---
+
+## MANDATORY: Atlas Artifact Sync (opt-in)
+Asked once after the cycle branch is created (`common/atlas-artifact-sync.md`). While `Enabled: Yes`,
+run its Section 5 pass **before every commit**, in every workflow, agent and skill. Never blocks.
 
 ---
 
@@ -351,36 +359,19 @@ requirements/natural-language description). Log the transition.
    pass like every other design artifact. The implement workflows then READ them — never author them.
 4. **MANDATORY STOP** — the workflow HALTS and waits. Code Generation NEVER starts on its own.
 5. **Development Handoff** — announce the ready stories; the user drives each one with **`dev-implement`**.
-6. **Code Generation** (per-**story**, via the **`dev-implement`** keyword only) — full definition in
-   `workflows/dev-implement.md`. In order:
-   - **Story Selection** from the Dependency Graph, with a **Doability Gate** that never merges a
-     prerequisite PR itself — even an approved one; merging stays a manual user action.
-   - **Story branch** cut from the Epic branch (`common/branching-strategy.md`), then D1–D7 +
-     regression **baseline** capture.
-   - **Behaviour spec + test plan READ, never authored here** — `spec/behavior/story-<N.M>.feature`
-     and `spec/test-plans/<TICKET-ID>-<title>/` were written and approved at the STOP CHECKPOINT
-     (`implementation/specs-and-test-plans.md`). The run verifies them and backfills only a genuinely
-     absent one, announced. 🔴 Never rewrite a scenario to match the code.
-   - **Code generation** into **`src/`**, tests into `tests/`.
-   - **Gates, in sequence**: unit + coverage → Gherkin in Podman (**B1** this unit → **B2** every
-     other feature file → **B3** whole cycle, last unit only) → API & contract (when touching an API
-     layer) → full regression vs baseline → static D1–D7 → automated Code Review including the
-     diff-scoped Security Baseline review and **blocking** J1/J2 judge gates.
-   - **Every self-healing loop is capped at 3 attempts**; on exhaustion HALTS with the Retry-Limit
-     Report rather than proceeding.
-   - On a clean verdict: commit, push, PR, auto PR review. Stays `🔵 In Development` until its PR
-     **merges** and ve signs it off.
-   - **Fully automatic — naming the story is the only user input.** Plan announced (no GATE 2), review
-     routes on its own verdict (no GATE 3), findings auto-remediated and re-reviewed until clean.
-7. **Code Review & Remediate** — `workflows/code-review.md` and `workflows/remediate.md`. Every review
-   checks the acceptance criteria/requirements **and** the always-mandatory Security Baseline via a
-   diff-scoped automated security review (`agents/code-security-review-agent.md` Phase 2.5), whose
-   🔴/🟠 findings on the changed surface become real `SEC-ISS-XXX` findings, and computes the
-   **blocking** J1/J2 gates. Both run automatically inside every implement workflow and are also
-   invokable standalone, confirm-first.
+6. **Code Generation** (per-**story**, via the **`dev-implement`** keyword only) — fully defined in
+   `workflows/dev-implement.md`: Doability Gate (never merges a PR), story branch cut from the Epic
+   branch, baselines, plan, code into `src/` and tests into `tests/` (the approved `.feature` and test
+   plan are read, never rewritten), the full gate chain ending in the automated Code Review with the
+   Security Baseline and **blocking** J1/J2, every self-healing loop capped at 3, then commit, PR and
+   auto PR review. Naming the story is the only user input; it stays `In Development` until merged and
+   signed off by the Verification Engineer.
+7. **Code Review & Remediate** — `workflows/code-review.md` and `workflows/remediate.md`: ACs,
+   requirements, the diff-scoped Security Baseline review and the **blocking** J1/J2 gates. Automatic
+   inside every implement workflow; also invokable standalone, confirm-first.
 
-**🧪 Test plans are AUTHORED here** (Step 1.7, every work unit, before code) but **EXECUTED** by ve
-per story via `/ve-implement` after the story's PR merges.
+**Test plans are AUTHORED here** (Step 1.7, every work unit, before code) and **EXECUTED** by ve per
+story once its PR merges, signed off with `ve-list-work`.
 
 ---
 
@@ -470,7 +461,7 @@ Handoff below, then block until the user invokes `dev-implement`.
    no PR — the files ride this checkpoint's own commit). Run the blocking coverage check (every AC has
    ≥1 scenario AND ≥1 test case), then present the standardized **2-option** completion message and
    **WAIT** for `Request Changes` / `Continue to Next Stage`; log the prompt and complete raw response.
-   🔴 Scope derivation, NOT ve sign-off — ve still runs `/ve-implement` and `ve-list-work` separately.
+   🔴 Scope derivation, NOT ve sign-off — ve signs off each unit with `ve-list-work`.
 2. Mark in `runtime-artifacts/aire-state.md`: `Design complete — awaiting dev-implement`.
 3. **Commit + push the design artifacts on the Epic branch (automatic — unblocks ve)**: stage
    `spec/**` (Step 1.3's `behavior.feature`, Step 1.4's `architecture.md`, and Step 1.7's
@@ -495,29 +486,25 @@ then **HALT**.
 
 ---
 
-## Code Generation (per-story, ONLY when the user types `dev-implement`)
+# KEYWORD WORKFLOWS
 
-**On the `dev-implement` keyword, read `workflows/dev-implement.md` and follow it exactly.**
+**On any keyword below, read `workflows/<file>` and follow it exactly.** CLAUDE.md routes only.
 
----
+| Keyword | When | File |
+|---|---|---|
+| `dev-implement` | Build one story — the only way code generation starts | `dev-implement.md` |
+| `ticket-implement <TICKET-ID>` | An existing ticket — bug OR enhancement (omit the ID for LOCAL, describe it inline) | `ticket-implement.md` |
+| `epic-enhance <TICKET-ID \| description>` | Epic cycle open; **behaviour** changed | `epic-enhance.md` |
+| `epic-bugfix <TICKET-ID \| description>` | Epic cycle open; **a defect** in what the epic built | `epic-bugfix.md` |
+| `epic-change-request <TICKET-ID \| description \| --from-requirements \| --from-spec <path>>` | Epic cycle open; **a requirement** changed — versions `requirements.md`, one staged gate | `epic-change-request.md` |
+| `pr-fix [PR-NUMBER]` | A rejected `[STORY]`/`[BUG]`/`[ENH]` PR — fixed from its comments, same PR updated | `pr-fix.md` |
+| `code-review` | Review one story or all stories — REVIEWER, read-only | `code-review.md` |
+| `remediate` | Fix what a review report found — DEV, code-editing | `remediate.md` |
 
-## Code Review & Remediate
-
-**Status**: OPTIONAL standalone invocations, for **one story** or **all stories together**. Both also
-run automatically inside every implement workflow; this section covers standalone use.
-
-- **`code-review`** → read `workflows/code-review.md` and follow it exactly (REVIEWER, read-only).
-- **`remediate`** → read `workflows/remediate.md` and follow it exactly (DEV, code-editing).
-
-🔴 **NEVER auto-run them here** — standalone invocations are user-initiated. After a story's PR is
-raised, *suggest* both as optional next steps without running either. Log every response and tracker update.
-
----
-
-# TICKET WORKFLOW (keyword: `ticket-implement <TICKET-ID>` — Bug OR Enhancement)
-
-**On `ticket-implement <TICKET-ID>`** (existing ticket in the configured tracker; omit the ID for
-LOCAL and describe the item inline): read `workflows/ticket-implement.md` and follow it exactly.
+- The three **mid-epic** workflows each deliver the change as one `[STORY]` PR into the epic branch,
+  updating affected earlier stories' specs, test plans and tests.
+- **`code-review` / `remediate`** also run automatically inside every implement workflow. 🔴 **NEVER
+  auto-run them standalone** — after a story's PR is raised, *suggest* both. Log every response.
 
 ---
 
@@ -531,8 +518,9 @@ LOCAL and describe the item inline): read `workflows/ticket-implement.md` and fo
 - **Complete Audit Trail** — every interaction logged with complete raw input, not just approvals.
 - **Content Validation** — validate all content before file creation (`common/content-validation.md`).
 - **Bounded Self-Healing** — every automatic fix loop is capped at **3 attempts**; on exhaustion the
-  run HALTS at that gate with the Retry-Limit Report and asks the user for next steps. A failing gate
-  is never skipped, weakened or carried forward. 🔴 **One named exception**: the epic-level smoke
+  run HALTS with the Self-Heal Limit message (`common/self-heal-limit-guidance.md`) for a manual fix.
+  A failing gate is never skipped, weakened or carried forward — and never left unrun: the work-unit
+  guard (`templates/hooks/check-work-unit.sh`) refuses such a commit; `--no-verify` is forbidden. 🔴 **One named exception**: the epic-level smoke
   test's watch loop (`common/ci-pipeline-generation.md` Section 4.0.6) is UNBOUNDED, terminating only
   via `auto-fix-agent.*`'s own `retryLimitForSelfRepair` exhaustion or a genuine fix — never license
   to uncap any OTHER loop.
@@ -559,13 +547,15 @@ self-healing entries add `**SH-LOOP**:`, `**Root cause**:` and `**Verification**
   as `src/`. 🔴 Never a second code location; never mass-move an existing tree.
 - **`tests/`** — `unit/`, `behavior/` (Gherkin step definitions), `e2e/` (Playwright)
 - **`spec/`** — specs/docs ONLY, 🔴 never a source file. `behavior.feature` at its root (**once per
-  cycle, never per story**) plus four subfolders: **`plans/`** — flat planning/design docs
+  cycle, never per story**) plus five subfolders: **`plans/`** — flat planning/design docs
   (`architecture.md`, `atlas-deep-dive.md` + the flat RE docs, `requirements.md`, `stories.md`,
   `personas.md`, `epic-brief.md`, `dependency-graph.yml`, the design docs, and
   **`delta/<CYCLE-ID>-<slug>/`** written at cycle close by `archive-epic`); **`spec-generation/`** —
   the `*-generation.md` plan/question files; **`behavior/`** — one `.feature` per work unit;
   **`test-plans/`** — the manual test plans. Those last two are written at the STOP CHECKPOINT
-  (Step 1.7). Plus human-authored **`context-project/`** (`existing-knowledge/`, `new-references/`;
+  (Step 1.7); **`playwright-specs/`** — the Playwright Planner's Approved `<story-slug>.md` plan (a
+  spec; the `.spec.ts` it drives is test CODE and stays in `tests/e2e/<story-slug>/`). Plus
+  human-authored **`context-project/`** (`existing-knowledge/`, `new-references/`;
   read only at a user-supplied path, never auto-scanned).
   🔴 **`spec/` is cycle-scoped**: `archive-epic` snapshots the whole tree into
   `aire-archives/<type>/<ID>-<slug>/` and **removes it in full**, `context-project/` included; after
@@ -573,7 +563,7 @@ self-healing entries add `**SH-LOOP**:`, `**Root cause**:` and `**Verification**
   Atlas deep dive against the merged code. Base carries no `spec/` between cycles.
 - **`reports/`** — generated OUTPUTS ONLY: `unit-test-evidence/`, `behavior-test-evidence/`,
   `api-contract-test-evidence/`, `eval-evidence/`, `reviews/`, `code-security-reviews/`,
-  `ticket-summary/`. 🔴 `.feature` contracts live in `spec/behavior/`, never here.
+  `ticket-summary/`, `pr-feedback/`. 🔴 `.feature` contracts live in `spec/behavior/`, never here.
 - **`tests/.evals/`** — `config.json`, `rubrics/`, `scripts/`
 - CONDITIONAL on the `## CI/CD Configuration` opt-in:
   **`.github/workflows/agentic-eval-pipeline.yml`** (`common/ci-pipeline-generation.md`) — absent

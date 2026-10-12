@@ -38,7 +38,7 @@ Incorporate NFR requirements into the system design using patterns and logical c
 - **Logical Components** - Ask about infrastructure components (queues, caches, circuit breakers, etc.) and their integration patterns
 
 ### Step 4: Store Plan
-- Save as `spec/spec-generation/nfr-generation.md`
+- Save as `spec/spec-generation/nfr-design-generation.md` (never the NFR Requirements plan file)
 - Include all [Answer]: tags for user input
 
 ### Step 5: Collect and Analyze Answers
@@ -47,8 +47,7 @@ Incorporate NFR requirements into the system design using patterns and logical c
 - Add follow-up questions if needed
 
 ### Step 6: Generate NFR Design Artifacts
-- Create `spec/plans/nfr.md`
-- Create `spec/plans/nfr.md`
+- Append a `## NFR Design` section to `spec/plans/nfr.md` — never overwrite or rewrite its `## NFR Requirements` section
 
 ### Step 7: Present Completion Message
 - Present completion message in this structure:

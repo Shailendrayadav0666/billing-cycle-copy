@@ -57,6 +57,13 @@ reports/code-security-reviews/security-review-YYYY-MM-DD.md
 
 Use **today's date**. If a report for today already exists, append a counter: `security-review-YYYY-MM-DD-2.md`.
 
+🔴 **Diff-scoped runs inside an implement workflow** (Code Review Phase 2.5 of `dev-implement`, `bug-fix-implement`,
+`enhancement-implement` and the flows built on them) do **not** use the dated name. They write
+`reports/code-security-reviews/<key>-security-review-v<X>.md` — `<key>` = `story-<N.M>` / `bug-<TICKET-ID>` /
+`enhancement-<TICKET-ID>`, `<X>` = the code-review version this pass belongs to — so parallel work units never
+collide on one file and every report traces to its story (`common/work-unit-artifacts.md` E8). The
+dated name is for the standalone full-repository audit only. The report structure below is the same.
+
 **Create the directory** `reports/code-security-reviews/` if it doesn't exist.
 
 ### Report Structure
@@ -69,17 +76,17 @@ Use **today's date**. If a report for today already exists, append a counter: `s
 **Rules Source**: `aire-workflow/extensions/security/baseline/security-baseline.md`
 **Project**: [project name from workspace]
 **Tech Stack**: [detected stack]
-**Scan Scope**: Full codebase
+**Scan Scope**: [Full codebase (standalone audit) | This work unit's diff and the attack surface it reaches (diff-scoped run)]
 
 ---
 
 ## Executive Summary
 
 - **Total Findings**: [count]
-- 🔴 **Critical/Blocker**: [count]
-- 🟠 **High**: [count]
-- 🟡 **Medium**: [count]
-- 🔵 **Low**: [count]
+- **Critical/Blocker**: [count]
+- **High**: [count]
+- **Medium**: [count]
+- **Low**: [count]
 - **Security Rules Checked**: 16/16
 - **Rules Compliant**: [count]/16
 - **Rules Non-Compliant**: [count]/16
@@ -92,15 +99,15 @@ Use **today's date**. If a report for today already exists, append a counter: `s
 
 | # | Severity | Security Rule | Title | File(s) | Line(s) |
 |---|----------|--------------|-------|---------|---------|
-| 1 | 🔴 Critical | SECURITY-05 | SQL injection in login handler | `src/auth.js` | 42-45 |
+| 1 | Critical | SECURITY-05 | SQL injection in login handler | `src/auth.js` | 42-45 |
 | ... | ... | ... | ... | ... | ... |
 
 ---
 
-## 🔴 Critical / Blocker Findings
+## Critical / Blocker Findings
 
 ### [SEC-001] [Title]
-- **Severity**: 🔴 Critical / Blocker
+- **Severity**: Critical / Blocker
 - **Security Rule**: SECURITY-XX — [Rule Name]
 - **Verification Criteria Violated**: [Which specific verification item failed]
 - **File(s)**: `path/to/file.ext` (Lines XX-YY)
@@ -114,19 +121,19 @@ Use **today's date**. If a report for today already exists, append a counter: `s
 
 ---
 
-## 🟠 High Findings
+## High Findings
 
 [Same structure as Critical]
 
 ---
 
-## 🟡 Medium Findings
+## Medium Findings
 
 [Same structure as Critical]
 
 ---
 
-## 🔵 Low Findings
+## Low Findings
 
 [Same structure as Critical]
 
@@ -197,5 +204,5 @@ Use **today's date**. If a report for today already exists, append a counter: `s
 4. **Show evidence** — include exact file path, line numbers, and code snippet for each finding.
 5. **No false positives** — only report findings you are confident about. Mark uncertain items as "Needs Manual Verification".
 6. **Provide actionable remediation** — include specific code fixes, not just "fix this".
-7. **Use today's date** in the filename.
+7. **Filename**: the standalone full-repository audit uses today's date; a diff-scoped run inside an implement workflow uses `<key>-security-review-v<X>.md` (above).
 8. **After generating the report**, present a summary to the user with finding counts per severity and the report file path.

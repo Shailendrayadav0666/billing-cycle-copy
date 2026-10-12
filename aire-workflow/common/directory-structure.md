@@ -17,7 +17,7 @@ one of them. Nothing AIRE writes goes anywhere else.
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
 | `src/`     | **ALL application source code**| Greenfield AND brownfield. Never code outside it.          |
 | `tests/`   | All test code:`tests/unit/`, `tests/api/` (API & contract tests), `tests/behavior/` (Gherkin), `tests/e2e/` (Playwright); plus the eval framework at **`tests/.evals/`** (thresholds, rubrics, eval runner scripts) | Mirrors`src/` structure under `tests/unit/`. `tests/.evals/` is the source of truth for WHETHER it built it right. |
-| `spec/`    | The specs AIRE writes and the docs AIRE writes — `plans/`, `spec-generation/`, `behavior/`, `test-plans/`, `behavior.feature`, `context-project/` | The agent's source of truth for WHAT to build.             |
+| `spec/`    | The specs AIRE writes and the docs AIRE writes — `plans/`, `spec-generation/`, `behavior/`, `test-plans/`, `playwright-specs/`, `behavior.feature`, `context-project/` | The agent's source of truth for WHAT to build.             |
 | `reports/` | **Generated OUTPUTS** — test/eval evidence (unit, behavior, api-contract, eval), review reports (`reviews/`, `code-security-reviews/`) and per-work-unit code summaries (`ticket-summary/`) | Generated proof/findings/summaries only; never a spec.     |
 | `runtime-artifacts/` | The cycle's **`audit.md`** (audit trail) and **`aire-state.md`** (session/state), alongside root-level tool caches (`.mypy_cache`, `.ruff_cache`, Playwright exec files) | Session/run state + tool artifacts; recreated fresh each cycle. |
 
@@ -69,12 +69,11 @@ this specific project** (see `common/ci-pipeline-generation.md`).
 │   │   └── <story-slug>/                  #    Generator output — ONE folder per story
 │   │       └── <scenario>.spec.ts         #     one spec per approved manual test scenario;
 │   │                                     #     run headed, healed by the Playwright Healer agent
-│   ├── playwright-specs/                  #    Playwright Planner output (<story-slug>.md per story)
 │   └── .evals/                            #   EVAL FRAMEWORK — nested under tests/; created on the cycle branch if missing
 │       ├── config.json                    #    ALL thresholds. The ONLY place a number lives.
 │       ├── rubrics/
 │       │   ├── architecture-rubric.json   #    derived from spec/plans/architecture.md every cycle
-│       │   └── security-rubric.json       #    OWASP-based, created once
+│       │   └── security-rubric.json       #    OWASP-based, derived every cycle; both archived + removed at cycle close
 │       ├── behavior/                      #    Gherkin container — same image locally and in CI
 │       │   ├── Containerfile              #      must be PROVEN to build at bootstrap
 │       │   └── run.sh                     #    THE entry point: run.sh <b1|b2|b3>
@@ -108,11 +107,14 @@ this specific project** (see `common/ci-pipeline-generation.md`).
 │   │   ├── bug-brief.md                  #     ticket-implement (bug-fix): fetched/captured ticket brief
 │   │   ├── enhancement-brief.md          #     ticket-implement (enhancement): fetched/captured brief
 │   │   ├── impact-analysis.md            #     bug-fix / enhancement-implement: affected files + root cause
+│   │   ├── change-story-<N.M>.md         #     epic-enhance: the ONE change document per change story
+│   │   ├── change-spec-<X.Y>.md          #     epic-enhance: spec-only amendments (no code yet)
+│   │   ├── bugfix-story-<N.M>.md         #     epic-bugfix: the ONE bugfix document per bugfix story
 │   │   └── delta/<CYCLE-ID>-<slug>/      #     the cycle's RE delta — change record + evidence for
 │   │       └── delta.md                  #     atlas-deep-dive.md. Written by archive-epic (Step 3),
 │   │                                     #     applied + published to Atlas by stitch-delta after merge
 │   ├── spec-generation/                 #    the *-generation.md plan + clarifying-question files
-│   │   ├── story-generation.md          #   nfr-generation.md, application-design-generation.md,
+│   │   ├── story-generation.md          #   nfr-requirements-generation.md, nfr-design-generation.md, application-design-generation.md,
 │   │   ├── functional-design-generation.md #   infrastructure-design-generation.md,
 │   │   ├── story-N.M-code-generation.md # Bug-generation.md, enhancement-generation.md,
 │   │   └── requirement-verification-questions.md
@@ -120,25 +122,32 @@ this specific project** (see `common/ci-pipeline-generation.md`).
 │   │   ├── story-1.1.feature             #     SPEC (contract), stays in spec/ — NOT evidence
 │   │   ├── story-1.2.feature             #     ALL units written at the STOP CHECKPOINT (Step 1.7),
 │   │   └── bug-PROJ-123.feature          #     approved together, BEFORE any code exists
-│   ├── test-plans/                      #   ve Test Plan — one folder per work unit, also written
+│   ├── test-plans/                      #   Verification Engineer Test Plan — one folder per work unit, also written
 │   │   └── Test-plan-<feature>-story-<n.m>/  #  at the STOP CHECKPOINT; integration/e2e/api/contract/
 │   │                                     #     security/perf/a11y steps
+│   ├── playwright-specs/                 #   Playwright Planner output (<story-slug>.md per story) —
+│   │                                     #     the Approved UI automation PLAN (a spec, not test code);
+│   │                                     #     its generated .spec.ts lives in tests/e2e/<story-slug>/
 │   └── context-project/                  #    HUMAN-CURATED INPUT — two subfolders, nothing else.
 │       ├── existing-knowledge/           #    HUMAN-AUTHORED — how the CURRENT system works.
 │       └── new-references/               #    HUMAN-SUPPLIED — wireframes, mockups, UI/API specs.
 │
 ├── reports/                               #   GENERATED OUTPUTS — evidence + review reports, never a spec
 │   ├── unit-test-evidence/               #    per work unit
-│   ├── behavior-test-evidence/           #    per unit: b1/ b2/ b3/
+│   ├── behavior-test-evidence/           #    per unit: b1/ b2/ (b3/ only on the last unit of the cycle)
 │   ├── api-contract-test-evidence/       #    per work unit
 │   ├── eval-evidence/                    #    eval.json, eval-summary.md, static/, judge/ — per unit
 │   ├── reviews/                          #    code-review reports (per story / all-stories)
-│   ├── code-security-reviews/            #    security-review reports (dated)
+│   ├── code-security-reviews/            #    <key>-security-review-v<X>.md per work unit; dated only for the standalone full audit
+│   ├── pr-feedback/                      #    per unit, per pr-fix round: feedback-ledger.md + resolution-summary.md
 │   └── ticket-summary/                   #    per-work-unit code-summary docs (story/bug/enh -summary.md)
 │
 ├── runtime-artifacts/                     #   SESSION STATE + tool caches, recreated fresh each cycle
 │   ├── audit.md                          #    complete audit trail of decisions and stages
 │   ├── aire-state.md                     #    Story Tracker, phases done, base branch, resumability
+│   ├── stories/<unit-key>/               #    per work unit (story-N.M, bug-ID, enhancement-ID, ve-ID):
+│   │   ├── audit.md                      #     that unit's audit trail — written only by that unit's runs
+│   │   └── state.md                      #     its Story Tracker row, progress, SH counters (common/parallel-work-state.md)
 │   └── (.mypy_cache/, .ruff_cache/, Playwright exec files, … — root tool caches)
 │
 ├── .github/workflows/
@@ -158,6 +167,10 @@ this specific project** (see `common/ci-pipeline-generation.md`).
 │   │                                     #    delta published to Atlas (doc id + version). A delta with
 │   │                                     #    no row is pending — absence is the signal. Lives HERE
 │   │                                     #    because archive-epic deletes spec/ at cycle close.
+│   ├── local-re/                         #    Option-B teams only. Written by stitch-delta-local ALONE:
+│   │   ├── spec/plans/                   #    the refreshed local RE doc set, copied (read-only) into
+│   │   │                                 #    a new cycle's spec/plans/ at Workspace Detection Step 3
+│   │   └── stitch-ledger.md              #    APPEND-ONLY, one row per delta stitched locally
 │   └── epics|bugs|enhancements/<ID>-<name>/
 │       ├── spec/                        #    EXACT MIRROR of the live spec/ at cycle close —
 │       │                                 #    all docs, every work-unit .feature, context-project,
@@ -179,7 +192,7 @@ this specific project** (see `common/ci-pipeline-generation.md`).
    keeps its code somewhere else, see "Brownfield reconciliation" below — never silently write new
    code into a second location.
 2. **`spec/` is documentation and specification only.** Never a `.ts`, `.py`, `.java` or any other
-   source file. There is **no `aire-docs/` layer** — `spec/` has exactly four subfolders plus
+   source file. There is **no `aire-docs/` layer** — `spec/` has exactly five subfolders plus
    `behavior.feature` at its root: **`plans/`** (all planning + design docs as flat files —
    `architecture.md`, `atlas-deep-dive.md` + the flat RE docs from Atlas, `requirements.md`, `stories.md`,
    `personas.md`, `epic-brief.md`, `dependency-graph.yml`, `functional-design.md`, `nfr.md`,
@@ -188,7 +201,9 @@ this specific project** (see `common/ci-pipeline-generation.md`).
    (ve manual test plans) — 🔴 **both of those are written for EVERY work unit at the STOP CHECKPOINT,
    in one approved pass, before any code is generated** (`CLAUDE.md` Step 1.7 /
    `implementation/specs-and-test-plans.md`); the implement workflows read them and never author them
-   — and
+   — **`playwright-specs/`** (the Playwright Planner's own `<story-slug>.md` plan output, Approved at
+   that skill's gate — a *plan*, hence a spec; the `.spec.ts` it drives is test CODE and stays in
+   `tests/e2e/<story-slug>/`) — and
    **`context-project/`** — the single human-curated input folder, which has exactly two subfolders:
    `existing-knowledge/` (how the CURRENT system works) and `new-references/` (wireframes, mockups,
    API specs defining the target). 🔴 There is no `context-references/` at the top level — both live
@@ -222,14 +237,14 @@ this specific project** (see `common/ci-pipeline-generation.md`).
    or resource group, not mirrored 1:1 from `src/`.
    4c. 🔴 **Rules 4a/4b are mechanically enforced, not merely narrated.** The **Test Placement
    Verification Gate** (`code-generation.md` Step 11a.6, `SH-LOOP-12` in `workflows/dev-implement.md`
-   Step 6.3) runs `tests/.evals/scripts/check-test-placement.*` — a deterministic script, generated
-   once per project per `common/ci-pipeline-generation.md` Section 4.0.7 — against this story's diff on
-   every `dev-implement` run, and CI re-runs the same script on every PR. A misplaced test file is a
+   Step 6.3) checks this story's diff on every `dev-implement` run and writes
+   `test-placement-check.log` (a local gate — `common/ci-pipeline-generation.md` Section 4.0.7; CI does
+   not re-run it). A misplaced test file is a
    gate failure, capped at 3 self-healing attempts, never a silent drift left for a later cleanup.
 5. **Generated outputs are not specifications.** Raw tool output and review reports go under the
    top-level `reports/` root (`reports/unit-test-evidence/`, `reports/behavior-test-evidence/`,
    `reports/api-contract-test-evidence/`, `reports/eval-evidence/`, `reports/reviews/`,
-   `reports/code-security-reviews/`, `reports/ticket-summary/`), never into `spec/` and never into a
+   `reports/code-security-reviews/`, `reports/pr-feedback/`, `reports/ticket-summary/`), never into `spec/` and never into a
    design or requirements document. The `.feature` contracts under `spec/behavior/` are
    specifications, not outputs, and stay in `spec/`.
 6. **Never write outside these roots.** No stray files at the workspace root; no code in
@@ -251,9 +266,10 @@ branch. Nothing is ever pushed to the base branch.**
 | `tests/.evals/config.json`                          | cycle branch     | **Create it**|
 | `tests/.evals/scripts/**`                           | cycle branch     | **Create it**|
 | `tests/.evals/behavior/**` (Containerfile, run.sh)  | cycle branch     | **Create it**|
-| `tests/.evals/rubrics/security-rubric.json`         | cycle branch     | **Create it**|
-| `tests/.evals/rubrics/architecture-rubric.json`     | cycle branch     | Derive from`spec/plans/architecture.md` Section 10 |
-| `spec/**`                                     | cycle branch     | Generate during the cycle                      |
+| `tests/.evals/rubrics/security-rubric.json`         | cycle branch     | **Create it** — cycle-scoped: `archive-epic` archives and removes it at cycle close |
+| `tests/.evals/rubrics/architecture-rubric.json`     | cycle branch     | Derive from `spec/plans/architecture.md` Section 10 — cycle-scoped, archived and removed with `spec/` |
+| `spec/**` (except `playwright-specs/`, below) | cycle branch     | Generate during the cycle                      |
+| `spec/playwright-specs/<story-slug>.md`       | **work-unit branch** | **Create it** — the Playwright Planner's own `planner_save_plan` output, one NEW file per work unit, written ONLY by that unit's own `playwright-implement` run and committed with that unit's code (`implementation/code-generation.md` Step 11d). 🔴 The second of the two work-unit-branch exceptions in this table, for the same reason as `ci-manifest.d/`: a new file under a unit-unique name, never an edit to another unit's file |
 | `reports/**` (generated evidence)             | work-unit branch | Written during code generation / gate runs     |
 | `runtime-artifacts/{audit.md,aire-state.md}`  | cycle branch     | Created by Workspace Detection at cycle start  |
 | `src/**`, `tests/**`                        | work-unit branch | Generate during code generation                |
@@ -273,14 +289,22 @@ the ONE exception to "reports/eval-evidence/ is tracked" (Section 5.3 of `common
 `auto-fix-agent.*`'s `git add -A` must never be allowed to stage it, which is exactly what this
 `.gitignore` entry prevents.
 
-🔴 **`tests/.evals/ci-manifest.d/<work-unit-key>.json` is the ONE row in this table not written on the
-cycle branch** — it is **append-a-new-file** territory, written on the **work-unit branch** by the story,
-bug, or enhancement that established the stack facts it records. This is what keeps two parallel
-`dev-implement` sessions (Step 1.75) conflict-free on CI configuration specifically: neither
-`tests/.evals/config.json` nor another unit's fragment is ever touched by a different work unit. Section
+🔴 **`tests/.evals/ci-manifest.d/<work-unit-key>.json` and `spec/playwright-specs/<story-slug>.md` are
+the ONLY two rows in this table not written on the cycle branch** — both are **append-a-new-file**
+territory, written on the **work-unit branch** by the story, bug, or enhancement that produced them.
+This is what keeps two parallel `dev-implement` sessions (Step 1.75) conflict-free: neither
+`tests/.evals/config.json`, nor another unit's manifest fragment, nor another unit's Planner plan is
+ever touched by a different work unit. Section
 2.1.1's "present → leave it completely alone" rule stays exactly as written for the REST of
-`tests/.evals/` — this directory is the one, narrow exception, and only because a new file with a unique
-name is being added, never an existing one edited.
+`tests/.evals/`, and the cycle-branch rule stays exactly as written for the rest of `spec/` — these two
+are the narrow exceptions, and only because a new file with a unique name is being added, never an
+existing one edited.
+
+🔴 **`spec/playwright-specs/` does NOT weaken the `spec/**` self-repair ban.** `auto-fix-agent.*` is
+still forbidden from touching any path under `spec/**` on a work-unit PR (`common/ci-pipeline-generation.md`
+V33) — the Planner's plan is an Approved spec, and CI re-runs Playwright headless as a trust gate
+without ever re-running the Planner, so nothing in CI has any reason to write it. A work unit writes
+its own plan during its `dev-implement` run; CI self-repair never does.
 
 ### Why nothing is pushed to base
 

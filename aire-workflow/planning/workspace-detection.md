@@ -40,7 +40,13 @@ This step ONLY synchronizes the local base branch; it does not create the epic b
 
 Otherwise, load `common/tracker-sync.md` Section 1 and execute it exactly: ask which issue tracker to use (JIRA / ADO / GITHUB / LOCAL), record the answer in `## Tracker` in `runtime-artifacts/aire-state.md`, then ask the type-specific one-time follow-up (ADO org/project, or GitHub org/repo — skipped entirely for LOCAL and for JIRA). Verify CLI/MCP auth for ADO (`az account show`) and GitHub (`gh auth status`) at this point; LOCAL requires no auth check at all.
 
-Log the question and the complete raw answer in `runtime-artifacts/audit.md`. This MUST run before Step 4.5 (Epic Branch Creation, which needs no tracker info) and before Parent Epic Capture (run by CLAUDE.md immediately after Workspace Detection completes) — Parent Epic Capture depends on knowing which tracker to query.
+Log the question and the complete raw answer in `runtime-artifacts/audit.md`. This MUST run before Step 1.8 — Parent Epic Capture depends on knowing which tracker to query.
+
+## Step 1.8: Parent Epic Capture (right after Tracker Selection)
+
+Apply CLAUDE.md "Tracker Selection & Parent Epic Capture": if the request carries an Epic link or key, write/merge it into `## Tracker` and fetch the Epic into `spec/plans/epic-brief.md` per `common/tracker-sync.md` Section 2 (LOCAL: no fetch). A different Epic already recorded (resumed project) → ask which to keep, never overwrite. No Epic given → do not block. It runs here, before the scan, because the Helix MCP gate (Step 3) reads the Epic to spot migration or integration work, and the Epic branch (Step 4.5) is named from the Epic key and title.
+
+**Startup order (single source of truth — CLAUDE.md, the welcome message and the diagrams follow it)**: state check (Step 1) → Tracker Selection (1.7) → Parent Epic Capture (1.8) → code scan and code root (2, 3.5) → RE artifact reuse and the Helix MCP gate (3) → Epic branch and Atlas Artifact Sync Opt-In (4.5) → context folder and Context Opt-In (4.6, 4.7).
 
 ## Step 2: Scan Workspace for Existing Code
 
@@ -68,13 +74,19 @@ Log the question and the complete raw answer in `runtime-artifacts/audit.md`. Th
 
 **IF workspace has existing code**:
 - Set flag: `brownfield = true`
+- **Restore the local RE home first** (teams that chose option B and stitch with `/stitch-delta-local`).
+  If `aire-archives/local-re/spec/plans/atlas-deep-dive.md` exists and `spec/plans/atlas-deep-dive.md`
+  does not, copy every file from `aire-archives/local-re/spec/plans/` into `spec/plans/`. Announce the
+  restore and log it. Record `Source: local-re (restored from aire-archives/local-re/)` in
+  `## Existing-System Context`. The copy is the cycle's own working set. 🔴 The home itself is
+  **read-only** to every cycle; only `stitch-delta-local` writes it (`agents/stitch-delta-local-agent.md`).
 - **Search the ENTIRE repo for existing reverse engineering artifacts — they can live ANYWHERE, not only at the default path.** RE docs live FLAT in `spec/plans/`; file names are always the same, so search by name:
   1. First check the default location: `spec/plans/` (the flat RE docs, alongside `atlas-deep-dive.md`)
-  2. If not there, glob the whole workspace for the standard artifact filenames at any depth: `business-overview.md`, `code-structure.md`, `api-documentation.md`, `component-inventory.md`, `technology-stack.md`, `dependencies.md`, `code-quality-assessment.md`, `reverse-engineering-timestamp.md`, `atlas-deep-dive.md` — a directory containing several of these IS the artifact set even if it lives elsewhere
+  2. If not there, glob the whole workspace (🔴 excluding `aire-archives/`, whose copies are archives or the read-only local RE home) for the standard artifact filenames at any depth: `business-overview.md`, `code-structure.md`, `api-documentation.md`, `component-inventory.md`, `technology-stack.md`, `dependencies.md`, `code-quality-assessment.md`, `reverse-engineering-timestamp.md`, `atlas-deep-dive.md` — a directory containing several of these IS the artifact set even if it lives elsewhere
   3. If found outside the default path, record the discovered location in `runtime-artifacts/aire-state.md` (`## Workspace State` → `Reverse Engineering Artifacts: <path>`) and use THAT path everywhere the artifacts are loaded later (Requirements Analysis, User Stories, design stages)
 - **IF reverse engineering artifacts exist (at ANY location found above)** — do NOT regenerate them:
-    - Current-system truth is refreshed **fresh from Atlas via the Helix MCP** at the start of each cycle (`common/helix-atlas-integration.md`), so existing artifacts from a prior cycle are treated as a starting point only. The Helix MCP gate (CLAUDE.md Step 4.5) decides whether to re-pull from Atlas or run local Reverse Engineering — no delta has to be replayed here, because the previous cycle's delta was already published INTO Atlas by `stitch-delta` before this cycle started.
-    - 🔴 **Check for unpublished deltas before trusting Atlas truth.** Glob `aire-archives/*/*/spec/plans/delta/*/` and compare against the rows in `aire-archives/stitch-ledger.md`: any archived delta with no row was never published to Atlas, so the deep dive you are about to pull is missing that cycle. Name the outstanding cycle(s), point the user at `/stitch-delta` on the base branch, and ask whether to proceed anyway (recording the choice). Never delete an archived delta.
+    - Current-system truth is refreshed **fresh from Atlas via the Helix MCP** at the start of each cycle (`common/helix-atlas-integration.md`), so existing artifacts from a prior cycle are treated as a starting point only. The Helix MCP gate (CLAUDE.md Workspace Detection item 2d, `common/helix-atlas-integration.md`) decides whether to re-pull from Atlas or run local Reverse Engineering — no delta has to be replayed here, because the previous cycle's delta was already published INTO Atlas by `stitch-delta` before this cycle started.
+    - 🔴 **Check for unpublished deltas before trusting Atlas truth.** Glob `aire-archives/{epics,bugs,enhancements}/*/spec/plans/delta/*/` and compare against the rows in `aire-archives/stitch-ledger.md` (Atlas) and `aire-archives/local-re/stitch-ledger.md` (local): any archived delta with no row in either was never stitched, so the docs you are about to use are missing that cycle. Name the outstanding cycle(s), point the user at `/stitch-delta` (or `/stitch-delta-local` when the local RE home is in use) on the base branch, and ask whether to proceed anyway (recording the choice). Never delete an archived delta.
     - **IF the artifacts are usable as-is** (Atlas unavailable and the user is content with the existing docs): Load them, skip to Requirements Analysis
     - **IF a fresh Atlas pull or rerun is warranted, or the user explicitly requests it**: Next phase is Reverse Engineering
 - **IF no reverse engineering artifacts**: Check `aire-archives/epics/`, `aire-archives/bugs/` AND `aire-archives/enhancements/` for archive folders (created by the `archive-epic` skill at the end of a previous epic, bug, or enhancement release cycle)
@@ -156,6 +168,9 @@ Load `common/branching-strategy.md` and execute **Section 1 — Epic Branch Crea
 
 Log the branch creation (name + base branch) in runtime-artifacts/audit.md.
 
+Then run the **Atlas Artifact Sync Opt-In** (`common/atlas-artifact-sync.md` Section 2 — chat-only,
+skipped when `## Atlas Artifact Sync` is already recorded).
+
 ## Step 4.6: Ensure the Context Project Folder (ALL flows — check first, create only if missing)
 
 Ensure **`spec/context-project/`** exists with its two subfolders. This is the human-authored home for
@@ -176,7 +191,7 @@ spec/context-project/
   Do NOT recreate, empty, overwrite or delete it or anything under it.
 - **Only if absent**: create the folder and both empty subfolders. Do NOT create a README inside them.
 - `existing-knowledge/` uses one subfolder per repo module, named **exactly** after the module
-  (e.g. `existing-knowledge/ALIX.BMS/interview.md`).
+  (e.g. `existing-knowledge/ABC.corp/interview.md`).
 - This is a safety net so the folders exist even on flows that skip reverse engineering.
 
 ## Step 4.7: Context Opt-In (ALL flows — ask ONCE, in chat, record in state)

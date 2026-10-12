@@ -24,13 +24,19 @@ CI Preflight, CI Attestation, CI self-repair).
 
 ---
 
+> **Terminology — "the verify job".** The pipeline is split into jobs: `setup`, `static-evals`,
+> `unit-coverage`, `behavior-gherkin`, `judge-gates`, `sonarqube`, `verdict` and `self-repair`. Wherever this
+> document says **"the verify job"**, read it as those gate jobs taken together — everything except
+> `self-repair`. Where one job is meant: base-SHA resolution, the evidence purge and `EVAL_KEY` live in
+> `setup`; the combined `eval.json` upload and the branch-protection status check are the `verdict` job's.
+
 ## 1. 🔴 Generated from the canonical templates — never hand-authored, never re-derived
 
 🔴 **The pipeline is not written by the model.** `templates/ci/` (this same `aire-workflow/`
 directory) holds the canonical, versioned source: `agentic-eval-pipeline.yml.template`, the
 `lib-manifest`/`read-manifest`/`ci-manifest-runner`/`run-static-evals`/`run-evals`/`auto-fix-agent`/
-`validate-pipeline`/`smoke-test-epic`/`check-test-placement` scripts (`.sh` + `.ps1` — the first three
-are #7a's run-time manifest readers, Section 4.0d.1/4.0f; `check-test-placement` is Section 4.0.7), the
+`validate-pipeline`/`smoke-test-epic`/`resolve-eval-key` scripts (`.sh` + `.ps1` — the first three
+are #7a's run-time manifest readers, Section 4.0d.1/4.0f), the
 `behavior/` Containerfile and entry point, and `sonar-project.properties.tmpl`. Generation means:
 detect the stack, fill the `ci` manifest block in `tests/.evals/config.json` (Section 3 below defines what
 goes in it), **copy** these files into the target repo, and substitute the fixed `${SLOT}` markers.
@@ -632,7 +638,7 @@ job: setup                                              (needs: —)
   as the ONE `workspace-<key>` artifact every gate job below downloads instead of re-installing/re-building
 
 job: static-evals                                       (needs: setup — no job-level if:)
-  ├── ci-manifest-runner.sh eval-tools    🔴 re-installs semgrep/gitleaks/mypy/etc. (Section 3.2) —
+  ├── ci-manifest-runner.sh eval-tools    re-installs semgrep/gitleaks/mypy/etc. (Section 3.2) —
   │                                        `setup`'s own install put them on ITS runner only; a
   │                                        `.git`-included, files-only tarball never carries a
   │                                        system-wide/global tool install to this SEPARATE runner.
@@ -640,13 +646,13 @@ job: static-evals                                       (needs: setup — no job
   │                                        diff-scoped `installCommands` (those stay in the tarball)
   └── Stage 1  Deterministic       tests/.evals/scripts/run-static-evals.sh <base-sha>
                                     D1 lint · D2 types · D3 SAST(+SonarQube) · D4 deps · D5 licences
-                                    D6 complexity · D7 secrets — 🔴 DELTA-SCOPED, never whole-tree
-                                    🔴 Runs UNCONDITIONALLY; an unresolved manifest degrades to an
+                                    D6 complexity · D7 secrets — DELTA-SCOPED, never whole-tree
+                                    Runs UNCONDITIONALLY; an unresolved manifest degrades to an
                                     EARNED N/A per gate INSIDE the script (empty ci.roots[]), never a
                                     job-level skip
 
 job: unit-coverage            (needs: setup, if: needs.setup.outputs.has_unit_tests == 'true')
-  ├── ci-manifest-runner.sh install (+ toolchain)   🔴 re-installs project deps for a TOUCHED root
+  ├── ci-manifest-runner.sh install (+ toolchain)   re-installs project deps for a TOUCHED root
   │                                    — same class of gap as static-evals' eval-tools reinstall: a
   │                                    bare `pip install`/`bundle install` (no venv/local vendor path)
   │                                    resolves outside the repo tree, so a fresh runner's tarball
@@ -660,17 +666,17 @@ job: behavior-gherkin        (needs: setup, if: needs.setup.outputs.has_behavior
 
 job: playwright-e2e          (needs: setup, if: needs.setup.outputs.has_e2e_tests == 'true')
   └── Stage 2  Behavioural         Playwright E2E headless — TRUST GATE, re-executes the local
-                                    Step 11d run, never originates it. 🔴 Gated on THIS story's own
+                                    Step 11d run, never originates it. Gated on THIS story's own
                                     tests/e2e/<key>/ having content — a directory fact, never
                                     ci.playwright.enabled (Section 3.0f still supplies HOW to run it)
 
 job: judge-gates                                        (needs: setup — no job-level if:)
   └── Stage 3  Semantic            J1 architecture · J2 security (OWASP) vs tests/.evals/rubrics/*
-                                    BLOCKING at the config minimums. 🔴 Runs UNCONDITIONALLY — J1/J2
+                                    BLOCKING at the config minimums. Runs UNCONDITIONALLY — J1/J2
                                     score the diff itself and do not depend on ci.roots[] state
 
 job: sonarqube                    (needs: [setup, unit-coverage] — if: always())
-  ├── Download/restore unit-coverage's coverage report(s)   🔴 needs unit-coverage, NOT setup alone
+  ├── Download/restore unit-coverage's coverage report(s)   needs unit-coverage, NOT setup alone
   │                                    — the setup tarball is packaged BEFORE any test runs, so it
   │                                    never has coverage data; without this dependency Sonar's
   │                                    "coverage on new code" measurement finds none and reports 0%
@@ -679,12 +685,12 @@ job: sonarqube                    (needs: [setup, unit-coverage] — if: always(
 job: verdict     (needs: [setup, static-evals, unit-coverage, behavior-gherkin, playwright-e2e,
                           judge-gates, sonarqube], if: always())
   ├── Download every gate-<name> artifact
-  ├── Verdict                 🔴 the ONLY step that fails the job — merge-verdict.sh maps every
+  ├── Verdict                 the ONLY step that fails the job — merge-verdict.sh maps every
   │                                gate job's needs.<job>.result into the same tally the old single
   │                                Verdict step used to compute (Section 4.0c)
   └── Stage 4  Scorecard           if: always() — publish eval-summary to the PR + job summary
 
-  🔴 EVERY gate job is isolated by construction — a job's own failure never skips a sibling job
+  EVERY gate job is isolated by construction — a job's own failure never skips a sibling job
      (they are parallel, independent jobs). NEVER `|| true` inside a gate job's own step (Section 4.0c).
 
 job: self-repair          (needs: verdict, if: failure())
@@ -736,7 +742,7 @@ enforce silently does not run, and the PR looks merely "red" rather than "unveri
 | V32 | **The Manifest triage class is WIRED, not just documented** | `auto-fix-agent.*` reads `tests/.evals/_run/manifest-defects.txt` and exits non-zero without repairing when it is non-empty, and it does so **before** the retry counter is written. 🔴 Section 6.4 described this class for a release while three scripts emitted `MANIFEST DEFECT` and **nothing consumed it** — a documented triage class with no consumer is the same defect as a documented gate with no step |
 | V33 | **Self-repair's scope is ENFORCED, not merely instructed** | `auto-fix-agent.*` compares every path it touched (committed **and** working-tree) against its scope and aborts **before the push** on a violation: on a `ci/epic-smoke-*` head branch `src/**` and `tests/**` (outside `tests/.evals/**`) are forbidden; on a work-unit PR `.github/workflows/**`, `tests/.evals/config.json`, `tests/.evals/rubrics/**`, `tests/.evals/ci-manifest.d/**` and `spec/**` are forbidden. A prompt is guidance; this check is what makes the scope binding |
 | V34 | **Every test command is no-tests-safe** | For each `ci.roots[]` entry with a `coverageCommand`, either the command carries the runner's own no-tests flag (`--passWithNoTests`) or the root declares `noTestsExitCode` (Section 3.0). A root with neither turns *"this repo has no suite yet"* into a hard gate failure — the exact condition that once produced 45 minutes of self-repair authoring dummy tests |
-| V35 | **`check-test-placement.*` exists, is wired into Stage 1, and can actually fail** | `tests/.evals/scripts/check-test-placement.{sh,ps1}` (Section 4.0.7) exists, appears as its own step in the generated YAML, and — same discipline as V9 — is proven to FAIL against a deliberately misplaced fixture (a `.test.`/`.spec.` file dropped under `src/`, or under a stray `tests/<name>/` outside `tests/unit/`/`tests/api/`) before being trusted on real diffs. Also grep it for a hardcoded `"verdict": "PASS"` literal not derived from the actual scan |
+| V35 | **D5/D6 commands reference their configured thresholds** | `run-static-evals.*` exports `AIRE_DISALLOWED_LICENSES` and `AIRE_MAX_CYCLOMATIC_COMPLEXITY`; the resolved D5 and D6 commands must consult them, otherwise the number in `tests/.evals/config.json` is decorative and the gate fails on ANY new finding rather than one that breaches the threshold. |
 | V36 | **Both generated Sonar steps carry the run-time scope guard** | The `sonarqube` job's `Resolve Sonar scope` step exists, the scan step reads `steps.sonarscope.outputs.skip`, and the quality-gate step's guard checks `report-task.txt` — Section 4.1.1b. Without this, a source path that does not exist yet (a greenfield `src/` at the smoke test) fails the scan outright and takes the quality gate down with it |
 | V37 | **`tests/.evals/config.json` validates against `tests/.evals/config.schema.json`** | CI-SPLIT-JOBS-PLAN.md Section 4. `ajv validate -s config.schema.json -d config.json` when `ajv` is available; otherwise a `jq`-based structural fallback (same "if the tool's unavailable, say so" pattern V2 uses for `actionlint`) checking the required top-level keys, plus the cross-field rules a generic schema can't express: `rubricVersion` in `architecture-rubric.json` equals `architecture.md`'s own version; `disallowedLicenses`/`maxCyclomaticComplexity` present whenever D5/D6 are in `ci.gates` (cross-referencing V35); every `tools[]` entry has a matching `toolInstallCommands` entry and vice versa (cross-referencing Section 4.0i.1 P1's declaration-completeness rule, so preflight and generation-time validation agree). `config.json` is the load-bearing input to the whole generated pipeline — this makes a malformed or incomplete manifest a **blocking generation-time gate**, not just a runtime read |
 | V38 | **Every per-stage job conditional reads a `needs.setup.outputs.*` fact, never hardcoded or re-derived — and only the three genuinely conditional jobs carry one** | CI-SPLIT-JOBS-PLAN.md Section 1's own job table + Section 6 (Section 4.0j's own "per-stage job conditionals from directory structure" rule, applied here as a check). `unit-coverage` gates on `needs.setup.outputs.has_unit_tests`; `behavior-gherkin` on `has_behavior_tests`; `playwright-e2e` on `has_e2e_tests`. `static-evals` and `judge-gates` are listed **unconditional** ("--") in Section 1's table and must carry NO job-level `if:` at all — D1-D7 degrade to an earned N/A per gate inside `run-static-evals.sh` on an unresolved manifest, and J1/J2 score the diff regardless of `ci.roots[]` state, so gating either job on `manifest_resolved` would wrongly turn a script-earned N/A into a job-skipped N/A. A job whose `if:` re-derives its own directory check, or is hardcoded to `true`, can disagree with `setup`'s own answer — the same "single manifest fact, read identically by both sides" principle as Section 4.0d, applied to job gating |
@@ -987,53 +993,17 @@ of its **own** PR, validated by that PR's own already-working CI run (Section 4.
 covers `story/**` → the epic branch) — adding a second scratch-PR cycle per story would double Actions
 minutes for a case the existing per-story flow already covers correctly.
 
-#### 4.0.7 🔴 TEST PLACEMENT CHECK — generate `check-test-placement.*` alongside `run-static-evals.*`
+#### 4.0.7 TEST PLACEMENT CHECK — a LOCAL gate, not a CI template
 
-**Purpose**: `common/directory-structure.md` rules 4a/4b and `implementation/code-generation.md` Step
-11a.6 (`SH-LOOP-12` in `workflows/dev-implement.md` Step 6.3) state where a test file must live. This
-gate is what actually **proves** it, mechanically, instead of relying on the generating run to remember
-correctly — exactly the same reasoning that makes D1–D7 deterministic checks rather than a model
-re-reading a lint rule.
-
-**Generate** `tests/.evals/scripts/check-test-placement.{sh,ps1}` (copied byte-for-byte from
-`templates/ci/`, same rule as every other script in this section — never hand-authored per repo) that:
-
-1. **Takes the diff base as its one argument**, same convention as `run-static-evals.*`: `git diff
-   --name-only --diff-filter=ACMR <base-sha>...HEAD`.
-2. **Classifies each changed path** as `application`, `unit-test`, `api-test`, or `other`:
-   - `unit-test` — matches the stack's unit-test naming convention (`*.test.*`, `*.spec.*`,
-     `test_*.py`, `*_test.py` outside Go, `*Test.java`, `*Tests.cs`, RTL/jsdom/Enzyme/Vue-Test-Utils
-     component suites), read from `tests/.evals/config.json`'s stack-detection block (Section 3) —
-     never hardcoded to one language.
-   - `api-test` — a `unit-test`-shaped file that additionally imports/uses a real-endpoint test client
-     (`supertest`, `httpx`/`TestClient`, `RestAssured`, `MockMvc`, or spins up a server) — grep the
-     file's own imports, since the naming convention alone does not distinguish it.
-   - `application` — everything under the resolved code root that is neither of the above.
-3. **Fails (non-zero exit, one line per violation) when**:
-   - an `application`-classified path is actually test-shaped (a test file was written under `src/`
-     or `## Code Root`) — **unless** the stack's own co-location convention applies (Go `_test.go`,
-     Rust `#[cfg(test)]`), which is never a violation;
-   - a `unit-test` path's parent is not under `tests/unit/` (e.g. `tests/components/`, `tests/foo/`,
-     or a bare file at `tests/`);
-   - an `api-test` path's parent is not under `tests/api/` (most commonly: found instead under
-     `tests/unit/`).
-4. **Emits** a JSON summary (`files_scanned`, `violations: [{path, classification, expected_root,
-   reason}]`, `verdict: PASS|FAIL`) to stdout, captured by the caller into
-   `reports/unit-test-evidence/story-[N.M]/test-placement-check.log` — same evidence contract as every
-   other gate in this document, never a hand-written claim.
-5. **Both the local run (`code-generation.md` Step 11a.6) and CI call the SAME script** — never a
-   second, YAML-inlined copy of the classification logic. Wire it into the generated
-   `agentic-eval-pipeline.yml` as its own step in Stage 1 (deterministic checks), immediately after the
-   D1–D7 steps and before Stage 2:
-   ```yaml
-   - name: "Test placement check"
-     run: tests/.evals/scripts/check-test-placement.sh "${{ steps.basesha.outputs.sha }}"
-   ```
-6. **Validation — new check V35** (added to the `validate-pipeline.{sh,ps1}` table in Section 4.0.1):
-   `check-test-placement.*` exists, is referenced in the generated YAML, and — same discipline as V9 —
-   is proven to FAIL against a deliberately misplaced fixture (a `.test.` file dropped under `src/`)
-   before being trusted to pass real diffs. A script that returns `PASS` unconditionally is the same
-   defect V9 already forbids for `run-static-evals`/`run-evals`.
+`common/directory-structure.md` rules 4a/4b state where a test file must live, and the Test Placement
+Verification Gate (`implementation/code-generation.md` Step 11a.6, `SH-LOOP-12` in `workflows/dev-implement.md`
+Step 6.3) proves it on every `dev-implement` run. 🔴 `templates/ci/` ships **no** `check-test-placement.*`
+script, so nothing is copied for it and the generated pipeline has no test-placement step. The run applies
+the rules itself to `git diff --name-only --diff-filter=ACMR <base-sha>...HEAD` — classifying each path as
+`application`, `unit-test`, `api-test` or `other` from the stack's own naming conventions (Go `_test.go`
+and Rust `#[cfg(test)]` co-location are never violations) — and writes
+`reports/unit-test-evidence/<key>/test-placement-check.log` (`common/work-unit-artifacts.md` Section 2.3).
+A project that adds its own `tests/.evals/scripts/check-test-placement.*` is run instead, with the same log.
 
 🔴 This check is **additional** to D1–D7, never folded into one of them and never a substitute for
 `run-static-evals.*` — a repo can lint-clean and type-clean while still writing a unit test under
@@ -1562,7 +1532,7 @@ for every root it establishes, or it records why a field is genuinely inapplicab
 step to each of the workflows that actually generate code — `workflows/dev-implement.md`,
 `workflows/bug-fix-implement.md`, `workflows/enhancement-implement.md` — placed **after the local gates
 pass and before the commit**: write `tests/.evals/ci-manifest.d/<work-unit-key>.json` (`story-<N.M>.json`,
-`bug-<TICKET-ID>.json`, `enh-<TICKET-ID>.json`) containing an array of the `ci.roots[]`-shaped entries
+`bug-<TICKET-ID>.json`, `enhancement-<TICKET-ID>.json`) containing an array of the `ci.roots[]`-shaped entries
 this work unit established or extended, then re-run `validate-pipeline.{sh,ps1}` before committing.
 `workflows/ticket-implement.md` gets nothing — it is a pure router that hands off to two of the three
 workflows above.
@@ -2709,7 +2679,9 @@ CI secrets required
   attempts halts locally and never reaches CI; CI's 3 attempts apply to failures that appear only in
   the CI environment.
 - **On exhaustion**: stop, post a PR comment naming every unresolved gate, what each attempt changed,
-  and why it did not resolve — closing with *"3 retries ended. Please suggest next steps."* Do not
+  and why it did not resolve — closing with the take-over guidance: reproduce locally with the failing
+  gate's command, fix on the PR branch without weakening any gate and push, or comment the problem on the
+  PR and run `pr-fix <PR>` (`common/self-heal-limit-guidance.md` sets the tone and content). Do not
   push further commits. Do not close or merge the PR.
 - 🔴 **Never let the self-repair job pass the build.** It repairs and re-runs; the verify job's own
   result is the only thing that turns the PR green.

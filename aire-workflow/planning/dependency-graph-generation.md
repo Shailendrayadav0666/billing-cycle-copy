@@ -85,12 +85,12 @@ Create/update in `runtime-artifacts/aire-state.md` under `## Story Tracker` afte
 
 | Story | Title   | Requires | Tracker ID | Status         | PR         | Merged | Start      | End        | Recorded           |
 |-------|---------|----------|------------|----------------|------------|--------|------------|------------|--------------------|
-| 1.1   | [Title] | none     | —          | 🟢 Ready for Development | —          | —      |            |            | [YYYY-MM-DD HH:MM] |
+| 1.1   | [Title] | none     | —          | Ready for Development | —          | —      |            |            | [YYYY-MM-DD HH:MM] |
 
 - **Requires**: Assigned by this Dependency Graph stage.
 - **Tracker ID**: Populated from Part 3 of User Stories (the tracker push; each pushed story is linked to the Parent Epic in `## Tracker`). The value is a Jira key, an ADO work item ID, a GitHub issue number, or `LOCAL` when `## Tracker` records `Type: LOCAL` (no external push).
 - **PR**: The story's Pull Request URL, recorded by `dev-implement` when the PR is raised (Section D). `—` until a PR exists.
-- **Merged**: `no` once the PR is raised, `yes` once the PR is confirmed merged into the epic branch, `—` before a PR exists. A story moves to 🧪 Ready for Testing ONLY when this becomes `yes` (checked via `gh pr view` by the `ve-list-work` skill, which promotes it once ve has tested it).
-- **Start**: Timestamp when story moves to 🔵 In Development.
-- **End**: Timestamp when story moves to 🧪 Ready for Testing (i.e. when its PR is merged).
+- **Merged**: `no` once the PR is raised, `yes` once the PR is confirmed merged into the epic branch, `—` before a PR exists. A story moves to Ready for Testing ONLY when this becomes `yes` (checked via `gh pr view` by the `ve-list-work` skill, which promotes it once ve has tested it).
+- **Start**: Timestamp when story moves to In Development.
+- **End**: Timestamp when story moves to Ready for Testing (set by `ve-list-work` Option B, after its PR has merged and the ve has tested it).
 - **Recorded**: Timestamp of the last tracker update for this row.

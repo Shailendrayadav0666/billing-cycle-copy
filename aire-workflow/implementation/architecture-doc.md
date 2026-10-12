@@ -26,7 +26,7 @@ new architecture. Its inputs, in precedence order:
 1. **Atlas existing-system truth** (brownfield) — `common/helix-atlas-integration.md`. The existing
    architecture is the **starting state**; this document records the target state and the delta.
 2. `spec/plans/functional-design.md`
-3. `spec/plans/nfr.md` and `nfr-requirements/`
+3. `spec/plans/nfr.md` (its `## NFR Requirements` and `## NFR Design` sections)
 4. `spec/plans/infrastructure-design.md`
 5. `spec/plans/application-design.md`
 6. `## Design References` registered in `runtime-artifacts/aire-state.md`, and the `### Reconciliations` table (a point
@@ -50,7 +50,7 @@ reason.
 
 ## 1. System Context
 <What the system does, who/what calls it, what it calls. One C4 context diagram + prose.
- 🔴 Brownfield: annotate every element as existing / new / modified.>
+ Brownfield: annotate every element as existing / new / modified.>
 
 ```mermaid
 C4Context
@@ -69,7 +69,7 @@ C4Context
 | ProrationEngine | Prorated amount calculation | new | functional-design/billing.md |
 
 <One component diagram. Group components by layer with subgraphs.
- 🔴 Brownfield: label each node existing / new / modified, matching the Status column above.>
+ Brownfield: label each node existing / new / modified, matching the Status column above.>
 
 ```mermaid
 flowchart TB
@@ -96,7 +96,7 @@ flowchart TB
 ## 4. Data Architecture
 <Stores, ownership per component, schemas/models introduced or changed, migration approach,
  transaction boundaries. Include one ER diagram of the entities this system owns or changes.
- 🔴 Brownfield: annotate entities/fields new vs existing.>
+ Brownfield: annotate entities/fields new vs existing.>
 
 ```mermaid
 erDiagram
@@ -118,7 +118,7 @@ erDiagram
 ## 7. Non-Functional Targets
 | Concern | Target | Source | How it is verified |
 |---|---|---|---|
-| p95 latency, /upgrade | < 800 ms excl. provider call | nfr-requirements/perf.md | load test |
+| p95 latency, /upgrade | < 800 ms excl. provider call | spec/plans/nfr.md | load test |
 
 ## 8. Infrastructure and Deployment
 <Runtime topology, environments, deployment unit, scaling model, external dependencies.>

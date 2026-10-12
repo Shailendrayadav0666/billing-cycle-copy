@@ -54,21 +54,21 @@ HelixAI-AIRE is a structured yet flexible software development process that adap
         |   (every work unit, 1 approval)       |
         | * >> STOP << (before code gen)        |
         | * Code Generation (per-story, via     |
-        |   `dev-implement`; + unit tests to threshold) |
-        | * Code Review & Remediate (OPTIONAL)  |
+        |   `dev-implement`) + unit tests       |
+        | * Code Review & Remediate (automatic) |
         +---------------------------------------+
               |                    |
               |                    +----------------------+
               |                                           |
               |                            +---------------------------------------+
-              |                            |  ve TRACK (parallel, NOT a phase)   |
+              |                            | Verification Engineer track (parallel)|
               |                            +---------------------------------------+
-              |                            | * Test Plan per story via        |
-              |                            |   `/ve-implement` (manual test      |
-              |                            |   steps from the story's acceptance   |
-              |                            |   criteria - no code)                 |
-              |                            | * `ve-list-work` on the epic or     |
-              |                            |   base branch moves tested, merged    |
+              |                            | * Test plans for every work unit,     |
+              |                            |   written and approved at the STOP    |
+              |                            |   checkpoint, before any code exists  |
+              |                            | * The Verification Engineer runs them |
+              |                            |   once the code is on the branch;     |
+              |                            |   `ve-list-work` moves tested         |
               |                            |   stories to Ready for Testing        |
               |                            +---------------------------------------+
               v
@@ -88,32 +88,30 @@ HelixAI-AIRE is a structured yet flexible software development process that adap
 - **Purpose**: Determines HOW to build it
 - **Activities**: System-level detailed design (when needed); then **every** work unit's Gherkin contract (`spec/behavior/<unit>.feature`) and manual test plan (`spec/test-plans/<TICKET-ID>-<title>/`) are written and approved in ONE pass — before any code exists; then — after a mandatory **STOP** — per-story code generation that you trigger with the **`dev-implement`** keyword (on a story branch cut from the Epic branch, with unit tests generated and run to the `unitTestCoverageMin` threshold, plus — when the story adds/changes an API endpoint — an automated **API & Contract Testing Gate**: functional behavior, response-code validation, role-based authorization 401/403, error-response validation, request validation, and response contract/schema validation), and optional code review
 - **Output**: Approved behaviour contracts and manual test plans for every work unit, then working code, unit tests and API & Contract test evidence (when applicable)
-- **Your Role**: Review designs, type `dev-implement` to build each story, approve implementation plans, validate results
+- **Your Role**: Review designs, approve the behaviour specs and test plans, type `dev-implement` to build each story, then review each story's PR together with the Verification Engineer (approval and merge are manual)
 
-**ve TRACK** - *Test Plan, in parallel with development*
+**Verification Engineer TRACK** - *Test Plan, in parallel with development*
 - **Purpose**: Proves each story meets its acceptance criteria
-- **Sign-off is not a Implementation stage** — neither at epic level nor at story level. ve drives it independently and can start immediately, without waiting for any code. The plans themselves are already written and approved at the STOP checkpoint, so ve can review them before a line of code exists
-- **Activities**: **`/ve-implement`** generates one story's Test Plan artifacts — manual test steps for every applicable test plan (integration, E2E, API, contract, security, performance, accessibility — whichever apply; there is no build-verification artifact), derived from the story's acceptance criteria, never from source code — into `spec/test-plans/<JIRA-ID>-<jira-title>/`. The mandatory Playwright Test Automation extension means `/playwright-implement` always turns the UI-relevant steps into executable browser automation once both the dev's and ve's PRs have merged. **`ve-list-work`** (on the cycle's integration branch — epic, bug, or enhancement) reports which stories/tickets dev has merged and moves the ones ve has tested to Ready for Testing
-- **Your Role (as ve)**: review the plans already on the branch (type `/ve-implement` per story only to refresh or extend one), execute the test steps, then `ve-list-work` to sign off
+- **Sign-off is not a Implementation stage** — neither at epic level nor at story level. Verification Engineer drives it independently and can start immediately, without waiting for any code. The plans themselves are already written and approved at the STOP checkpoint, so Verification Engineer can review them before a line of code exists
+- **Activities**: every work unit's Test Plan artifacts — manual test steps for every applicable test plan (integration, E2E, API, contract, security, performance, accessibility — whichever apply; there is no build-verification artifact), derived from the acceptance criteria, never from source code — are already in `spec/test-plans/<TICKET-ID>-<title>/`. Once a story's code is generated and on the branch, Verification Engineer executes them. For frontend work units the implement workflows also turn the UI-relevant steps into executable Playwright tests. **`ve-list-work`** (on the cycle's integration branch — epic, bug, or enhancement) reports which stories/tickets dev has merged and moves the ones Verification Engineer has tested to Ready for Testing, or records a rejection
+- **Your Role (as Verification Engineer)**: review the plans already on the branch, execute the test steps, then `ve-list-work` to sign off
 
 ## Key Principles:
 
 - **Fully Adaptive**: Each stage independently evaluated based on your needs
 - **Efficient**: Simple changes execute only essential stages
 - **Comprehensive**: Complex changes get full treatment with all safeguards
-- **Transparent**: You see and approve the execution plan before work begins
+- **Transparent**: You see the execution plan before work begins, and can add or remove stages at any time
 - **Documented**: Complete audit trail of all decisions and changes
 - **User Control**: You can request stages be included or excluded
 
 ## What Happens Next:
 
-1. **I'll analyze your workspace** to understand if this is a new or existing project — and I'll ask whether there are any **context-project artifacts** (human-authored notes on how your current system works, under `spec/context-project/existing-knowledge/`) I should use for this task
-1.5. **I'll ask about reference materials** — UX wireframes, design mockups, API specs, or any other reference docs (under `spec/context-project/new-references/`) that should guide what I build. These define the target state.
-1.6. **I'll ask which issue tracker to use** — Jira, Azure DevOps, GitHub, or Local-only (no external tracker at all, everything tracked right here in the project's own state file). Whichever you pick is used for every story, bug, and enhancement from that point on — Local is a fully supported, complete option, not a fallback.
-2. **I'll gather requirements** and ask clarifying questions if needed
-3. **I'll create an execution plan** showing which stages I propose to run and why
-4. **You'll review and approve** the plan (or request changes)
-5. **We'll execute the plan** with checkpoints at each major stage
+1. **I'll check for an existing aire project and ask which issue tracker to use** — Jira, Azure DevOps, GitHub, or Local-only (no external tracker at all, everything tracked right here in the project's own state file). Whichever you pick is used for every story, bug, and enhancement from that point on — Local is a fully supported, complete option, not a fallback.
+2. **I'll capture your Parent Epic** (if you gave one) **and analyze your workspace** to understand if this is a new or existing project — pulling existing-system truth from Atlas via Helix when it is needed — then create the Epic branch
+3. **I'll ask about context-project artifacts and reference materials** — human-authored notes on how your current system works (under `spec/context-project/existing-knowledge/`), and UX wireframes, design mockups, API specs or other docs that define the target state (under `spec/context-project/new-references/`)
+4. **I'll gather requirements** and ask clarifying questions if needed
+5. **I'll show an execution plan** and run it, with your approval at each major stage (you can add or remove stages any time)
 6. **You'll get working code** with complete documentation and tests
 
 The aire process adapts to:

@@ -138,9 +138,9 @@
 - **Recovery**: Generate plan with available information, mark gaps
 
 **Error**: Story dependencies not satisfied (Doability Gate failed)
-- **Cause**: Prerequisite stories (from the story's `requires`) are not yet `🧪 Ready for Testing` in the Story Tracker
+- **Cause**: Prerequisite stories (from the story's `requires`) are not yet `Ready for Testing` in the Story Tracker
 - **Solution**: Implement a currently ready story first (see the Doability Gate in `workflows/dev-implement.md` and `implementation/story-selection.md`)
-- **Do Not Proceed**: Never bypass the Doability Gate — a story is doable only when ALL its `requires` are `🧪 Ready for Testing`
+- **Do Not Proceed**: Never bypass the Doability Gate — a story is doable only when ALL its `requires` are `Ready for Testing`
 
 **Error**: `dev-implement` invoked but no Dependency Graph / Story Tracker exists
 - **Cause**: User Stories or Dependency Graph stage was not completed

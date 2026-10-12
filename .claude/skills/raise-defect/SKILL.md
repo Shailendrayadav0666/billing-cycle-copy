@@ -1,15 +1,15 @@
 ---
 name: raise-defect
 description: >
-  Helps an ve raise a defect/bug in whichever tracker is configured (Jira, Azure DevOps, GitHub,
+  Helps a Verification Engineer raise a defect/bug in whichever tracker is configured (Jira, Azure DevOps, GitHub,
   or Local) with a minimal, fixed question set: Title, Description, Severity (Low / Medium / High /
   Critical), Environment Found, and Discovery Activity. Components is always
   "Default" and Associated Org is always "All" for JIRA (never asked). Creates the bug via
   the tracker-appropriate mechanism, tagged with "bug", "defect", "ai-generated", "aire" and "aire-v[N]" labels/tags
   (the framework version read live from CLAUDE.md), or records it in the local Story Tracker for Local. Confirm-first: nothing is
-  written to the tracker until the ve reviews and approves the drafted ticket.
+  written to the tracker until the Verification Engineer reviews and approves the drafted ticket.
 when_to_use: >
-  Trigger when the user (ve) says: "raise a defect", "raise a bug", "log a defect",
+  Trigger when the user (Verification Engineer) says: "raise a defect", "raise a bug", "log a defect",
   "file a bug", "report a defect", "create a bug ticket", "found a bug", "new defect",
   "ve bug", "log this issue in Jira" (or ADO/GitHub/locally).
 allowed-tools: Read Grep Glob Bash Write
@@ -87,7 +87,7 @@ Every tracker gets the same **description body**, built from the Phase 1 answers
 [Low/Medium/High/Critical]
 
 ---
-Raised via the AIRE raise-defect skill by ve. Drafted with AI ([MODEL NAME]).
+Raised via the AIRE raise-defect skill by Verification Engineer. Drafted with AI ([MODEL NAME]).
  AIRE Framework: v[N]
 ```
 - `[MODEL NAME]` — the actual session model (e.g., "Claude Sonnet 5") — never left as a placeholder.
@@ -144,13 +144,13 @@ Do not proceed without an explicit yes. If the tester wants edits, revise and re
    work-item/issue URL directly for ADO/GITHUB. LOCAL has no URL — use the local ID.
 3. **Log in `runtime-artifacts/audit.md`** (append-only at the end — never rewrite the file):
    ```markdown
-   ## Defect Raised (ve)
+   ## Defect Raised (Verification Engineer)
    **Timestamp**: [ISO timestamp]
    **User Email**: [current session email — read live from the session context]
    **Defect**: [<ISSUE-KEY>](<site-base-url>/browse/<ISSUE-KEY>) — [title]  (or the local BUG-LOCAL-N ID)
    **Severity**: [Low/Medium/High/Critical]
    **Environment Found / Discovery Activity**: [..] / [..]
-   **Raised by**: [ve user]
+   **Raised by**: [Verification Engineer user]
 
    ---
    ```

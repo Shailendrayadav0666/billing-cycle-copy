@@ -76,7 +76,10 @@ reconstructing what happened. If verification is impossible, write that it could
 
 ## 4. File handling
 
-- **Path**: `runtime-artifacts/audit.md`.
+- **Path**: `runtime-artifacts/audit.md` — for integration-branch writers. A **work-unit writer** (a run
+  committing on its own story / `ve/…` branch, or on a bug/enhancement branch while ve work runs in
+  parallel) appends to `runtime-artifacts/stories/<unit-key>/audit.md` instead, with every rule in this
+  file unchanged plus a `**Unit**:` field (`common/parallel-work-state.md`).
 - **Creation**: if it does not exist, create it with an `# Audit Log` header before the first entry.
 - **Ordering**: ALWAYS append to the **END**, in strict chronological order (oldest → newest).
   🔴 Never prepend, never reorder, never rewrite an existing entry.

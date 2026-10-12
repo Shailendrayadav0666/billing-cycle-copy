@@ -27,7 +27,7 @@ Design detailed business logic for the whole system, technology-agnostic and foc
 - Read requirements from `spec/plans/requirements.md`
 - Read stories from `spec/plans/stories.md` and the `## Story Tracker` in `runtime-artifacts/aire-state.md`
 - Read `spec/plans/application-design.md` artifacts (if Application Design ran) for component structure and boundaries
-- Read `## Context References` in `runtime-artifacts/aire-state.md`. **IF `Use References: Yes`**, load all listed reference paths — UX wireframes define interaction flows, states, and validation rules; API specs define data contracts and operation semantics. Use them as primary inputs for detailed business logic design.
+- Read the `New References` fields of `## Context Project` in `runtime-artifacts/aire-state.md`. **IF `New References: Yes`**, load all listed reference paths — UX wireframes define interaction flows, states, and validation rules; API specs define data contracts and operation semantics. Use them as primary inputs for detailed business logic design.
 
 ### Step 2: Create Functional Design Plan
 - Generate plan with checkboxes [] for functional design

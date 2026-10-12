@@ -68,14 +68,11 @@ correct — set it to `Yes` — rather than a reason to refuse running.
      `test-plan-summary.md`, `e2e-test-steps.md`, `integration-test-steps.md`,
      `api-test-steps.md`, `contract-test-steps.md`, `security-test-steps.md`,
      `performance-test-steps.md`, `accessibility-test-steps.md`.
-  2. **The Approval decision itself lives only in `runtime-artifacts/audit.md`** — find that story's
-     `/ve-implement` run entry (`**Context**: /ve-implement skill — Test Plan
-     (build-and-test.md)`) and confirm its `**Approve / Request Changes checkpoint**` field reads
-     `Approved`. `test-plan-summary.md` itself does not carry an explicit approval field — do
-     not infer approval from the summary's mere existence or from its "Open Questions" being empty.
-  3. If `runtime-artifacts/audit.md` shows no Approved checkpoint for this story (or you can't find one), **stop** and
-     tell the user this story's Test Plan plan needs to be Approved first via `/ve-implement`
-     — do not proceed as if it were approved.
+  2. **The Approval decision itself lives only in the audit trail** — find the approval of this story's test plan in the **resolved audit trail** (the shared `runtime-artifacts/audit.md` plus the `runtime-artifacts/stories/*/audit.md` fragments, `common/parallel-work-state.md` Section 4). Either record counts: (a) the design checkpoint that approved every work unit's specs and test plans — `implementation/specs-and-test-plans.md` (epic cycles, `Continue to Next Stage`) or the ticket flow's own test-plan checkpoint (bug/enhancement cycles); or (b) a standalone `/ve-implement` run entry for this story whose `**Approve / Request Changes checkpoint**` reads `Approved` (logged in `runtime-artifacts/stories/ve-<TICKET-ID>/audit.md`).
+     `test-plan-summary.md` itself does not carry an explicit approval field — do not infer approval
+     from the summary's mere existence or from its "Open Questions" being empty.
+  3. If neither record exists for this story, **stop** and tell the user its test plan has not been
+     approved yet — do not proceed as if it were approved.
 - The Playwright Test Automation extension is `Enabled`.
 - No dependency on the DEV's code, branch, PR, or merge state to run the **Planner** phase (it explores
   the live local frontend, not the app's source). Generator/Execution/Healer also need that same
@@ -91,7 +88,7 @@ build
 | 2 | `spec/test-plans/<TICKET-ID>-<title>/test-plan-summary.md` | AC → test case coverage, to reconcile automated vs. remaining-manual coverage afterward |
 | 3 | `runtime-artifacts/aire-state.md` | `## Story Tracker`, `## Tracker`, `## Branching`, `## Extension Configuration` |
 | 4 | `tests/e2e/seed.spec.ts` (inside `<playwright-root>/tests/e2e/`, matching `testDir` — Playwright's own convention, ONE shared file, extended over time, never per-story) | The environment bootstrap the real Planner/Generator run against |
-| 5 | `tests/playwright-specs/` (under `<playwright-root>/tests/` — AIRE's chosen location, relocated from Playwright's own default bare `specs/`, see Step 0a) | Where the real Planner saves its markdown plan (`planner_save_plan`) |
+| 5 | `spec/playwright-specs/` (under `<playwright-root>/spec/` — AIRE's chosen location, relocated from Playwright's own default bare `specs/`, see Step 0a) | Where the real Planner saves its markdown plan (`planner_save_plan`) |
 | 6 | The **live local frontend**, once the Prerequisite Gate passes | The real DOM/selectors — the manual plan never contains these (black-box, by design); only the real Planner/Generator/Healer agents (via their MCP browser tools) resolve them, never this orchestrating file |
 
 ---
@@ -116,7 +113,7 @@ subdirectories — there is no decision to make here.
   root-level tooling package and does not conflict with `frontend/`'s or `backend/`'s own
   `package.json`.
 - If a prior run of this extension mistakenly installed `.claude/agents/`, `.mcp.json`,
-  `seed.spec.ts`, or `tests/playwright-specs/` inside a subdirectory (from before this correction),
+  `seed.spec.ts`, or `spec/playwright-specs/` inside a subdirectory (from before this correction),
   **do not just leave it there and add a second copy at root** — tell the user to move/recreate that
   scaffolding at the true workspace root, then restart the Claude Code session once so it picks up the
   corrected location.
@@ -134,21 +131,38 @@ subdirectories — there is no decision to make here.
 │   ├── playwright-test-generator.md              #   "
 │   └── playwright-test-healer.md                 #   "
 └── tests/
-    ├── playwright-specs/                          # AIRE's renamed/relocated home for Playwright's plan output (Playwright itself always scaffolds a bare `specs/` at root — Step 0a auto-relocates it here)
-    │   └── <story-slug>.md                       # this story's Planner output (e.g. AT-898-training-feedback-rating-widget.md)
     └── e2e/                                        # testDir — matches common/directory-structure.md
         ├── seed.spec.ts                            # ONE shared seed, extended across stories, never per-story
         └── <story-slug>/
             └── <test-name-kebab>.spec.ts        # this story's Generator output, one file per scenario
 
+spec/playwright-specs/                            # AIRE's renamed/relocated home for Playwright's plan output (Playwright itself always scaffolds a bare `specs/` at root — Step 0a auto-relocates it here)
+└── <story-slug>.md                               # this story's Planner output (e.g. AT-898-training-feedback-rating-widget.md)
+
 spec/test-plans/<TICKET-ID>-<title-kebab>/        # DOCS — reporting only, no code
-└── automation-summary.md                          # cross-reference to tests/playwright-specs/<story-slug>.md + tests/e2e/<story-slug>/, AC coverage, healer outcome
+└── automation-summary.md                          # cross-reference to spec/playwright-specs/<story-slug>.md + tests/e2e/<story-slug>/, AC coverage, healer outcome
 ```
 
-**🔴 Note — `tests/playwright-specs/` is OUTSIDE `testDir` (`./tests/e2e`) on purpose.** These are markdown
-plan files, never `.spec.ts` test files, so Playwright's test runner never scans them and this
-placement cannot conflict with test discovery. Only actual `.spec.ts` files (`seed.spec.ts`,
-generated specs) must stay inside `testDir`.
+**🔴 Note — `spec/playwright-specs/` is OUTSIDE `testDir` (`./tests/e2e`) on purpose — it is not even
+under `tests/`.** These are markdown plan files, never `.spec.ts` test files, so Playwright's test
+runner never scans them and this placement cannot conflict with test discovery. The plan is a
+*specification* (Approved at this skill's gate), so it lives in `spec/` with every other spec; only
+actual `.spec.ts` files (`seed.spec.ts`, generated specs) are test CODE and must stay inside `testDir`.
+
+**🔴 Cycle-scoping consequence — `spec/` is wiped at cycle close, `tests/` is not.** `archive-epic`
+mirrors the whole `spec/` tree into `aire-archives/<type>/<ID>-<slug>/spec/` and then removes it, so a
+past cycle's Planner plans live in the archive while the `.spec.ts` files they produced stay in
+`tests/e2e/<story-slug>/` on base. The "already exists" check below therefore only ever sees plans from
+the CURRENT cycle — a re-run in a LATER cycle finds `tests/e2e/<story-slug>/` present with no matching
+live plan, which here means "archived", not "hand-authored".
+
+🔴 **This is why the two provenance checks are scoped differently, and neither may be loosened into the
+other**: `implementation/code-generation.md` Step 11d asserts the plan for **this unit, this run**
+(always live — the skill just wrote it), while `implementation/code-review.md`'s diff-scoped check
+resolves **live OR archive** and fires only on specs the diff **ADDS**. Missing from *both* locations is
+still the forgery signal, at full Blocker strength. A pre-existing spec that this unit merely modified
+is judged on its own merits — a regression to fix in the code, or a **declared** supersede — never a
+provenance finding, and never a spec quietly healed into agreement with new behaviour.
 
 **🔴 CONFIRMED INCIDENT — `seed.spec.ts` at the bare repo root (outside `testDir`) is invisible to
 `npx playwright test` and caused a real "Playwright Test did not expect test() to be called here"
@@ -161,10 +175,10 @@ anything else — do not leave two copies, and do not assume the bare-root one i
 
 - `<story-slug>` = the same kebab-case title used in the story's `spec/test-plans/<TICKET-ID>-<title>/`
   folder, so the two are trivially cross-referenced without duplicating naming conventions.
-- `tests/e2e/seed.spec.ts` and `tests/playwright-specs/` are **never** per-story — they are shared,
+- `tests/e2e/seed.spec.ts` and `spec/playwright-specs/` are **never** per-story — they are shared,
   repo-wide files. A story's Planner run may **extend** `tests/e2e/seed.spec.ts` (e.g. add a new
   login helper) but never overwrites another story's setup out of it.
-- If `tests/playwright-specs/<story-slug>.md` or `tests/e2e/<story-slug>/` already exists, say so and
+- If `spec/playwright-specs/<story-slug>.md` or `tests/e2e/<story-slug>/` already exists, say so and
   ask whether to **refresh** (re-run Planner/Generator) or **stop** — same convention as
   `test-plan.md`.
 
@@ -179,7 +193,7 @@ test -f package.json && grep -q '"@playwright/test"' package.json    # base Play
 test -f .claude/agents/playwright-test-planner.md                     # agents scaffolded
 test -f .mcp.json && grep -q '"playwright-test"' .mcp.json            # MCP server registered
 ```
-- **Base Playwright missing** → confirm-first, then run (verified non-interactive — do **NOT** use
+- **Base Playwright missing** → confirm-first (STANDALONE; in WORKFLOW MODE the announced plan's Playwright Readiness step is the authorisation — announce, do not ask), then run (verified non-interactive — do **NOT** use
   `npm init playwright@latest` bare; that command is an **interactive wizard** — language choice,
   test folder, GitHub Actions, browser download prompts — and hangs/errors when run through a
   non-interactive shell, which is how this framework always invokes it):
@@ -189,7 +203,7 @@ test -f .mcp.json && grep -q '"playwright-test"' .mcp.json            # MCP serv
   This installs the dependency and downloads browser binaries with no prompts. It does **not** create
   `playwright.config.ts` — that's fine, Step 3 (Generator) creates/extends it itself. Do not
   additionally run `create-playwright`/`npm init playwright@latest` — one non-interactive path only.
-- **Agents/MCP config missing** → confirm-first, then run (from `<playwright-root>`, resolved in
+- **Agents/MCP config missing** → confirm-first (STANDALONE; WORKFLOW MODE announces instead, as above), then run (from `<playwright-root>`, resolved in
   Step -1):
   ```bash
   cd <playwright-root> && npx playwright init-agents --loop=claude
@@ -203,18 +217,18 @@ test -f .mcp.json && grep -q '"playwright-test"' .mcp.json            # MCP serv
   of this gate.** 🔴 Step 1 below is **not** a precondition of this bullet: run it whether `init-agents`
   just ran, was already present, or never needed to run at all. It was previously written as a
   side-effect of `init-agents`, which meant that on any repo where the agents were already scaffolded
-  the `mkdir` silently never executed — and `tests/playwright-specs/` is created **nowhere else in this
+  the `mkdir` silently never executed — and `spec/playwright-specs/` is created **nowhere else in this
   framework** (the same "every directory written to is created first" rule `ci-pipeline-generation.md`
   V12 enforces for CI scripts). `init-agents` is Playwright's own third-party command; it always writes
   `specs/README.md` at the bare `<playwright-root>/specs/` and there is no flag to point it elsewhere,
-  and AIRE's convention is `tests/playwright-specs/`. So, automatically — no confirmation needed, it's
+  and AIRE's convention is `spec/playwright-specs/`. So, automatically — no confirmation needed, it's
   just Playwright's own placeholder README, never story content:
-  1. `mkdir -p tests/playwright-specs`  ← 🔴 ALWAYS, every run, before the Planner is invoked
-  2. If `specs/README.md` exists at bare root, move it to `tests/playwright-specs/README.md`
+  1. `mkdir -p spec/playwright-specs`  ← 🔴 ALWAYS, every run, before the Planner is invoked
+  2. If `specs/README.md` exists at bare root, move it to `spec/playwright-specs/README.md`
      (overwrite is fine — it's Playwright's static boilerplate, identical every time).
   3. Remove the now-empty bare `specs/` directory at root (only if it's empty — never delete it if a
      story's plan `.md` somehow ended up there from an older run; move that file into
-     `tests/playwright-specs/` instead and tell the user).
+     `spec/playwright-specs/` instead and tell the user).
   4. Log this relocation once in `runtime-artifacts/audit.md` the first time it happens for a project.
 - **🔴 CONFIRMED DESTRUCTIVE BEHAVIOR — `.mcp.json` is fully overwritten, not merged.** If
   `.mcp.json` already exists with OTHER MCP servers configured, `init-agents` replaces the whole file
@@ -223,8 +237,9 @@ test -f .mcp.json && grep -q '"playwright-test"' .mcp.json            # MCP serv
   2. Run `npx playwright init-agents --loop=claude`.
   3. If step 1 found other servers, `Edit`/`Write` `.mcp.json` back to a merged form — the
      `playwright-test` entry `init-agents` just wrote, plus every other server that was there before.
-     Confirm the merge with the user before writing it back (this touches shared project
-     config — do not silently assume the merge is correct).
+     STANDALONE: confirm the merge with the user before writing it back (this touches shared project
+     config — do not silently assume the merge is correct). WORKFLOW MODE: write it back and announce
+     the merged server list — never drop a server, never ask.
   4. If `.mcp.json` didn't exist before, no merge is needed — proceed as-is.
 - **🔴 IF `init-agents` JUST RAN IN THIS SESSION — HALT IMMEDIATELY AND ASK FOR A SESSION RESTART.
   Both modes. Do NOT continue to Step 0b, do NOT invoke the Planner, do NOT wait for a subagent to
@@ -250,26 +265,32 @@ test -f .mcp.json && grep -q '"playwright-test"' .mcp.json            # MCP serv
      .mcp.json is NOT connected in this session yet. The Planner, Generator and Healer subagents
      cannot run until it is.
 
-     🔴 Nothing is lost. [list what has already passed and is recorded in runtime-artifacts/audit.md].
+     Nothing is lost. [list what has already passed and is recorded in runtime-artifacts/audit.md].
         No commit, no push, no PR, and no tracker change has happened.
 
-  ➡ NEXT ACTIONS:
-     1⃣  Restart / reload this Claude Code session.
-     2⃣  Re-invoke with the SAME work unit: [dev-implement | bug-fix-implement |
-         enhancement-implement | /playwright-implement <story or TICKET-ID>]
+  NEXT ACTIONS:
+     1.  Restart / reload this Claude Code session.
+     2.  Type the SAME keyword again: [dev-implement | bug-fix-implement | ticket-implement <TICKET-ID> |
+         epic-enhance | epic-bugfix | pr-fix <PR> | /playwright-implement <story or TICKET-ID>]
 
-     On resume it reads runtime-artifacts/audit.md, SKIPS every gate already recorded as passed, and
-     picks up at the Planner — it does not redo the code, the earlier gates, or this install.
+     On resume it SKIPS every gate already recorded as passed and picks up at the Planner — it does not
+     redo the code, the earlier gates, or this install.
 
-  🔴 Type the keyword EXACTLY as shown — any other phrasing is not a framework trigger.
+  Type the keyword EXACTLY as shown — any other phrasing is not a framework trigger.
   ```
 
-  **On resume — do NOT restart this skill's flow from Step 0.** Re-read `runtime-artifacts/audit.md`
+  🔴 **In WORKFLOW MODE, before emitting the block**, record
+  `PAUSED — Playwright agents installed — resume at <the invoking workflow's Playwright gate step> — <timestamp>`
+  in the work unit's `runtime-artifacts/stories/<key>/state.md` `## Progress` (`common/parallel-work-state.md`) —
+  the invoking workflow's resume check looks for exactly that record.
+
+  **On resume — do NOT restart this skill's flow from Step 0.** Re-read the work unit's audit trail
+  (`runtime-artifacts/stories/<key>/audit.md` in workflow mode; `runtime-artifacts/audit.md` standalone)
   for this work unit's run entry (Step 7 format) and skip every gate/check already logged there before
   the restart — Prerequisite Gate results (dependency/agent-scaffolding, local server, fixture-data
   checklist), the Seed Test Gate decision, and any scope decision (which manual cases are in/out of
   automation scope) all carry forward unchanged. Resume at the first step whose confirmation is NOT yet
-  in `runtime-artifacts/audit.md` — normally the Planner (Step 1). In WORKFLOW MODE the invoking
+  in that audit trail — normally the Planner (Step 1). In WORKFLOW MODE the invoking
   workflow likewise resumes at its Playwright gate, **not** at story selection or code generation. Only
   re-run an already-logged gate if the user says something changed (e.g. the local server is now down,
   or they want to revise the scope decision).
@@ -277,7 +298,7 @@ test -f .mcp.json && grep -q '"playwright-test"' .mcp.json            # MCP serv
   **Reactive fallback (belt and braces)**: if the Planner/Generator/Healer are nonetheless invoked and
   report missing `mcp__playwright-test__*` tools, emit the same block and stop there — never work
   around it, and never fall back to hand-authoring (Rule 1b).
-- **All present** → proceed, log in `runtime-artifacts/audit.md`. 🔴 **Still run the AUTO-RELOCATE step above** — its `mkdir -p tests/playwright-specs` is what creates the Planner's output directory, and it is NOT conditional on `init-agents` having just run.
+- **All present** → proceed, log in `runtime-artifacts/audit.md`. 🔴 **Still run the AUTO-RELOCATE step above** — its `mkdir -p spec/playwright-specs` is what creates the Planner's output directory, and it is NOT conditional on `init-agents` having just run.
 
 #### 🔴 Step 0a in WORKFLOW MODE — "confirm-first" resolves to INSTALL, never to skip
 
@@ -317,7 +338,9 @@ curl -sf http://localhost:<FRONTEND_PORT> >/dev/null
 - Port sourced from the story's manual plan **System Under Test** block — never guessed; mark
   ` TO CONFIRM` if undocumented.
 - **Down** → **STOP**. Tell the user which command to run (read from the project's own
-  README/`package.json` scripts — never invented). Do not silently background-start it.
+  README/`package.json` scripts — never invented). Do not silently background-start it. (STANDALONE.
+  In WORKFLOW MODE nobody is at a terminal, so the agent starts it itself, backgrounded, and tears it
+  down on every exit path — `playwright-implement-agent.md` Mode Detection, Step 5b.)
 - **Up** → proceed.
 
 ### Step 0c — Test data / fixture accounts seeded
@@ -395,7 +418,7 @@ Produce a comprehensive Playwright test plan that covers EXACTLY the following U
 
 [paste each selected UI-relevant TC-[PLAN]-[nn]: title, preconditions, steps, expected result]
 
-Save the plan via planner_save_plan to tests/playwright-specs/<story-slug>.md.
+Save the plan via planner_save_plan to spec/playwright-specs/<story-slug>.md.
 ```
 
 🔴 **PERFORMANCE — CONTRACT GROUNDING (MANDATORY)**: before invoking the Planner, read this story's
@@ -415,14 +438,14 @@ verification — it removes a specific, avoidable defect class (a route intercep
 fails to intercept because it doesn't account for the real request's exact shape) before it has a
 chance to occur.
 
-🔴 **Before invoking the Planner, assert `tests/playwright-specs/` exists** (`mkdir -p` it if not —
+🔴 **Before invoking the Planner, assert `spec/playwright-specs/` exists** (`mkdir -p` it if not —
 Step 0a owns this, but assert it here too; `planner_save_plan` is Playwright's own MCP tool and this
 framework must not assume it creates directories).
 
-🔴 **After the Planner completes, verify `tests/playwright-specs/<story-slug>.md` actually exists — and
+🔴 **After the Planner completes, verify `spec/playwright-specs/<story-slug>.md` actually exists — and
 have a remedy, not just a check.** If it is absent, look for the plan at Playwright's own default bare
 `specs/` (its native convention, and where it lands if the target directory was missing), move it into
-`tests/playwright-specs/`, and re-verify. Only if no plan file exists anywhere did the Planner genuinely
+`spec/playwright-specs/`, and re-verify. Only if no plan file exists anywhere did the Planner genuinely
 fail — report that as an ERROR and stop; never continue to the Generator without a real plan, and never
 substitute one you wrote yourself.
 
@@ -440,15 +463,15 @@ gate is **this framework's requirement**, layered on top.
 🔴 **STANDALONE MODE only. In WORKFLOW MODE this gate is SKIPPED** (`playwright-implement-agent.md`
 Mode Detection): the invoking implement workflow has no approval gates, so the Planner's plan is
 auto-approved and the Generator runs immediately. Log
-`Playwright plan auto-approved (workflow mode, no gate) — tests/playwright-specs/<story-slug>.md`
+`Playwright plan auto-approved (workflow mode, no gate) — spec/playwright-specs/<story-slug>.md`
 in `runtime-artifacts/audit.md` and proceed to Step 3. The compensating control is that the caller's own gate
 requires every generated spec to actually PASS before code review, and any failure is remediated in
 that same run.
 
 ```markdown
-# 🧪 Playwright Test Plan Ready — [TICKET-ID] [Story title]
+# Playwright Test Plan Ready — [TICKET-ID] [Story title]
 
- Plan (Playwright Planner's own output): tests/playwright-specs/<story-slug>.md
+ Plan (Playwright Planner's own output): spec/playwright-specs/<story-slug>.md
  UI-relevant manual cases covered: [list of TC-IDs]
  Manual cases excluded as backend/API-only (stay manual-only): [list, or "none"]
 
@@ -456,12 +479,12 @@ that same run.
 
    1)  Approve — hand this plan to the Generator agent
    2)  Request Changes — re-invoke the Planner with feedback, or hand-edit
-      tests/playwright-specs/<story-slug>.md directly
+      spec/playwright-specs/<story-slug>.md directly
 
 [Answer]:
 ```
 - **Request Changes** → either re-run Step 1 with the user's feedback folded into the prompt, or let
-  the user hand-edit `tests/playwright-specs/<story-slug>.md` directly, then re-present this gate.
+  the user hand-edit `spec/playwright-specs/<story-slug>.md` directly, then re-present this gate.
   Never proceed to Step 3 without an Approve landed here.
 - **Approve** → proceed to Step 3. Log the approval (with session email) in `runtime-artifacts/audit.md`.
 
@@ -496,7 +519,7 @@ not require tearing the app down between calls. Before the first Generator call 
 This keeps every guarantee (real subagent, real live verification, one process at a time) while
 removing the repeated cold-start/re-discovery cost of restarting the app for every scenario.
 
-For each top-level scenario in the Approved `tests/playwright-specs/<story-slug>.md`, **in sequence**, invoke the agent
+For each top-level scenario in the Approved `spec/playwright-specs/<story-slug>.md`, **in sequence**, invoke the agent
 (`subagent_type: "playwright-test-generator"`) using its own documented per-scenario contract:
 
 ```
@@ -508,7 +531,7 @@ For each top-level scenario in the Approved `tests/playwright-specs/<story-slug>
 ```
 
 **🔴 Construct `<test-file>` yourself — never copy the Planner's own `**File:**` suggestion from
-`tests/playwright-specs/<story-slug>.md` verbatim.** The Planner is inconsistent about including the TC-ID in its own
+`spec/playwright-specs/<story-slug>.md` verbatim.** The Planner is inconsistent about including the TC-ID in its own
 file-path suggestion (observed: some runs produce `tc-e2e-01-desktop-load.spec.ts`, others produce
 `e2e-desktop-alignment.spec.ts` with no numbering at all), which breaks scannability once a story has
 many specs. Always build the filename yourself as `tc-[plan]-[nn]-<short-description-kebab>.spec.ts`
@@ -633,7 +656,7 @@ underlying app behavior.
 ```markdown
 # Playwright Automation Summary — [TICKET-ID] [Story title]
 
-**Plan**: tests/playwright-specs/<story-slug>.md (Approved [date])
+**Plan**: spec/playwright-specs/<story-slug>.md (Approved [date])
 **Generated tests**: tests/e2e/<story-slug>/
 **Generated**: [ISO 8601]   **AIRE VERSION**: [N]
 
@@ -677,8 +700,8 @@ Present completion with the same confirm-first Approve/Request-Changes checkpoin
 **Excluded (backend/API-only)**: "[n] cases, remain manual-only"
 **Execution**: "[pass]/[fail] before healing"
 **Healer outcome**: "[n] healed to passing, [n] marked test.fixme() as candidate defects"
-**Code location**: `tests/e2e/<story-slug>/`   **Plan location**: `tests/playwright-specs/<story-slug>.md`
-**Gate timing** (🔴 PERFORMANCE — MANDATORY): `Planner: [real clock start]→[end] | Generator:
+**Code location**: `tests/e2e/<story-slug>/`   **Plan location**: `spec/playwright-specs/<story-slug>.md`
+**Gate timing** (PERFORMANCE — MANDATORY): `Planner: [real clock start]→[end] | Generator:
 [start]→[end] ([n] scenarios) | Route-glob pre-check: [start]→[end] | Execution (pre-heal):
 [start]→[end] | Healer: [start]→[end] | Execution (post-heal, authoritative): [start]→[end]` — each
 read live at that sub-step's actual start/end, never rounded, estimated, or backfilled after the fact
@@ -703,7 +726,7 @@ instead of guesswork.
    does not help. HALT and say the run needs a normal session or a general-purpose agent.
 1b. 🔴 **"Never re-implement" includes never HAND-WRITING the output.** A `.spec.ts` this framework
    typed itself — however faithfully transcribed from the manual test plan — is **not** a result of
-   this extension, and a `tests/playwright-specs/<story-slug>.md` this framework wrote instead of the
+   this extension, and a `spec/playwright-specs/<story-slug>.md` this framework wrote instead of the
    Planner is not a plan. The gate is the real subagents' output or it is **ERROR**; there is no third
    option (`common/eval-framework.md` Section 2.5.2). Missing agents are **installed** (Step 0a), never
    worked around, never "disclosed as a gap" — and a prior story that did work around it is a defect
@@ -718,7 +741,7 @@ instead of guesswork.
    auto-derives and the plan auto-approves — but **every verification step still runs**, and a failing
    spec still fails the caller's gate. Skipping an approval is never skipping a check.
 5. **AIRE's convention, layered on Playwright's own agents**: ONE shared `tests/e2e/seed.spec.ts`, ONE
-   `tests/playwright-specs/` folder (renamed and relocated from Playwright's own default bare
+   `spec/playwright-specs/` folder (renamed and relocated from Playwright's own default bare
    `specs/` — the auto-relocate step in Step 0a runs every time `init-agents` is invoked, since that
    command has no flag to change where it drops its own `specs/README.md`), `tests/e2e/<story-slug>/`
    for generated specs. No per-story seed files.
@@ -734,9 +757,11 @@ instead of guesswork.
     like `frontend/` — Claude Code only scans `.claude/agents/` and `.mcp.json` there. This is not a
     per-project judgment call; never install this scaffolding anywhere else.
 12. **`.mcp.json` is overwritten, not merged, by `init-agents`** — always read and preserve any other
-    configured MCP servers before running it, and confirm the merge with the user afterward.
+    configured MCP servers before running it, and confirm the merge with the user afterward (STANDALONE;
+    WORKFLOW MODE announces the merged list instead).
 13. **There is no file literally named `test-plan.md` generated per story.** Approval status
-    lives only in `runtime-artifacts/audit.md`'s `/ve-implement` run entry, never in a file of that name
+    lives only in the resolved audit trail (the design checkpoint's approval, or a standalone
+    `/ve-implement` run entry — Prerequisites), never in a file of that name
     and never inferred from `test-plan-summary.md`'s mere existence.
 14. **Per-scenario Generator invocations have no memory of each other** (Step 3.5) — always run the
     cross-scenario consistency pass after all scenarios are generated; never assume independently

@@ -54,10 +54,10 @@ unit's uncommitted code).
   |---|---|
   | **Step 2 — Resolve the target story** | 🔴 **SKIPPED.** The story is passed in. Never present the story-picker table; never ask. If the folder already exists, reuse it — do NOT ask refresh-or-stop; the caller already decided (it only invokes this skill when the content is absent). 🔴 **Never overwrite a plan that was approved at the STOP CHECKPOINT.** |
   | **Step 3 — Resolve branch + cut `ve/…`** | 🔴 **SKIPPED ENTIRELY.** Stay on the branch you were invoked on (the story/bug/enhancement branch). **Never `git checkout`, never cut a branch, never pull** — the caller's uncommitted work is in this tree. |
-  | **Step 4 — Generate the artifacts** | ▶ **RUNS IN FULL**, with two carve-outs inside `test-plan.md`: its **Step 2 applicability confirmation is auto-confirmed** (announce the applicability table, do not wait), and its **Step 6 Approve/Request-Changes checkpoint is SKIPPED**. |
+  | **Step 4 — Generate the artifacts** | **RUNS IN FULL**, with two carve-outs inside `test-plan.md`: its **Step 2 applicability confirmation is auto-confirmed** (announce the applicability table, do not wait), and its **Step 6 Approve/Request-Changes checkpoint is SKIPPED**. |
   | **Step 5 — Commit, push, raise the PR** | 🔴 **SKIPPED ENTIRELY.** No commit, no push, no PR, no labels. The generated `spec/test-plans/…` files are left in the working tree and ride the **caller's own commit** — the STOP CHECKPOINT's design commit, or the work unit's own commit when backfilling. |
   | **Step 6 — Completion + checkpoint** | Present a short **announcement** of what was generated (no Approve/Request-Changes question), then hand control straight back to the caller. |
-  | **Step 7 — Audit log** | ▶ **RUNS**, with `**Approve / Request Changes checkpoint**: Approved (automatic — workflow mode, no ve review)` and an explicit `**Mode**: workflow (invoked by <workflow>) — no ve branch, no ve PR` line. |
+  | **Step 7 — Audit log** | **RUNS**, with `**Approve / Request Changes checkpoint**: Approved (automatic — workflow mode, no Verification Engineer review)` and an explicit `**Mode**: workflow (invoked by <workflow>) — no Verification Engineer branch, no Verification Engineer PR` line. |
 
   🔴 **WORKFLOW MODE changes nothing about the CONTENT you generate** — same black-box derivation from
   acceptance criteria, same mandatory `TC-[PLAN]-[nn]` format, same AC-coverage gate. It removes the
@@ -112,7 +112,7 @@ The user invokes this agent via `/ve-implement` optionally followed by a story i
 
 **If a story identifier was given** — resolve it against the Story Tracker, or fetch it directly
 from the configured tracker (`getJiraIssue` / `az boards work-item show` / `gh issue view`, per `common/tracker-sync.md` Section 8) if it is a Tracker ID not in the local tracker. **Any status is eligible**:
-`🟢 Ready for Development`, `🔵 In Development`, or `🧪 Ready for Testing`. If
+`Ready for Development`, `In Development`, or `Ready for Testing`. If
 `spec/test-plans/<TICKET-ID>-<title>/` already exists, say so and ask whether to **refresh**
 the artifacts or **stop**.
 
@@ -126,7 +126,7 @@ Read `Workflow Type` in `runtime-artifacts/aire-state.md` `## Tracker`:
   continue** — presenting a one-row "pick a story" table is a question with only one possible
   answer. Announce the resolution instead:
   ```
-  🧪 [bug|enhancement] cycle — one story only: [1.1] / [TICKET-ID] — [title]. Generating its Test Plan artifacts.
+  [bug|enhancement] cycle — one story only: [1.1] / [TICKET-ID] — [title]. Generating its Test Plan artifacts.
   ```
   Apply the same rule to an **epic cycle whose Story Tracker holds exactly one story**.
 - If the resolved single story already has `spec/test-plans/<TICKET-ID>-<title>/`, the existing
@@ -135,16 +135,16 @@ Read `Workflow Type` in `runtime-artifacts/aire-state.md` `## Tracker`:
 **Otherwise (2+ stories in the tracker — normal epic cycle)** — list every story and ask which one to work:
 
 ```markdown
-# 🧪 Pick a story for Test Plan
+# Pick a story for Test Plan
 
 | # | Story | Tracker ID | Title | Dev status | Test Plan artifacts |
 |---|-------|------------|-------|-----------|------------------------|
-| 1 | 1.1 | PROJ-101 | [title] | 🔵 In Development | — not generated |
-| 2 | 1.2 | PROJ-102 | [title] | 🟢 Ready for Development | — not generated |
-| 3 | 1.3 | PROJ-103 | [title] | 🧪 Ready for Testing |  generated |
+| 1 | 1.1 | PROJ-101 | [title] | In Development | — not generated |
+| 2 | 1.2 | PROJ-102 | [title] | Ready for Development | — not generated |
+| 3 | 1.3 | PROJ-103 | [title] | Ready for Testing |  generated |
 
 > **Pick ONE story** (by number or Tracker ID).
-> The ve works per story and in parallel with development — a story does **not** need to be developed
+> The Verification Engineer works per story and in parallel with development — a story does **not** need to be developed
 > or merged for its Test Plan artifacts to be produced.
 ```
 
@@ -199,12 +199,15 @@ Wait for the user to select one story. **This table is shown ONLY when the track
 > the caller commits them with its own work. Go straight to Step 6.
 
 
+0. **Approval first.** Present `test-plan.md` Step 6's completion message and Approve / Request Changes
+   checkpoint NOW, before anything is committed. On Approve, write `test-plan.md` Step 7's audit entry to
+   `runtime-artifacts/stories/ve-<TICKET-ID>/audit.md`, so the approval travels with the plans (standalone
+   `/playwright-implement` looks for it there).
 1. Stage only this story's new/changed files under
-   `spec/test-plans/<TICKET-ID>-<title-kebab>/`.
+   `spec/test-plans/<TICKET-ID>-<title-kebab>/`, plus `runtime-artifacts/stories/ve-<TICKET-ID>/`.
 2. Commit (via Bash `git commit`), message describing the story's Test Plan artifacts, with an
    `AIRE-Version: [N]` trailer (`[N]` read live from the canonical line in `CLAUDE.md`).
-3. ** AUTOMATIC — do NOT ask.** The ve's approval of the generated test plans (Step 4 /
-   `test-plan.md`) IS the authorization to publish them; asking again is the same decision
+3. **AUTOMATIC — do NOT ask.** The ve's approval of the generated test plans (item 0 above) IS the authorization to publish them; asking again is the same decision
    twice. Show the commit summary as an **announcement**, then push and open the PR:
    ```
     Pushing branch `ve/<TICKET-ID>-<title-kebab>` and raising a PR into `<integration-branch>`.
@@ -251,14 +254,16 @@ Wait for the user to select one story. **This table is shown ONLY when the track
    🔴 Do NOT invoke the `pr-generator` skill for this — it is scoped to dev/epic PRs and its
    branch-pattern inference doesn't recognize `ve/…` branches. This step deliberately mirrors its
    labeling convention by hand.
-5. Record the returned PR URL **and the labels applied** (`ai-generated` + `aire-v[N]`) in the
-   `runtime-artifacts/audit.md` entry (`test-plan.md` Step 7) as this story's **ve PR** — do **NOT** write it to
+5. Record the returned PR URL **and the labels applied** (`ai-generated` + `aire-v[N]`) in the same
+   fragment audit entry (`runtime-artifacts/stories/ve-<TICKET-ID>/audit.md`, never the shared file) as
+   this story's **ve PR**. It rides the ve branch's next push; until then readers resolve the ve PR live
+   (`gh pr list --head ve/<TICKET-ID>-<title-kebab>`). Do **NOT** write it to
    the Story Tracker's `PR`/`Merged` columns, which track the **dev's** PR, not this one.
 
 ### Step 6: Present Completion
 
-Present the completion message and Approve/Request-Changes checkpoint from `test-plan.md` Step 6;
-once approved, `test-plan.md` Step 7 logs the run in `runtime-artifacts/audit.md`. Then close with the handoff
+STANDALONE: the Approve / Request Changes checkpoint and the audit entry already ran at Step 5 item 0.
+WORKFLOW MODE: the checkpoint is skipped (`test-plan.md` Step 6) and the caller logs the run. Then close with the handoff
 below — **it is the LAST thing the run outputs; say nothing after it.**
 
 🔴 **Resolve every placeholder AND print only the ONE bracketed variant that matches the cycle type** (`Workflow Type` in `## Tracker`) — never print both, and never ship `[EPIC cycles:]` / `[BUG/ENH cycles:]` labels to the user. The distinction is real, not cosmetic:
@@ -266,45 +271,47 @@ below — **it is the LAST thing the run outputs; say nothing after it.**
 - **Bug/enhancement cycles** — there is **no story PR at all**: `bug-fix-implement` / `enhancement-implement` commit the fix straight onto the cycle branch. The `[BUG]`/`[ENH]` PR targets **base** and deliberately stays **OPEN** until `archive-epic` runs, so it must never be presented as something the ve waits on. Saying "after the dev's PR merges" on these cycles describes a PR that does not exist and a merge that must not have happened yet.
 
 ```markdown
-➡ NEXT ACTIONS — do these in order:
-   1⃣  Merge the ve PR into `<integration-branch>`: <ve PR URL>
+NEXT ACTIONS — do these in order:
+   1.  Merge the Verification Engineer PR into `<integration-branch>`: <ve PR URL>
        (test docs only — no application code; it then rides the [EPIC]/[BUG]/[ENH] PR into base)
-   2⃣  WAIT to EXECUTE the manual test steps — build and run the system from `<integration-branch>` locally,
+   2.  WAIT to EXECUTE the manual test steps — build and run the system from `<integration-branch>` locally,
        per the project's own build docs, once the code for <TICKET-ID> is on that branch:
        [EPIC cycles:]           after the dev's [STORY] PR for <TICKET-ID> has MERGED into `<epic-branch>`.
        [BUG/ENH cycles:]        after the bug fix/enhancement is committed on `<cycle-branch>`. Then
                                 `git checkout <cycle-branch> && git pull --ff-only`.
-                                🔴 Do NOT wait for the [BUG]/[ENH] PR — it targets `<base-branch>` and
+                                Do NOT wait for the [BUG]/[ENH] PR — it targets `<base-branch>` and
                                 stays OPEN on purpose until `archive-epic` runs. Testing and sign-off
                                 both happen on `<cycle-branch>` before that.
        Test plan: `spec/test-plans/<TICKET-ID>-<title-kebab>/`
-   3⃣  Meanwhile — type `/ve-implement <next story>` for the next story
+   3.  Meanwhile — type `/ve-implement <next story>` for the next story
        (once per story, fully in parallel with development; skip if this was the last one
         — bug/enhancement cycles have exactly one ticket, so there is no next one).
 
-▶ ONCE the code is on `<integration-branch>` and you have executed the steps:
+ONCE the code is on `<integration-branch>` and you have executed the steps:
    • Use the skill ve-list-work on `<integration-branch>` — pick **B** to sign off
-     (approve → 🧪 Ready for Testing; reject → stays 🔵 In Development).
+     (approve → Ready for Testing; reject → stays In Development).
      Pick **A** first if you just want to see the current status, or **C** to adjust this test plan.
    • Use the skill raise-defect for anything your testing finds.
 
-🔴 This run changed NO story or tracker status — only `ve-list-work` (Option B) does that.
-🔴 Use the skill names EXACTLY as shown — do not describe what you want in your own words.
+This run changed NO story or tracker status — only `ve-list-work` (Option B) does that.
+Use the skill names EXACTLY as shown — do not describe what you want in your own words.
    Any other phrasing is not a framework trigger and the workflow will not advance.
 ```
 
 **Rules for this message**: substitute every placeholder with real values — `<integration-branch>` is
 the branch resolved in Step 3 (Epic Branch for epic cycles, Bug/Enhancement Branch for ticket
-cycles), `<ve PR URL>` the PR from Step 5. If the user declined the push/PR at Step 5, replace
-line 1⃣ with `1⃣  Push the branch and raise the PR first — the test docs are local-only and will
-not reach `<integration-branch>`.` Drop line 3⃣ when no story remains.
+cycles), `<ve PR URL>` the PR from Step 5. If the push or PR creation failed at Step 5, replace
+line step 1 with `step 1  Push the branch and raise the PR first — the test docs are local-only and will
+not reach `<integration-branch>`.` Drop line step 3 when no story remains.
 
 ---
 
 ## Rules
 
-1. **Test Plan belongs to ve.** No development workflow (`dev-implement`,
-   `bug-fix-implement`, `enhancement-implement`) runs it. It runs here, per story, via `/ve-implement`.
+1. **Test Plan belongs to ve.** No development workflow (`dev-implement`, `bug-fix-implement`,
+   `enhancement-implement`) runs it in STANDALONE mode. The design checkpoints invoke it in WORKFLOW
+   MODE only (Mode Detection), to write every work unit's plan before code; the ve runs `/ve-implement`
+   standalone, per story, to rework a plan.
 2. **Never wait for the DEV's code to WRITE the steps.** Authoring runs in parallel with development, from acceptance criteria
    alone — never gated on the dev's branch, PR, or merge.
 3. **Black-box always.** Do NOT read application source code. Derive everything from acceptance
@@ -338,9 +345,9 @@ not reach `<integration-branch>`.` Drop line 3⃣ when no story remains.
 9. **NEVER modify application code**, and never write anything into a `tests/` directory at the
    workspace root — ve artifacts live only under `spec/test-plans/`.
 10. **Do NOT touch story status.** This agent never changes the Story Tracker and never transitions
-   the tracker. Moving a merged, tested story to `🧪 Ready for Testing` is the **`ve-list-work`**
+   the tracker. Moving a merged, tested story to `Ready for Testing` is the **`ve-list-work`**
    skill's job (its local Option B).
 11. **Do NOT write the Story Tracker's `PR`/`Merged`/`Status` columns.** The only state this produces
-   is the `runtime-artifacts/audit.md` entry defined in `test-plan.md` Step 7 (which records this agent's own
+   is the audit entry defined in `test-plan.md` Step 7 (standalone: the `runtime-artifacts/stories/ve-<TICKET-ID>/audit.md` fragment), which records this agent's own
    ve PR URL, not the dev's).
 

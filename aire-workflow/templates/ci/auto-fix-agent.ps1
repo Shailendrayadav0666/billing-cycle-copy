@@ -78,7 +78,7 @@ if ((Test-Path $config) -and (Get-Command jq -ErrorAction SilentlyContinue)) { $
 $counter = "$runDir/self-repair-attempt"
 $prev = if (Test-Path $counter) { [int](Get-Content $counter -Raw) } else { 0 }
 $attempt = $prev + 1
-if ($attempt -gt $limit) { ReportAndExit "retry limit $limit reached — 3 retries ended. Please suggest next steps. Unresolved: $($gates -join ', ')" 1 }
+if ($attempt -gt $limit) { ReportAndExit "SELF-REPAIR LIMIT REACHED ($limit of $limit attempts) — I could not fix this on my own. Unresolved gates: $($gates -join ', '). Evidence: the eval-results artifact of this run. To take over: (1) reproduce locally with the failing gate's command from tests/.evals/config.json, (2) fix the code on this PR's branch — never by skipping a test, suppressing a finding or lowering a threshold — and push, or (3) leave a PR comment describing the problem and type pr-fix <PR number> in Claude Code to have it fixed and re-verified on this PR." 1 }
 $attempt | Out-File -Encoding utf8 $counter
 
 

@@ -25,20 +25,20 @@
 
 Read the `## Context Project` section in `runtime-artifacts/aire-state.md` (written during Workspace Detection):
 
-- **IF `Use Artifacts: Yes`**: read **only** the exact `Artifact Path` recorded there — do NOT scan the rest of `spec/context-project/existing-knowledge/`. Convert any non-markdown content to markdown as needed (see Step 4). These artifacts describe **how the CURRENT system works** (existing behavior, layout, module responsibilities) — use them as **background context** to ground your understanding of the codebase when analyzing the request; the WHAT-to-build still comes from the Epic brief (`epic-brief.md`). In the generated `requirements.md`, add a short **"Context Project artifacts consulted: `<path>`"** note for traceability.
-- **IF `Use Artifacts: No`** (or the section is absent): proceed with no context-project input.
+- **IF `Existing Knowledge: Yes`**: read **only** the exact `Existing Knowledge Path(s)` recorded there — do NOT scan the rest of `spec/context-project/existing-knowledge/`. Convert any non-markdown content to markdown as needed (see Step 4). These artifacts describe **how the CURRENT system works** (existing behavior, layout, module responsibilities) — use them as **background context** to ground your understanding of the codebase when analyzing the request; the WHAT-to-build still comes from the Epic brief (`epic-brief.md`). In the generated `requirements.md`, add a short **"Context Project artifacts consulted: `<path>`"** note for traceability.
+- **IF `Existing Knowledge: No`** (or the section is absent): proceed with no context-project input.
 
 ### Step 1.5b: Load Context References (if the user opted in)
 
-Read the `## Context References` section in `runtime-artifacts/aire-state.md` (written during Workspace Detection or ticket-implement):
+Read the `New References` fields of `## Context Project` in `runtime-artifacts/aire-state.md` (written during Workspace Detection or ticket-implement):
 
-- **IF `Use References: Yes`**: read **all** paths listed in `Reference Paths`. These are reference materials for the NEW work — UX wireframes, design mockups, API specs, research docs, architecture diagrams, etc. Use them as **primary inputs** that guide WHAT to build and HOW it should look/behave. For each path:
+- **IF `New References: Yes`**: read **all** paths listed in `New Reference Path(s)`. These are reference materials for the NEW work — UX wireframes, design mockups, API specs, research docs, architecture diagrams, etc. Use them as **primary inputs** that guide WHAT to build and HOW it should look/behave. For each path:
   - **UI wireframes / mockups / screenshots**: extract every control, layout, grouping, interaction, and visual element shown — these define the target UI
   - **API specs** (OpenAPI, Swagger, etc.): extract endpoints, schemas, request/response shapes — these define the target API surface
   - **Research docs / architecture diagrams**: extract relevant constraints, patterns, and decisions — these inform the system shape
   - Convert non-markdown content as needed (binary formats per DR-3 rules)
-- In the generated `requirements.md`, add a **"Context References consulted"** section listing each reference path, its type, and what was extracted from it for traceability.
-- **IF `Use References: No`** (or the section is absent): proceed with no new-references input.
+- In the generated `requirements.md`, add a **"New References consulted"** section listing each reference path, its type, and what was extracted from it for traceability.
+- **IF `New References: No`** (or the section is absent): proceed with no new-references input.
 
 ### Step 1.6: READ the Design References (MANDATORY — blocking)
 
@@ -203,7 +203,7 @@ Update `runtime-artifacts/aire-state.md`:
 
 ```markdown
 ## Stage Progress
-### 🔵 PLANNING PHASE
+### PLANNING PHASE
 - [x] Workspace Detection
 - [x] Reverse Engineering (if applicable)
 - [x] Requirements Analysis

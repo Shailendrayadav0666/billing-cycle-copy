@@ -13,9 +13,11 @@
 # 🔴 THE ACTIVATION RULE (behavior-spec.md Section 6.0). EVERY work unit's .feature file is authored at
 #    the STOP CHECKPOINT, before ANY code is generated (CLAUDE.md Step 1.7). So spec/behavior/ is fully
 #    populated from the start, including units nobody has begun. Running those would fail the gate for
-#    work never claimed to be done — a false negative, not a regression. A unit is ACTIVE when its
-#    ## Story Tracker row in runtime-artifacts/aire-state.md is NOT "Ready for Development"; a unit with
-#    no row, or no state file at all, counts as ACTIVE (conservative, preserves legacy behaviour).
+#    work never claimed to be done — a false negative, not a regression. A unit is ACTIVE when its row
+#    in the RESOLVED Story Tracker is NOT "Ready for Development" — the shared ## Story Tracker in
+#    runtime-artifacts/aire-state.md plus every runtime-artifacts/stories/*/state.md fragment
+#    (parallel-work-state.md Section 4): claims live in fragments, so the shared row alone can be stale.
+#    A unit with no row anywhere, or no state file at all, counts as ACTIVE (conservative).
 #    B2/B3 run only ACTIVE files and PRINT the excluded ones. B1 is exempt — the unit being built is
 #    active by definition.
 #
@@ -78,30 +80,33 @@ unit_key_of() { # spec/behavior/story-1.10.feature -> 1.10 ; bug-PROJ-123.featur
   base="$(basename "$1" .feature)"
   base="${base#story-}"
   base="${base#bug-}"
+  base="${base#enhancement-}"
   base="${base#enh-}"
   printf '%s' "$base"
 }
 
-is_active() { # $1 = feature file path. Active unless its Story Tracker row says Ready for Development.
-  [ -f "$STATE_FILE" ] || return 0            # no state file -> everything active
-  local key row
+is_active() { # $1 = feature file path. Active unless EVERY resolved Story Tracker row for it says Ready for Development.
+  local key rows f
+  local files=()
+  [ -f "$STATE_FILE" ] && files+=("$STATE_FILE")
+  for f in runtime-artifacts/stories/*/state.md; do [ -f "$f" ] && files+=("$f"); done
+  [ "${#files[@]}" -gt 0 ] || return 0        # no state file anywhere -> everything active
   key="$(unit_key_of "$1")"
-  # Match the key as a whole cell in ANY column of a markdown table row (Story column or Tracker ID).
-  row="$(awk -v k="$key" -F'|' '
+  # Every row, in the shared file and every fragment, whose cells include the key (Story column or Tracker ID).
+  rows="$(awk -v k="$key" -F'|' '
     /^[[:space:]]*\|/ {
       for (i = 2; i <= NF; i++) {
         cell = $i
         gsub(/[[:space:]]+/, "", cell)
         gsub(/\*/, "", cell)
         gsub(/`/, "", cell)
-        if (cell == k) { print $0; exit }
+        if (cell == k) { print $0; next }
       }
-    }' "$STATE_FILE" 2>/dev/null || true)"
-  [ -n "$row" ] || return 0                   # no row for this unit -> active (conservative)
-  case "$row" in
-    *"Ready for Development"*) return 1 ;;
-    *) return 0 ;;
-  esac
+    }' "${files[@]}" 2>/dev/null || true)"
+  [ -n "$rows" ] || return 0                  # no row for this unit -> active (conservative)
+  # Statuses only advance, so the unit is active as soon as ANY row (normally the fragment's) has moved on.
+  if printf '%s\n' "$rows" | grep -qv "Ready for Development"; then return 0; fi
+  return 1
 }
 
 partition_active() { # $@ = feature files -> fills ACTIVE[] and EXCLUDED[], reports the exclusions

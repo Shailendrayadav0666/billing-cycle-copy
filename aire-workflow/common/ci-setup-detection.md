@@ -83,11 +83,11 @@ opt-in question above. `missing` now means "not present, and the user opted IN t
 - **Status**: exists
 - **Detected At**: 2026-09-14T10:30:45Z
 - **Files Found**: 
-  - .github/workflows/agentic-eval-pipeline.yml ✓
-  - tests/.evals/config.json ✓
-  - tests/.evals/rubrics/architecture-rubric.json ✓
-  - tests/.evals/rubrics/security-rubric.json ✓
-  - tests/.evals/scripts/run-static-evals.sh ✓
+  - .github/workflows/agentic-eval-pipeline.yml (present)
+  - tests/.evals/config.json (present)
+  - tests/.evals/rubrics/architecture-rubric.json (present)
+  - tests/.evals/rubrics/security-rubric.json (present)
+  - tests/.evals/scripts/run-static-evals.sh (present)
 ```
 
 ### Example — CI Missing
@@ -97,9 +97,9 @@ opt-in question above. `missing` now means "not present, and the user opted IN t
 - **Status**: missing
 - **Detected At**: 2026-09-14T10:30:45Z
 - **Files Missing**: 
-  - .github/workflows/agentic-eval-pipeline.yml ✗
-  - tests/.evals/rubrics/architecture-rubric.json ✗
-  - tests/.evals/scripts/run-static-evals.sh ✗
+  - .github/workflows/agentic-eval-pipeline.yml (missing)
+  - tests/.evals/rubrics/architecture-rubric.json (missing)
+  - tests/.evals/scripts/run-static-evals.sh (missing)
 ```
 
 ---
