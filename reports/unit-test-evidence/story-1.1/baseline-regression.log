@@ -1,0 +1,12 @@
+# Baseline regression - story-1.1 - e6aa80b - 2026-10-23T14:59:27Z
+## Frontend (src/frontend): npm test
+npm error Missing script: "test"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run
+npm error A complete log of this run can be found in: C:\Users\shailendra.yadav\AppData\Local\npm-cache\_logs\2026-10-23T14_59_29_043Z-debug-0.log
+exit code: 1
+## Backend (src/backend): test discovery
+backend test files found: 0
+## Repo-root tests/: 0 test files
+SUMMARY: no test suite exists in the repo (0 tests, 0 passed, 0 failed) - Atlas deep dive Test Coverage Analysis confirms 0 tests.

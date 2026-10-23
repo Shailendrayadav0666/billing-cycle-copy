@@ -1,0 +1,1 @@
+MSYS_NO_PATHCONV=1 podman run --rm -v C:/Users/shailendra.yadav/Desktop/projects/helix-aire-v1-demo1/billing-cycle-copy:/work:Z -w /work -e AIRE_STORY_KEY=story-1.1 -e AIRE_BEHAVIOR_REPORT=/work/reports/behavior-test-evidence/story-1.1/b1/behavior-test-report.json aire-behavior:local "bash tests/.evals/behavior/run.sh b1"

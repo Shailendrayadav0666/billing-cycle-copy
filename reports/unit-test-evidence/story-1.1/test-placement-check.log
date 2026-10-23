@@ -1,0 +1,23 @@
+# Test Placement Verification — story-1.1 — base e6aa80b — 2026-10-23T15:16:11Z
+# No tests/.evals/scripts/check-test-placement.* exists; rules applied to the diff per common/directory-structure.md 4a/4b and code-generation.md Step 11a.6
+# Changed/added paths (git diff --name-only --diff-filter=ACMR e6aa80b + untracked, excluding reports/ and runtime-artifacts/):
+spec/spec-generation/story-1.1-code-generation.md        other          n/a (not a test file)
+src/frontend/.gitignore                                  other          n/a (not a test file)
+src/frontend/package.json                                other          n/a (not a test file)
+src/frontend/package-lock.json                           other          n/a (not a test file)
+src/frontend/README.md                                   other          n/a (not a test file)
+src/frontend/src/App.css                                 other          n/a (not a test file)
+src/frontend/src/pages/Billing.jsx                       other          n/a (not a test file)
+src/frontend/vitest.behavior.config.js                   other          n/a (not a test file)
+src/frontend/vitest.config.js                            other          n/a (not a test file)
+src/frontend/vitest.shared.js                            other          n/a (not a test file)
+tests/.evals/behavior/Containerfile                      other          n/a (not a test file)
+tests/.evals/behavior/run.sh                             other          n/a (not a test file)
+tests/.evals/eslint-complexity.config.mjs                other          n/a (not a test file)
+tests/.evals/gitleaks.toml                               other          n/a (not a test file)
+tests/behavior/steps/billing.steps.jsx                   behavior-step  PASS (Gherkin step definitions/support under tests/behavior/)
+tests/behavior/support/backend.js                        behavior-step  PASS (Gherkin step definitions/support under tests/behavior/)
+tests/unit/pages/Billing.test.jsx                        unit-test      PASS (tests/unit mirrors src/frontend/src/pages -> tests/unit/pages)
+tests/unit/setup.js                                      other          n/a (not a test file)
+# tests/unit top-level entries: pages setup.js - 'pages' mirrors src/frontend/src/pages; setup.js is the runner setup file
+VERDICT: PASS — 0 violations

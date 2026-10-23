@@ -1,0 +1,5 @@
+# AIRE D7 secrets gate (bootstrap, eval-framework.md Section 2.3): gitleaks' own default rule set.
+title = "AIRE gitleaks config"
+
+[extend]
+useDefault = true

@@ -1,0 +1,31 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90m/tmp/tmp.J6o9kAJtSm/src/frontend[39m
+
+Sourcemap for "/opt/deps/node_modules/quickpickle/dist/index.esm.js" points to missing source files
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Standard subscriber sees the upgrade button below the plan row (@AC-1)[32m 232[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Premium subscriber does not see the upgrade button (@AC-2)[32m 41[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Subscriber on any other plan does not see the upgrade button (@AC-2)[32m 24[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Upgrade button is not shown while billing is still loading (@AC-2)[32m 24[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Plan labels show the Standard plan from the billing data (@AC-3)[32m 25[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Plan labels show whatever plan the billing data names (@AC-3)[32m 48[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Clicking upgrade switches the plan details to Premium without a reload (@AC-4)[32m 83[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Renewal date is unchanged by the upgrade (@AC-5)[32m 61[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: After upgrading, the page confirms Premium and removes the button (@AC-6)[32m 65[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Success message is not shown before any upgrade (@AC-6)[32m 24[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Upgrading makes no request to the billing service (@AC-7)[32m 58[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: The upgrade is not persisted across a reload (@AC-7)[32m 100[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Keyboard user upgrades with the keyboard (@AC-8)[32m 115[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Screen readers are told about the upgrade (@AC-8)[32m 53[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Standard billing display is unchanged when no upgrade happens (@AC-9)[32m 36[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: The frontend unit-test suite runs the Billing page tests (@AC-10)[33m 3463[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior.feature[2m > [22mFeature: Premium upgrade demo, end to end across the existing login and billing flow[2m > [22mScenario: A Standard subscriber logs in, upgrades to Premium, and a reload restores Standard (@REQ-F-01 @REQ-F-03 @REQ-F-10 @REQ-NF-01 @REQ-NF-02)[33m 622[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m17 passed[39m[22m[90m (17)[39m
+[2m   Start at [22m 15:15:16
+[2m   Duration [22m 8.43s[2m (tests 62%, setup 18%, environment 17%, transform 3%)[22m
+
+[2m    Isolate [22m [33m2 workers spawned[39m[2m · ~785ms startup each (spawn + environment, per file)[22m
+[2m            [22m [2mat least ~785ms faster with [22m[33misolate: false[39m[2m — reuses workers across files instead of one per file[22m
+
+JSON report written to /work/reports/behavior-test-evidence/story-1.1/b3/behavior-test-report.json

@@ -1,0 +1,4 @@
+podman pod create --name aire-beh
+podman run -d --pod aire-beh --name beh-api -v C:/Users/shailendra.yadav/Desktop/projects/helix-aire-v1-demo1/billing-cycle-copy:/work:Z,ro docker.io/library/python:3.11-slim sh -c "pip install --no-cache-dir -q -r /work/src/backend/requirements.txt && cd /tmp && uvicorn main:app --app-dir /work/src/backend --host 127.0.0.1 --port 8000"
+podman run --rm --pod aire-beh -v C:/Users/shailendra.yadav/Desktop/projects/helix-aire-v1-demo1/billing-cycle-copy:/work:Z -w /work -e AIRE_STORY_KEY=story-1.1 -e AIRE_BACKEND_URL=http://127.0.0.1:8000 -e AIRE_BEHAVIOR_REPORT=/work/reports/behavior-test-evidence/story-1.1/b3/behavior-test-report.json aire-behavior:local "bash tests/.evals/behavior/run.sh b3"
+podman pod rm -f aire-beh

@@ -2,6 +2,44 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import '../App.css'
 
+// Demo-only Premium plan, applied in local state on upgrade (no backend call; a refresh reverts it).
+const PREMIUM_DATA = {
+  plan_name: 'Premium',
+  price: '$40/month',
+  usages: [
+    {
+      id: 'video-quality',
+      label: 'Video quality',
+      type: 'feature',
+      value: '4K Ultra HD',
+      help: 'The best video resolution available on the Premium plan.',
+    },
+    {
+      id: 'screens',
+      label: 'Watch at the same time',
+      type: 'feature',
+      value: 'Can watch on 4 devices at once',
+      help: 'Number of supported devices that can stream simultaneously.',
+    },
+    {
+      id: 'downloads',
+      label: 'Download on devices',
+      type: 'feature',
+      value: 'Can download on 6 devices',
+      help: 'Number of devices for offline viewing.',
+    },
+  ],
+  included_usage: {
+    title: 'Plan perks',
+    items: [
+      { id: 'ad-free', label: 'Ad-free streaming', used_percent: 100 },
+      { id: 'spatial-audio', label: 'Spatial audio (select titles)', used_percent: 100 },
+      { id: 'dolby-vision', label: 'Dolby Vision (select titles)', used_percent: 100 },
+    ],
+    help: 'Perks included in your Premium plan.',
+  },
+}
+
 function InfoIcon() {
   return (
     <svg
@@ -76,6 +114,12 @@ function IncludedUsageCard({ data }) {
 export default function Billing() {
   const { token } = useAuth()
   const [data, setData] = useState(null)
+  const [upgraded, setUpgraded] = useState(false)
+
+  const handleUpgrade = () => {
+    setData((prev) => ({ ...prev, ...PREMIUM_DATA, renew_at: prev.renew_at }))
+    setUpgraded(true)
+  }
 
   useEffect(() => {
     fetch(`/api/billing?email=${encodeURIComponent(token)}`)
@@ -101,7 +145,7 @@ export default function Billing() {
       </div>
 
       <p className="current-label">
-        Current plan: <span className="standard-badge">Standard</span>
+        Current plan: <span className="standard-badge">{data.plan_name}</span>
       </p>
       <p className="section-sub">Unlimited movies, TV shows and more. Watch anywhere. Cancel anytime.</p>
 
@@ -123,7 +167,23 @@ export default function Billing() {
         </div>
       </div>
 
-      <div className="section-title">What's included with Standard</div>
+      {data.plan_name === 'Standard' && (
+        <button
+          type="button"
+          className="btn upgrade-btn"
+          data-testid="billing-upgrade-button"
+          onClick={handleUpgrade}
+        >
+          Upgrade to Premium
+        </button>
+      )}
+      {upgraded && (
+        <p className="upgrade-success" role="status" data-testid="billing-upgrade-success">
+          You're now on Premium!
+        </p>
+      )}
+
+      <div className="section-title">What's included with {data.plan_name}</div>
       <p className="section-sub">Your plan's streaming features</p>
 
       <div className="usage-grid">

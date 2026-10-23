@@ -1,16 +1,41 @@
-# React + Vite
+# StreamPlex Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React 19 single-page app (Vite 8) for the StreamPlex Billing-Cycle demo. It talks to the FastAPI
+backend in `src/backend/`. During development, Vite proxies every `/api/*` request to
+`http://localhost:8000` (see `vite.config.js`).
 
-Currently, two official plugins are available:
+## Pages
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Route | Page | What it does |
+|---|---|---|
+| `/login` | `src/pages/Login.jsx` | Sign in or register (demo user: `tpg@example.com` / `password`) |
+| `/billing` | `src/pages/Billing.jsx` | Shows the current plan, price, renewal date, usage cards and plan perks, loaded once from `GET /api/billing` |
 
-## React Compiler
+### Upgrade to Premium (demo)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+On the Billing page, a user on the **Standard** plan sees an **Upgrade to Premium** button below the
+plan card. Clicking it switches the page to Premium **in local React state only**:
 
-## Expanding the Oxlint configuration
+- the plan becomes Premium at $40/month, with 4K Ultra HD, 4 screens and 6 downloads, and adds the Dolby Vision perk
+- the renewal date is unchanged
+- the message "You're now on Premium!" appears and the button disappears
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+No request is sent to the backend. Refreshing the page re-fetches the billing data and shows Standard
+again. Users on any other plan do not see the button.
+
+## Scripts
+
+Run from `src/frontend/`:
+
+| Command | Purpose |
+|---|---|
+| `npm install` | Install dependencies (use `npm ci` for a clean, lock-file install) |
+| `npm run dev` | Start the dev server on `http://localhost:5173` (start the backend on port 8000 first) |
+| `npm run build` | Production build into `dist/` |
+| `npm run lint` | Lint with oxlint (`.oxlintrc.json`) |
+| `npm test` | Run the unit tests in the repo-root `tests/unit/` (Vitest + React Testing Library, jsdom) |
+| `npm run test:coverage` | Unit tests with v8 coverage, written to `coverage/` (lcov, json-summary, HTML) |
+| `npm run test:behavior` | Run the Gherkin behaviour specs in the repo-root `spec/behavior/` (QuickPickle, with step definitions in `tests/behavior/steps/`) |
+
+The test files live outside this package, in the repo-root `tests/` tree, but they run with this
+package's dependencies and configuration (`vitest.config.js`, `vitest.behavior.config.js`).
