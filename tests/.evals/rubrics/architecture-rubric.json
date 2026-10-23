@@ -1,0 +1,51 @@
+{
+  "rubricName": "Architectural Alignment — Billing-Cycle (StreamPlex)",
+  "rubricVersion": "1.0.0",
+  "derivedFrom": [
+    "spec/plans/architecture.md#10-verifiable-constraints"
+  ],
+  "evalCriteria": [
+    {
+      "id": "ARCH-01",
+      "metric": "No network or I/O in the upgrade path",
+      "weight": 0.25,
+      "prompt": "Inspect the upgrade handler and anything it calls in the diff. Score 0 if it calls `fetch`, `XMLHttpRequest`, axios or any HTTP client, writes `localStorage`/`sessionStorage`/cookies, or triggers navigation or a page reload.",
+      "source": "spec/plans/requirements.md (REQ-NF-01, REQ-F-10)"
+    },
+    {
+      "id": "ARCH-02",
+      "metric": "Upgrade state is local to the Billing component and preserves renew_at",
+      "weight": 0.2,
+      "prompt": "Score 0 if the diff introduces a new React context, global store or module-level mutable state for plan data, or replaces `data` without carrying over the previous `renew_at` value.",
+      "source": "spec/plans/requirements.md (REQ-F-03, REQ-F-04); Atlas story doc 7342 Step 3"
+    },
+    {
+      "id": "ARCH-03",
+      "metric": "Plan labels are data-driven",
+      "weight": 0.15,
+      "prompt": "Score 0 if, after the change, `Billing.jsx` still renders a hardcoded \"Standard\" or \"Premium\" literal as the badge text or inside the \"What's included with\" heading, instead of `data.plan_name`.",
+      "source": "spec/plans/requirements.md (REQ-F-05); runtime-artifacts/aire-state.md Reconciliations"
+    },
+    {
+      "id": "ARCH-04",
+      "metric": "Premium values defined once as a module-level constant",
+      "weight": 0.1,
+      "prompt": "Score 0 if any Premium value (\"$40/month\", \"4K Ultra HD\", \"Dolby Vision (select titles)\") is declared inside the component body, or duplicated in more than one place in production code.",
+      "source": "Atlas story doc 7342 Step 1; spec/plans/requirements.md (REQ-F-03)"
+    },
+    {
+      "id": "ARCH-05",
+      "metric": "Backend untouched",
+      "weight": 0.15,
+      "prompt": "Score 0 if the diff modifies any file under `src/backend/`.",
+      "source": "spec/plans/requirements.md (REQ-NF-01); spec/plans/epic-brief.md (Out of Scope)"
+    },
+    {
+      "id": "ARCH-06",
+      "metric": "Test code and tooling placement",
+      "weight": 0.15,
+      "prompt": "Score 0 if test files are added under `src/`, if any new package is added to `dependencies` (not `devDependencies`), or if a newly added devDependency uses a range specifier (`^`, `~`, `*`, `latest`) rather than an exact version.",
+      "source": "spec/plans/requirements.md (REQ-NF-04, REQ-NF-05); common/directory-structure.md"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "rubricName": "Security — OWASP Top 10:2025 — Billing-Cycle (StreamPlex)",
+  "rubricVersion": "1.0.0",
+  "derivedFrom": [
+    "OWASP Top 10:2025",
+    "spec/plans/architecture.md"
+  ],
+  "evalCriteria": [
+    {
+      "id": "SEC-01",
+      "owasp": "A03:2025",
+      "metric": "Software Supply Chain Failures",
+      "weight": 0.25,
+      "prompt": "Inspect every change to package.json and package-lock.json in the diff. Score 0 if any newly added or changed dependency uses a range specifier (^, ~, *, latest) instead of an exact version, is added to dependencies when it is only used by tests or tooling, is resolved from a registry other than the official npm registry (https://registry.npmjs.org), or if package.json changes without a matching committed package-lock.json update. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A03_2025-Software_Supply_Chain_Failures/"
+    },
+    {
+      "id": "SEC-02",
+      "owasp": "A05:2025",
+      "metric": "Injection",
+      "weight": 0.2,
+      "prompt": "Check every changed JSX/JS path in the diff that renders text or builds markup. Score 0 if any changed code uses dangerouslySetInnerHTML, innerHTML, outerHTML, insertAdjacentHTML, document.write, eval, new Function, or builds a URL or query string by concatenating unencoded values. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A05_2025-Injection/"
+    },
+    {
+      "id": "SEC-03",
+      "owasp": "A07:2025",
+      "metric": "Authentication Failures",
+      "weight": 0.15,
+      "prompt": "Check whether the diff touches authentication or session handling (AuthContext, ProtectedRoute, token storage, the email/token passed to /api/billing, login/register/logout). Score 0 if any changed code weakens it further: bypasses or removes ProtectedRoute, writes the token or user data to a new storage location, exposes the token in a new URL, log, or DOM attribute, or alters login/logout behaviour. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A07_2025-Authentication_Failures/"
+    },
+    {
+      "id": "SEC-04",
+      "owasp": "A01:2025",
+      "metric": "Broken Access Control",
+      "weight": 0.1,
+      "prompt": "Review every backend route and every frontend route guard changed in the diff. Score 0 if any changed endpoint returns or mutates another user's data without checking the caller, or if any changed route bypasses the existing ProtectedRoute guard. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A01_2025-Broken_Access_Control/"
+    },
+    {
+      "id": "SEC-05",
+      "owasp": "A02:2025",
+      "metric": "Security Misconfiguration",
+      "weight": 0.1,
+      "prompt": "Inspect changes to vite.config.js, test or build configuration, CORS settings in src/backend/main.py, and any environment/mode flags. Score 0 if the diff widens CORS, enables debug/dev-only behaviour in a production build path, disables security-relevant defaults, or ships test-only configuration into the production bundle. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A02_2025-Security_Misconfiguration/"
+    },
+    {
+      "id": "SEC-06",
+      "owasp": "A09:2025",
+      "metric": "Security Logging and Alerting Failures",
+      "weight": 0.1,
+      "prompt": "Check every logging call added or changed in the diff (console.log/info/warn/error, print, logger). Score 0 if any changed log call outputs the auth token, an email address, a password, or a full billing/user object. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A09_2025-Security_Logging_and_Alerting_Failures/"
+    },
+    {
+      "id": "SEC-07",
+      "owasp": "A10:2025",
+      "metric": "Mishandling of Exceptional Conditions",
+      "weight": 0.1,
+      "prompt": "Check every new event handler and state update in the diff. Score 0 if a changed handler can throw on the data it receives (for example dereferencing a possibly null data object or calling map on a possibly undefined array) without a guard, or if a changed path renders raw error objects or stack traces to the user. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A10_2025-Mishandling_of_Exceptional_Conditions/"
+    }
+  ]
+}

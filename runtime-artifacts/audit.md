@@ -189,3 +189,90 @@
 **Context**: Dependency Graph - Steps 1-8
 
 ---
+
+## Dependency Graph - Epic Branch Commit and Push
+**Timestamp**: 2026-10-23T12:41:03Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "N/A (automatic step)"
+**AI Response**: "Committed fe62cd8 'docs(aire): stories, personas and dependency graph for Epic 7344' (AIRE-Version: 1.0) on epic/7344-premium-upgrade-demo-frontend-only. Push verified: 8347942..fe62cd8. No PR raised."
+**Context**: Dependency Graph - Step 9
+
+---
+
+## Workflow Planning - Plan Finalized (auto-approved, no gate)
+**Timestamp**: 2026-10-23T12:41:51Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "N/A (automatic stage, no gate)"
+**AI Response**: "Execution plan created at spec/plans/executions.md (Mermaid validated, text alternative included): execute Behaviour Specs and Test Plans + Code Generation; skip Application Design, Functional Design, NFR Requirements, NFR Design, Infrastructure Design (Reverse Engineering already skipped via Atlas). Risk Low. Proceeded automatically to the Implementation-phase STOP CHECKPOINT (all design stages skipped)."
+**Status**: Auto-approved
+**Context**: Workflow plan created with 2 stages to execute, 5 skipped
+
+---
+
+## Implementation - STOP CHECKPOINT Reached
+**Timestamp**: 2026-10-23T12:41:51Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "N/A (automatic)"
+**AI Response**: "All system-level design stages skipped; reached the mandatory STOP CHECKPOINT. No code generated. Step 1.2: no ## CI/CD Configuration recorded and .github/workflows/agentic-eval-pipeline.yml absent - asking CI/CD opt-in (chat-only)."
+**Context**: STOP CHECKPOINT - Steps 1, 1.2
+**TRACKER ITEM**: "1.1 (LOCAL)"
+**Epic Link**: "none (LOCAL; Atlas document 7344)"
+**AIRE VERSION**: "1.0"
+
+---
+
+## STOP CHECKPOINT - CI/CD Setup Opt-In
+**Timestamp**: 2026-10-23T12:42:54Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "no"
+**AI Response**: "Asked 'Set up the CI/CD eval pipeline for this project? (yes/no)'. Recorded ## CI/CD Configuration Enabled: No, Source: user opt-out. Steps 1.6 (CI pipeline) and 4 (epic smoke test) will be SKIPPED; common/ci-pipeline-generation.md not loaded."
+**Context**: STOP CHECKPOINT - Step 1.2
+
+---
+
+## STOP CHECKPOINT - behavior.feature, architecture.md and Rubrics
+**Timestamp**: 2026-10-23T12:45:49Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "N/A (automatic steps, no gate)"
+**AI Response**: "Step 1.3: wrote spec/behavior.feature - single-story cycle has no story-to-story seams; recorded that explicitly and wrote the one genuine cross-boundary journey (existing login + GET /api/billing + upgrade + reload) tagged @REQ-F-01 @REQ-F-03 @REQ-F-10 @REQ-NF-01 @REQ-NF-02. Step 1.4: wrote spec/plans/architecture.md v1.0.0 assembled from Atlas deep dive + requirements (all design stages skipped, stated per section); inline Mermaid System Context (C4Context) + Component Architecture (flowchart TB) + one sequenceDiagram, all with text alternatives; no erDiagram (no store/schema change); Section 10 has 6 constraints ARCH-01..06, weights sum 1.00. Step 1.5: derived tests/.evals/rubrics/architecture-rubric.json v1.0.0 mechanically from Section 10 (6 criteria); created tests/.evals/rubrics/security-rubric.json v1.0.0 (7 OWASP Top 10:2025 criteria: A03, A05, A07, A01, A02, A09, A10; weights sum 1.0; A04, A06, A08 excluded - stack/diff cannot exercise them) and tests/.evals/config.json (template thresholds, one node root src/frontend, judge model claude-opus-5-5). Step 1.6: SKIPPED (CI/CD Enabled: No)."
+**Context**: STOP CHECKPOINT - Steps 1.3, 1.4, 1.5, 1.6
+
+---
+
+## Test Plan (ve-implement skill)
+**Timestamp**: 2026-10-23T12:48:24Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "N/A (invoked in WORKFLOW MODE by the STOP CHECKPOINT specs & test-plans stage, CLAUDE.md Step 1.7)"
+**Story**: "1.1 — Upgrade to Premium on the Billing page (frontend only) — local Story ID 1.1 (LOCAL)"
+**Output folder**: `spec/test-plans/story-1.1-upgrade-to-premium-on-the-billing-page/`
+**Verification Engineer branch / PR**: "none — workflow mode, files written on epic/7344-premium-upgrade-demo-frontend-only and carried by the caller's commit"
+**Mode**: workflow (invoked by the STOP CHECKPOINT specs & test-plans stage) — no Verification Engineer approval, no Verification Engineer branch, no Verification Engineer PR
+**Test plans generated**: "Integration (5), E2E (8), Security (4), Accessibility (4) = 21 cases — N/A plans: API (no endpoint added/changed), Contract (monolith, no schema change), Performance (no targets)"
+**Coverage**: "10/10 acceptance criteria covered"
+**Approve / Request Changes checkpoint**: "Approved (automatic — workflow mode, no Verification Engineer review)"
+**AI Response**: "Applicability table announced (not asked). Generated test-plan-summary.md, integration-test-steps.md, e2e-test-steps.md, security-test-steps.md, accessibility-test-steps.md, black-box from Story 1.1 ACs, requirements.md and the Atlas deep dive external interfaces; no application source or build config read. No git commands run."
+**Context**: `/ve-implement` skill — Test Plan (`test-plan.md`)
+
+---
+
+## STOP CHECKPOINT - Behaviour Specs & Test Plans (approval prompt)
+**Timestamp**: 2026-10-23T12:48:33Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "N/A (prompt logged before presenting)"
+**AI Response**: "UI/UX Mockups = No -> Section 0 skipped. Part A: wrote spec/behavior/story-1.1.feature (16 scenarios, @AC-1..@AC-10 all present, failure paths included). Part B: invoked ve-implement skill in WORKFLOW MODE for Story 1.1 (21 test cases). Section 4.1 blocking coverage check PASS: 10/10 ACs have >=1 scenario and >=1 test case; the only work unit has both artifacts. Presenting the standardized 2-option message (Request Changes / Continue to Next Stage)."
+**Context**: STOP CHECKPOINT - Step 1.7
+**TRACKER ITEM**: "1.1 (LOCAL)"
+**Epic Link**: "none (LOCAL; Atlas document 7344)"
+**AIRE VERSION**: "1.0"
+
+---
+
+## STOP CHECKPOINT - Behaviour Specs & Test Plans (response received)
+**Timestamp**: 2026-10-23T12:49:51Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "Continue to Next Stage"
+**AI Response**: "Behaviour specs and test plans approved. Requirements traceability Rule 4 post-design re-verification: 16/16 REQ-IDs covered, no design contradiction, no reconciliation. State marked 'Design complete — awaiting dev-implement'. Committing design artifacts on the epic branch (Step 3); Step 4 epic smoke test SKIPPED (CI/CD Enabled: No)."
+**Context**: STOP CHECKPOINT - Step 1.7 approval, Step 2
+**AIRE VERSION**: "1.0"
+
+---

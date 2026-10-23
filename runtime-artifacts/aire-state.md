@@ -4,7 +4,7 @@
 - **Project Type**: Brownfield
 - **Workflow Type**: Epic
 - **Start Date**: 2026-10-23T11:02:51Z
-- **Current Stage**: PLANNING - Workflow Planning
+- **Current Stage**: Design complete — awaiting dev-implement
 
 ## Tracker
 - Type: LOCAL
@@ -84,6 +84,26 @@
 - **target_story_count**: 1 (user: story-generation.md Q1 = 1, confirmed story-clarification-questions.md Q1 = A)
 - **Sizing-ceiling override**: Story 1.1 — 10 ACs, multiple scenario classes; user-approved 2026-10-23T12:40:01Z. Parallelism below team_size accepted by user.
 
+## Execution Plan Summary
+- **Plan**: spec/plans/executions.md
+- **Stages to Execute**: Behaviour Specs and Test Plans (STOP checkpoint), Code Generation (dev-implement)
+- **Stages Skipped**: Reverse Engineering (Atlas), Application Design, Functional Design, NFR Requirements, NFR Design, Infrastructure Design
+
+## CI/CD Configuration
+- **Enabled**: No
+- **Source**: user opt-out
+- **Recorded**: 2026-10-23T12:42:54Z
+
+## Requirements Coverage (post-design)
+- Requirements coverage verified post-design: 16/16 REQ-IDs — 2026-10-23T12:49:51Z (all design stages skipped; architecture.md v1.0.0 introduces no contradiction with Story 1.1 ACs; no reconciliation needed)
+
+## Behaviour Specs & Test Plans
+- **Work units covered**: 1
+- **Behaviour contracts**: spec/behavior/ — 1 file, 16 scenarios
+- **Manual test plans**: spec/test-plans/ — 1 folder, 21 test cases
+- **AC coverage**: 10/10 (scenarios) · 10/10 (test cases)
+- **Approved**: 2026-10-23T12:49:51Z
+
 ## Story Tracker
 | Story | Title | Requires | Tracker ID | Status | PR | Merged | Start | End | Recorded |
 |-------|-------|----------|------------|--------|----|--------|-------|-----|----------|
@@ -115,4 +135,11 @@ graph TD
 - [x] Requirements Analysis (approved 2026-10-23T12:36:06Z)
 - [x] User Stories (GATE 1 approved 2026-10-23T12:40:50Z; LOCAL — no push)
 - [x] Dependency Graph (2026-10-23T12:40:50Z)
-- [ ] Workflow Planning
+- [x] Workflow Planning (2026-10-23T12:41:51Z; auto-approved, no gate)
+- [x] Application Design - SKIP (within existing Billing component boundary)
+- [x] Functional Design - SKIP (no new data model or complex rule)
+- [x] NFR Requirements - SKIP (stack determined; NFRs specified in requirements.md)
+- [x] NFR Design - SKIP (NFR Requirements skipped)
+- [x] Infrastructure Design - SKIP (no infra change)
+- [x] STOP CHECKPOINT - CI/CD opt-in (No), behavior.feature, architecture.md v1.0.0, rubrics, specs and test plans (approved 2026-10-23T12:49:51Z)
+- [ ] Code Generation - EXECUTE (per story via dev-implement)
