@@ -1,0 +1,70 @@
+{
+  "gate": "J2_security",
+  "judgeModel": "claude-opus-5-5",
+  "rubricVersion": "1.0.0",
+  "scoredAt": "2026-10-23T15:31:02Z",
+  "scope": "story-1.1 diff vs e6aa80b",
+  "criteria": [
+    {
+      "id": "SEC-01",
+      "owasp": "A03:2025",
+      "metric": "Software Supply Chain Failures",
+      "weight": 0.25,
+      "evidence": "All 9 new packages are devDependencies with exact versions; package-lock.json updated and now tracked (removed from src/frontend/.gitignore); every resolved URL is https://registry.npmjs.org/.",
+      "score": 1.0
+    },
+    {
+      "id": "SEC-02",
+      "owasp": "A05:2025",
+      "metric": "Injection",
+      "weight": 0.2,
+      "evidence": "No dangerouslySetInnerHTML/innerHTML/eval/new Function in the diff; Billing.jsx renders text via JSX only.",
+      "score": 1.0
+    },
+    {
+      "id": "SEC-03",
+      "owasp": "A07:2025",
+      "metric": "Authentication Failures",
+      "weight": 0.15,
+      "evidence": "AuthContext, ProtectedRoute, token storage and login/logout are untouched by the production diff.",
+      "score": 1.0
+    },
+    {
+      "id": "SEC-04",
+      "owasp": "A01:2025",
+      "metric": "Broken Access Control",
+      "weight": 0.1,
+      "evidence": "N/A - the diff changes no backend route and no frontend route guard, so the criterion cannot be exercised; excluded and remaining weights renormalised.",
+      "status": "N/A"
+    },
+    {
+      "id": "SEC-05",
+      "owasp": "A02:2025",
+      "metric": "Security Misconfiguration",
+      "weight": 0.1,
+      "evidence": "vite.config.js and backend CORS unchanged; vitest*.js test configs are not used by vite build or the dev server.",
+      "score": 1.0
+    },
+    {
+      "id": "SEC-06",
+      "owasp": "A09:2025",
+      "metric": "Security Logging and Alerting Failures",
+      "weight": 0.1,
+      "evidence": "No console/print/logger call added or changed.",
+      "score": 1.0
+    },
+    {
+      "id": "SEC-07",
+      "owasp": "A10:2025",
+      "metric": "Mishandling of Exceptional Conditions",
+      "weight": 0.1,
+      "evidence": "handleUpgrade runs only after data is loaded (button guarded by the !data early return at Billing.jsx:130-136); no raw error rendering added.",
+      "score": 1.0
+    }
+  ],
+  "renormalisedWeightTotal": 0.9,
+  "score": 1.0,
+  "min": 0.85,
+  "vulnerabilities": 0,
+  "status": "PASS"
+}

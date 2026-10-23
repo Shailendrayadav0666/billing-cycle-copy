@@ -1,0 +1,257 @@
+{
+  "key": "story-1.1",
+  "trackerId": "LOCAL",
+  "evalFrameworkVersion": "1.0.0",
+  "rubricVersion": "1.0.0",
+  "judgeModel": "claude-opus-5-5",
+  "scope": "changed-files",
+  "base": "e6aa80b",
+  "generated": "2026-10-23T15:31:02Z",
+  "bootstrap": {
+    "created": [
+      {
+        "check": "D6_complexity",
+        "path": "tests/.evals/eslint-complexity.config.mjs",
+        "tool": "eslint",
+        "preset": "core complexity rule only, max 12"
+      },
+      {
+        "check": "D7_secrets",
+        "path": "tests/.evals/gitleaks.toml",
+        "tool": "gitleaks",
+        "preset": "useDefault"
+      },
+      {
+        "check": "behavior",
+        "path": "tests/.evals/behavior/Containerfile",
+        "tool": "podman + quickpickle",
+        "preset": "template"
+      },
+      {
+        "check": "behavior",
+        "path": "tests/.evals/behavior/run.sh",
+        "tool": "quickpickle",
+        "preset": "template, runner region filled"
+      }
+    ],
+    "reused": [
+      {
+        "check": "D1_lint",
+        "path": "src/frontend/.oxlintrc.json",
+        "note": "repo's own config, used as-is"
+      }
+    ]
+  },
+  "gates": {
+    "D1_lint": {
+      "status": "PASS",
+      "tool": "oxlint 1.85.0",
+      "baselineFindings": 3,
+      "postFindings": 3,
+      "newFindings": 0
+    },
+    "D2_types": {
+      "status": "N/A",
+      "reason": "src/frontend is plain JavaScript/JSX with no TypeScript and no type checker in its toolchain; type checking cannot apply to this stack (closed-list reason 1)"
+    },
+    "D3_sast": {
+      "status": "PASS",
+      "tool": "semgrep 1.127.0 (p/javascript, p/react)",
+      "new": {
+        "critical": 0,
+        "high": 0,
+        "medium": 0
+      }
+    },
+    "D4_deps": {
+      "status": "PASS",
+      "tool": "npm audit (npm 10.9.2)",
+      "new": {
+        "critical": 0,
+        "high": 0,
+        "moderate": 4
+      },
+      "note": "new moderates: uuid GHSA-w5hq-g745-h8pq via quickpickle (dev-only, no fix); 2 high pre-existing at baseline (vite, source-map-js)"
+    },
+    "D5_licenses": {
+      "status": "PASS",
+      "tool": "license-checker-rseidelsohn 4.4.2",
+      "packages": 144,
+      "violations": []
+    },
+    "D6_complexity": {
+      "status": "PASS",
+      "tool": "eslint 9.39.5 complexity rule",
+      "findings": 0,
+      "threshold": 12
+    },
+    "D7_secrets": {
+      "status": "PASS",
+      "tool": "gitleaks 8.21.2",
+      "findings": 0
+    },
+    "unitCoverage": {
+      "status": "PASS",
+      "value": 100.0,
+      "branchValue": 100.0,
+      "threshold": 90.0,
+      "tests": "15/15"
+    },
+    "behaviorB1": {
+      "status": "PASS",
+      "scenarios": "16/16",
+      "acsCovered": "10/10",
+      "containerised": true,
+      "image": "localhost/aire-behavior:local@sha256:14ad2694b7c2543f70ee9a6f2ef781fb94c4e6ea763535fc8324a86ed5f7ffb3"
+    },
+    "behaviorB2": {
+      "status": "N/A",
+      "reason": "spec/behavior/ holds no feature file other than this unit's own story-1.1.feature (single-story epic)"
+    },
+    "behaviorB3": {
+      "status": "PASS",
+      "scenarios": "17/17",
+      "featureFiles": 2,
+      "reqTags": "5/5",
+      "containerised": true,
+      "image": "localhost/aire-behavior:local@sha256:14ad2694b7c2543f70ee9a6f2ef781fb94c4e6ea763535fc8324a86ed5f7ffb3",
+      "note": "last (only) work unit of the cycle; spec/behavior.feature run against the real FastAPI backend in the same pod"
+    },
+    "apiContract": {
+      "status": "N/A",
+      "reason": "the code-generation plan has no API Layer Generation step; no endpoint is added or changed (REQ-NF-01)"
+    },
+    "regression": {
+      "status": "PASS",
+      "baseline": "0 tests",
+      "post": "15/15",
+      "newFailures": 0
+    },
+    "J1_architecture": {
+      "status": "PASS",
+      "score": 1.0,
+      "min": 0.85,
+      "rubricSource": "architecture.md#10",
+      "criteria": [
+        {
+          "id": "ARCH-01",
+          "weight": 0.25,
+          "score": 1.0
+        },
+        {
+          "id": "ARCH-02",
+          "weight": 0.2,
+          "score": 1.0
+        },
+        {
+          "id": "ARCH-03",
+          "weight": 0.15,
+          "score": 1.0
+        },
+        {
+          "id": "ARCH-04",
+          "weight": 0.1,
+          "score": 1.0
+        },
+        {
+          "id": "ARCH-05",
+          "weight": 0.15,
+          "score": 1.0
+        },
+        {
+          "id": "ARCH-06",
+          "weight": 0.15,
+          "score": 1.0
+        }
+      ]
+    },
+    "J2_security": {
+      "status": "PASS",
+      "score": 1.0,
+      "min": 0.85,
+      "criteria": [
+        {
+          "id": "SEC-01",
+          "owasp": "A03:2025",
+          "weight": 0.25,
+          "score": 1.0
+        },
+        {
+          "id": "SEC-02",
+          "owasp": "A05:2025",
+          "weight": 0.2,
+          "score": 1.0
+        },
+        {
+          "id": "SEC-03",
+          "owasp": "A07:2025",
+          "weight": 0.15,
+          "score": 1.0
+        },
+        {
+          "id": "SEC-04",
+          "owasp": "A01:2025",
+          "weight": 0.1,
+          "status": "N/A"
+        },
+        {
+          "id": "SEC-05",
+          "owasp": "A02:2025",
+          "weight": 0.1,
+          "score": 1.0
+        },
+        {
+          "id": "SEC-06",
+          "owasp": "A09:2025",
+          "weight": 0.1,
+          "score": 1.0
+        },
+        {
+          "id": "SEC-07",
+          "owasp": "A10:2025",
+          "weight": 0.1,
+          "score": 1.0
+        }
+      ]
+    }
+  },
+  "selfHealing": {
+    "SH-LOOP-1": {
+      "attempts": 2,
+      "budget": 3
+    },
+    "SH-LOOP-7": {
+      "attempts": 0,
+      "budget": 3
+    },
+    "SH-LOOP-8": {
+      "attempts": 0,
+      "budget": 3
+    },
+    "SH-LOOP-12": {
+      "attempts": 0,
+      "budget": 3
+    },
+    "SH-LOOP-3": {
+      "attempts": 0,
+      "budget": 3
+    },
+    "SH-LOOP-4": {
+      "attempts": 0,
+      "budget": 3
+    },
+    "SH-LOOP-6": {
+      "attempts": 0,
+      "budget": 3
+    },
+    "SH-LOOP-5": {
+      "attempts": 0,
+      "budget": 3
+    },
+    "SH-LOOP-16": {
+      "attempts": 0,
+      "budget": 3
+    }
+  },
+  "verdict": "PASS"
+}

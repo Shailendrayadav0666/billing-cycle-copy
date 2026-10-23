@@ -1,0 +1,8 @@
+INFO:     127.0.0.1:53744 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53754 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53744 - "GET /api/billing?email=tpg%40example.com HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53744 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53744 - "GET /api/users/me?email=tpg%40example.com HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53754 - "GET /api/billing?email=tpg%40example.com HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53744 - "GET /api/billing?email=tpg%40example.com HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53754 - "GET /api/users/me?email=tpg%40example.com HTTP/1.1" 200 OK

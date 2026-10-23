@@ -1,0 +1,27 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90m/tmp/tmp.jmZTciAoCo/src/frontend[39m
+
+Sourcemap for "/opt/deps/node_modules/quickpickle/dist/index.esm.js" points to missing source files
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Standard subscriber sees the upgrade button below the plan row (@AC-1)[33m 398[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Premium subscriber does not see the upgrade button (@AC-2)[32m 71[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Subscriber on any other plan does not see the upgrade button (@AC-2)[32m 46[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Upgrade button is not shown while billing is still loading (@AC-2)[32m 22[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Plan labels show the Standard plan from the billing data (@AC-3)[32m 44[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Plan labels show whatever plan the billing data names (@AC-3)[32m 47[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Clicking upgrade switches the plan details to Premium without a reload (@AC-4)[32m 119[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Renewal date is unchanged by the upgrade (@AC-5)[32m 89[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: After upgrading, the page confirms Premium and removes the button (@AC-6)[32m 142[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Success message is not shown before any upgrade (@AC-6)[32m 34[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Upgrading makes no request to the billing service (@AC-7)[32m 86[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: The upgrade is not persisted across a reload (@AC-7)[32m 110[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Keyboard user upgrades with the keyboard (@AC-8)[32m 141[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Screen readers are told about the upgrade (@AC-8)[32m 61[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: Standard billing display is unchanged when no upgrade happens (@AC-9)[32m 35[2mms[22m[39m
+ [32m✓[39m ../../spec/behavior/story-1.1.feature[2m > [22mFeature: Upgrade to Premium on the Billing page[2m > [22mScenario: The frontend unit-test suite runs the Billing page tests (@AC-10)[33m 2851[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m16 passed[39m[22m[90m (16)[39m
+[2m   Start at [22m 15:14:33
+[2m   Duration [22m 6.75s[2m (tests 65%, environment 17%, setup 13%, transform 5%)[22m
+
+JSON report written to /work/reports/behavior-test-evidence/story-1.1/b1/behavior-test-report.json

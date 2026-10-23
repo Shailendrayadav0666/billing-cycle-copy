@@ -1,0 +1,34 @@
+# Full regression - story-1.1 - e6aa80b+working-tree - 2026-10-23T15:16:20Z
+## Frontend (root src/frontend, markerFile package.json present: yes): npm test
+
+> frontend@0.0.0 test
+> vitest run --reporter=verbose
+
+
+ RUN  v5.0.5 C:/Users/shailendra.yadav/Desktop/projects/helix-aire-v1-demo1/billing-cycle-copy/src/frontend
+
+ ✓ ../../tests/unit/pages/Billing.test.jsx > Billing page — existing display (AC-9 regression) > shows the loading state and no upgrade button before data arrives (AC-2) 71ms
+ ✓ ../../tests/unit/pages/Billing.test.jsx > Billing page — existing display (AC-9 regression) > renders the Standard plan exactly as before 151ms
+ ✓ ../../tests/unit/pages/Billing.test.jsx > Billing page — existing display (AC-9 regression) > fetches billing once for the logged-in user 42ms
+ ✓ ../../tests/unit/pages/Billing.test.jsx > Plan labels follow the billing data (AC-3) > reads Standard for a Standard plan 34ms
+ ✓ ../../tests/unit/pages/Billing.test.jsx > Plan labels follow the billing data (AC-3) > reads whatever plan the data names, keeping the badge styling 26ms
+ ✓ ../../tests/unit/pages/Billing.test.jsx > Upgrade button visibility (AC-1, AC-2) > is shown for the Standard plan, after the plan row and before the section title 180ms
+ ✓ ../../tests/unit/pages/Billing.test.jsx > Upgrade button visibility (AC-1, AC-2) > is not shown for the Premium plan 23ms
+ ✓ ../../tests/unit/pages/Billing.test.jsx > Upgrade button visibility (AC-1, AC-2) > is not shown for the Basic plan 31ms
+ ✓ ../../tests/unit/pages/Billing.test.jsx > Upgrading to Premium (AC-4 to AC-7) > switches price, usage cards and perks to Premium (AC-4) 116ms
+ ✓ ../../tests/unit/pages/Billing.test.jsx > Upgrading to Premium (AC-4 to AC-7) > keeps the renewal date from the billing data (AC-5) 102ms
+ ✓ ../../tests/unit/pages/Billing.test.jsx > Upgrading to Premium (AC-4 to AC-7) > confirms the upgrade, removes the button and relabels the plan (AC-6) 104ms
+ ✓ ../../tests/unit/pages/Billing.test.jsx > Upgrading to Premium (AC-4 to AC-7) > makes no further request and writes nothing to storage (AC-7) 92ms
+ ✓ ../../tests/unit/pages/Billing.test.jsx > Upgrading to Premium (AC-4 to AC-7) > is not persisted: a remount re-fetches and shows Standard again (AC-7) 128ms
+ ✓ ../../tests/unit/pages/Billing.test.jsx > Keyboard and screen-reader access (AC-8) > upgrades when the focused button is activated with {Enter} 130ms
+ ✓ ../../tests/unit/pages/Billing.test.jsx > Keyboard and screen-reader access (AC-8) > upgrades when the focused button is activated with   165ms
+
+ Test Files  1 passed (1)
+      Tests  15 passed (15)
+   Start at  20:46:23
+   Duration  9.17s (environment 51%, setup 26%, tests 16%, transform 4%, import 3%)
+
+exit code: 0
+## Backend (src/backend): test discovery
+backend test files found: 0
+## Diff vs baseline-regression.log: baseline 0 tests (no suite); post-change 15 unit tests, 15 passed, 0 failed. NEW failures: 0 (no test was green at baseline).

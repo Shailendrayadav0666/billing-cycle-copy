@@ -1,0 +1,55 @@
+{
+  "gate": "J1_architecture",
+  "judgeModel": "claude-opus-5-5",
+  "rubricVersion": "1.0.0",
+  "rubricSource": "spec/plans/architecture.md#10-verifiable-constraints",
+  "scoredAt": "2026-10-23T15:31:02Z",
+  "scope": "story-1.1 diff vs e6aa80b",
+  "criteria": [
+    {
+      "id": "ARCH-01",
+      "metric": "No network or I/O in the upgrade path",
+      "weight": 0.25,
+      "score": 1.0,
+      "evidence": "handleUpgrade (src/frontend/src/pages/Billing.jsx:119-122) only calls setData and setUpgraded; no fetch, storage, navigation or reload."
+    },
+    {
+      "id": "ARCH-02",
+      "metric": "Upgrade state is local to the Billing component and preserves renew_at",
+      "weight": 0.2,
+      "score": 1.0,
+      "evidence": "Functional merge setData((prev) => ({ ...prev, ...PREMIUM_DATA, renew_at: prev.renew_at })) at Billing.jsx:120; no new context, store or module-level mutable state."
+    },
+    {
+      "id": "ARCH-03",
+      "metric": "Plan labels are data-driven",
+      "weight": 0.15,
+      "score": 1.0,
+      "evidence": "Badge renders {data.plan_name} (Billing.jsx:148); heading renders What's included with {data.plan_name} (Billing.jsx:186); no hardcoded plan literal remains."
+    },
+    {
+      "id": "ARCH-04",
+      "metric": "Premium values defined once as a module-level constant",
+      "weight": 0.1,
+      "score": 1.0,
+      "evidence": "All Premium values in module-level PREMIUM_DATA (Billing.jsx:6-41); not duplicated in production code."
+    },
+    {
+      "id": "ARCH-05",
+      "metric": "Backend untouched",
+      "weight": 0.15,
+      "score": 1.0,
+      "evidence": "git diff e6aa80b --stat shows no file under src/backend/."
+    },
+    {
+      "id": "ARCH-06",
+      "metric": "Test code and tooling placement",
+      "weight": 0.15,
+      "score": 1.0,
+      "evidence": "Tests in tests/unit/pages/ and tests/behavior/; 9 new packages all in devDependencies with exact versions; none under src/."
+    }
+  ],
+  "score": 1.0,
+  "min": 0.85,
+  "status": "PASS"
+}
