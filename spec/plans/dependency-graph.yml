@@ -1,0 +1,12 @@
+version: 1
+generated_at: 2026-10-23
+team_size: 2
+
+shared_files: []   # single story - no file is touched by 2+ stories
+
+stories:
+  - id: "1.1"
+    title: Upgrade to Premium on the Billing page (frontend only)
+    tracker_id: LOCAL
+    requires: []     # no other story exists; no prerequisite
+    enables: []

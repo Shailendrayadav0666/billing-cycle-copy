@@ -4,7 +4,7 @@
 - **Project Type**: Brownfield
 - **Workflow Type**: Epic
 - **Start Date**: 2026-10-23T11:02:51Z
-- **Current Stage**: PLANNING - User Stories
+- **Current Stage**: PLANNING - Workflow Planning
 
 ## Tracker
 - Type: LOCAL
@@ -78,6 +78,28 @@
 - **Provided design path(s)**: —
 - **Decided At**: Requirements Analysis
 
+## Story Planning
+- **team_size**: 2 (fixed framework default, not asked)
+- **story_creation_mode**: all-at-once (fixed framework default, not asked)
+- **target_story_count**: 1 (user: story-generation.md Q1 = 1, confirmed story-clarification-questions.md Q1 = A)
+- **Sizing-ceiling override**: Story 1.1 — 10 ACs, multiple scenario classes; user-approved 2026-10-23T12:40:01Z. Parallelism below team_size accepted by user.
+
+## Story Tracker
+| Story | Title | Requires | Tracker ID | Status | PR | Merged | Start | End | Recorded |
+|-------|-------|----------|------------|--------|----|--------|-------|-----|----------|
+| 1.1 | Upgrade to Premium on the Billing page (frontend only) | none | LOCAL | Ready for Development | — | — | | | 2026-10-23T12:40:50Z |
+
+## Dependency Graph
+```mermaid
+graph TD
+    S11["1.1 Upgrade to Premium on the Billing page"]
+```
+- **Ready now (no prerequisites)**: 1.1
+- **Blocked**: none
+- **Inferred edges**: none (single story)
+- **Parallelism**: 1 independent story, below team_size 2, accepted by the user at User Stories (single-story override)
+- **Recorded**: 2026-10-23T12:40:50Z
+
 ## Code Location Rules
 - **Application Code**: src/ (NEVER in spec/)
 - **Documentation**: spec/ only
@@ -91,6 +113,6 @@
 - [x] Workspace Detection — Atlas Artifact Sync Opt-In (No)
 - [x] Workspace Detection — Context Opt-In (1 no, 2 no)
 - [x] Requirements Analysis (approved 2026-10-23T12:36:06Z)
-- [ ] User Stories
-- [ ] Dependency Graph
+- [x] User Stories (GATE 1 approved 2026-10-23T12:40:50Z; LOCAL — no push)
+- [x] Dependency Graph (2026-10-23T12:40:50Z)
 - [ ] Workflow Planning
