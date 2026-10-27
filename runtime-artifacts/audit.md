@@ -219,3 +219,200 @@
 **AIRE VERSION**: "1.0"
 
 ---
+
+## Dependency Graph - Epic Branch Commit and Push
+**Timestamp**: 2026-10-27T14:26:24Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(none - automatic, Step 9)"
+**AI Response**: "Atlas sync of the state and audit files: aire-state.md (7840) and audit.md (7841) replaced, version 2, team visibility, line counts and content_length read back equal to the local bodies (181/225 lines). Synced At refreshed in the state map. Committed f17d366 'docs(aire): user stories and dependency graph for HELIX-7344' on epic/HELIX-7344-premium-upgrade-demo-frontend-only (spec/plans/stories.md, personas.md, dependency-graph.yml, spec/spec-generation/story-generation.md, runtime-artifacts/aire-state.md, audit.md) with trailer AIRE-Version: 1.0. git push origin succeeded (exit 0, 9e45b41..f17d366). No PR raised."
+**Context**: PLANNING - Dependency Graph, Step 9
+**AIRE VERSION**: "1.0"
+
+---
+
+## Workflow Planning - Plan Finalized (auto-approved, no gate)
+**Timestamp**: 2026-10-27T14:26:56Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(none - automatic stage, no gate)"
+**AI Response**: "Loaded planning/workflow-planning.md and all prior context (atlas-deep-dive.md, requirements.md, stories.md, personas.md, dependency-graph.yml). Execution plan created at spec/plans/executions.md (Mermaid validated: alphanumeric node ids, quoted labels, no ampersands; text alternative included). Stages to execute: Behaviour Specs and Test Plans (always, STOP checkpoint), Code Generation (per story via dev-implement). Skipped: Application Design, Functional Design, NFR Requirements, NFR Design, Infrastructure Design (rationale recorded per stage). Risk Low. Proceeded automatically to the STOP CHECKPOINT without an approval gate."
+**Status**: Auto-approved
+**Context**: Workflow plan created with 2 remaining stages to execute, 5 skipped
+**AIRE VERSION**: "1.0"
+
+---
+
+## Requirements Coverage - Post-Design Re-verification (traceability Rule 4)
+**Timestamp**: 2026-10-27T14:26:56Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(none - automatic, silent check)"
+**AI Response**: "All system-level design stages were skipped, so the check ran immediately. Coverage matrix in stories.md re-verified: 21/21 REQ-IDs fully covered; no design artifact refined or contradicted any story AC; no reconciliation needed. Recorded in aire-state.md ## Requirements Coverage."
+**Context**: IMPLEMENTATION - transition to STOP CHECKPOINT (requirements-traceability.md Rule 4)
+**AIRE VERSION**: "1.0"
+
+---
+
+## STOP CHECKPOINT - Reached, CI/CD Opt-In Prompt
+**Timestamp**: 2026-10-27T14:26:56Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(prompt logged before presenting)"
+**AI Response**: "Reached the mandatory STOP CHECKPOINT (design stages complete or skipped; no code generated). Step 1.2: no ## CI/CD Configuration recorded and .github/workflows/agentic-eval-pipeline.yml does not exist (only distribute-framework.yml present), so asking (chat-only): 'Set up the CI/CD eval pipeline for this project? (yes/no)'."
+**Context**: IMPLEMENTATION - STOP CHECKPOINT, Steps 1 and 1.2
+**AIRE VERSION**: "1.0"
+
+---
+
+## STOP CHECKPOINT - CI/CD Opt-In Response
+**Timestamp**: 2026-10-27T14:44:13Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "no"
+**AI Response**: "Recorded ## CI/CD Configuration: Enabled: No, Source: user opt-out. Steps 1.6 and 4 SKIPPED entirely: common/ci-pipeline-generation.md not loaded; no pipeline, no sonar-project.properties, no tests/.evals/scripts/* generated. Proceeding with Steps 1.3 (behavior.feature), 1.4 (architecture.md), 1.5 (rubrics + config.json), 1.7 (specs and test plans)."
+**Context**: IMPLEMENTATION - STOP CHECKPOINT, Step 1.2
+**AIRE VERSION**: "1.0"
+
+---
+
+## STOP CHECKPOINT - behavior.feature, architecture.md and Rubrics
+**Timestamp**: 2026-10-27T14:54:17Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(none - automatic, no gate)"
+**AI Response**: "Step 1.3: wrote spec/behavior.feature with 3 genuine cross-unit journeys tagged @REQ (upgrade end to end across 1.2/1.4/1.5/1.6; demo repeatable after reload across 1.2/1.4/1.5/1.6; failed billing load never offers the upgrade across 1.3/1.4/1.6). Step 1.4: wrote spec/plans/architecture.md v1.0.0, assembled from Atlas truth and approved requirements/stories (all design stages skipped, stated explicitly): inline Mermaid System Context (C4Context) and Component Architecture (flowchart TB with layer subgraphs) plus a sequence diagram, brownfield existing/new/modified labels; no erDiagram because no store or schema changes; Section 10 has 6 Verifiable Constraints ARCH-01..ARCH-06 with weights 0.25/0.20/0.20/0.15/0.10/0.10 = 1.00. Delta table records the Atlas Flow 4 vs code observation (401 body passed to setData) and that src/frontend/.gitignore currently ignores package-lock.json (Story 1.1 must un-ignore it for REQ-NF-06). Step 1.5: architecture-rubric.json v1.0.0 derived mechanically (script) from Section 10 - 6 criteria, prompts = Verifiable-as text verbatim, weights sum 1.0; security-rubric.json v1.0.0 created (8 OWASP Top 10:2025 criteria A01, A02, A03, A05, A06, A07, A09, A10, weights summing 1.0; A04 and A08 excluded as not exercised by the stack); tests/.evals/config.json created from the template (thresholds unchanged; ci.roots resolved: src/frontend node 22.14.0 lcov via npm run test:coverage, src/backend python 3.13 with no test runner; tools left empty for the first work unit tooling bootstrap); all three files validated as JSON; added tests/.evals/_run/ to .gitignore. Step 1.6 skipped (CI/CD opt-out). J1 BLOCKING at >= llmJudgeArchitectureScoreMin, J2 BLOCKING at >= llmJudgeSecurityScoreMin (tests/.evals/config.json)."
+**Context**: IMPLEMENTATION - STOP CHECKPOINT, Steps 1.3, 1.4, 1.5
+**AIRE VERSION**: "1.0"
+
+---
+
+## Behaviour Specs & Test Plans - Part A (behaviour contracts)
+**Timestamp**: 2026-10-27T14:54:17Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(none - automatic)"
+**AI Response**: "UI/UX Mockups = No (Section 0 skipped). Wrote spec/behavior/story-1.1.feature (5 scenarios), story-1.2.feature (4), story-1.3.feature (5), story-1.4.feature (5), story-1.5.feature (5), story-1.6.feature (6) - one @AC-n scenario per acceptance criterion minimum, failure paths included, business-language steps with concrete values."
+**Context**: IMPLEMENTATION - STOP CHECKPOINT, Step 1.7 Part A (implementation/specs-and-test-plans.md Section 2)
+**AIRE VERSION**: "1.0"
+
+---
+
+## Test Plan (ve-implement skill)
+**Timestamp**: 2026-10-27T14:54:17Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(none - invoked in WORKFLOW MODE by the STOP CHECKPOINT specs & test-plans stage)"
+**Story**: "1.1 — Frontend unit-test tooling — local Story ID (Tracker ID LOCAL)"
+**Output folder**: `spec/test-plans/story-1.1-frontend-unit-test-tooling/`
+**Verification Engineer branch / PR**: "none — workflow mode, files written on epic/HELIX-7344-premium-upgrade-demo-frontend-only and carried by the caller commit"
+**Test plans generated**: "Integration (4), Security (4) — N/A: E2E, API, Contract, Performance, Accessibility"
+**Coverage**: "4/4 acceptance criteria covered"
+**Approve / Request Changes checkpoint**: "Approved (automatic — workflow mode, no Verification Engineer review)"
+**Mode**: workflow (invoked by the STOP CHECKPOINT specs & test-plans stage) — no Verification Engineer approval, no Verification Engineer branch, no Verification Engineer PR
+**AI Response**: "Applicability table announced (not asked). Generated test-plan-summary.md and the applicable *-test-steps.md files in TC-[PLAN]-[nn] format with System Under Test blocks for a locally built epic branch. Black-box: derived from stories.md ACs, requirements.md and atlas-deep-dive.md Getting Started (ports, demo account); no application source or build configuration read for the plan content. Unknowns marked TO CONFIRM."
+**Context**: `/ve-implement` skill — Test Plan (`test-plan.md`)
+
+---
+
+## Test Plan (ve-implement skill)
+**Timestamp**: 2026-10-27T14:54:17Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(none - invoked in WORKFLOW MODE by the STOP CHECKPOINT specs & test-plans stage)"
+**Story**: "1.2 — Plan text follows the current plan — local Story ID (Tracker ID LOCAL)"
+**Output folder**: `spec/test-plans/story-1.2-plan-text-follows-the-current-plan/`
+**Verification Engineer branch / PR**: "none — workflow mode, files written on epic/HELIX-7344-premium-upgrade-demo-frontend-only and carried by the caller commit"
+**Test plans generated**: "Integration (3), E2E (3), Accessibility (2) — N/A: API, Contract, Security, Performance"
+**Coverage**: "4/4 acceptance criteria covered"
+**Approve / Request Changes checkpoint**: "Approved (automatic — workflow mode, no Verification Engineer review)"
+**Mode**: workflow (invoked by the STOP CHECKPOINT specs & test-plans stage) — no Verification Engineer approval, no Verification Engineer branch, no Verification Engineer PR
+**AI Response**: "Applicability table announced (not asked). Generated test-plan-summary.md and the applicable *-test-steps.md files in TC-[PLAN]-[nn] format with System Under Test blocks for a locally built epic branch. Black-box: derived from stories.md ACs, requirements.md and atlas-deep-dive.md Getting Started (ports, demo account); no application source or build configuration read for the plan content. Unknowns marked TO CONFIRM."
+**Context**: `/ve-implement` skill — Test Plan (`test-plan.md`)
+
+---
+
+## Test Plan (ve-implement skill)
+**Timestamp**: 2026-10-27T14:54:17Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(none - invoked in WORKFLOW MODE by the STOP CHECKPOINT specs & test-plans stage)"
+**Story**: "1.3 — Fail-safe billing fetch — local Story ID (Tracker ID LOCAL)"
+**Output folder**: `spec/test-plans/story-1.3-fail-safe-billing-fetch/`
+**Verification Engineer branch / PR**: "none — workflow mode, files written on epic/HELIX-7344-premium-upgrade-demo-frontend-only and carried by the caller commit"
+**Test plans generated**: "Integration (4), Security (2) — N/A: E2E, API, Contract, Performance, Accessibility"
+**Coverage**: "3/3 acceptance criteria covered"
+**Approve / Request Changes checkpoint**: "Approved (automatic — workflow mode, no Verification Engineer review)"
+**Mode**: workflow (invoked by the STOP CHECKPOINT specs & test-plans stage) — no Verification Engineer approval, no Verification Engineer branch, no Verification Engineer PR
+**AI Response**: "Applicability table announced (not asked). Generated test-plan-summary.md and the applicable *-test-steps.md files in TC-[PLAN]-[nn] format with System Under Test blocks for a locally built epic branch. Black-box: derived from stories.md ACs, requirements.md and atlas-deep-dive.md Getting Started (ports, demo account); no application source or build configuration read for the plan content. Unknowns marked TO CONFIRM."
+**Context**: `/ve-implement` skill — Test Plan (`test-plan.md`)
+
+---
+
+## Test Plan (ve-implement skill)
+**Timestamp**: 2026-10-27T14:54:17Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(none - invoked in WORKFLOW MODE by the STOP CHECKPOINT specs & test-plans stage)"
+**Story**: "1.4 — Upgrade button on the Standard plan — local Story ID (Tracker ID LOCAL)"
+**Output folder**: `spec/test-plans/story-1.4-upgrade-button-on-the-standard-plan/`
+**Verification Engineer branch / PR**: "none — workflow mode, files written on epic/HELIX-7344-premium-upgrade-demo-frontend-only and carried by the caller commit"
+**Test plans generated**: "Integration (3), E2E (2), Accessibility (3) — N/A: API, Contract, Security, Performance"
+**Coverage**: "3/3 acceptance criteria covered"
+**Approve / Request Changes checkpoint**: "Approved (automatic — workflow mode, no Verification Engineer review)"
+**Mode**: workflow (invoked by the STOP CHECKPOINT specs & test-plans stage) — no Verification Engineer approval, no Verification Engineer branch, no Verification Engineer PR
+**AI Response**: "Applicability table announced (not asked). Generated test-plan-summary.md and the applicable *-test-steps.md files in TC-[PLAN]-[nn] format with System Under Test blocks for a locally built epic branch. Black-box: derived from stories.md ACs, requirements.md and atlas-deep-dive.md Getting Started (ports, demo account); no application source or build configuration read for the plan content. Unknowns marked TO CONFIRM."
+**Context**: `/ve-implement` skill — Test Plan (`test-plan.md`)
+
+---
+
+## Test Plan (ve-implement skill)
+**Timestamp**: 2026-10-27T14:54:17Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(none - invoked in WORKFLOW MODE by the STOP CHECKPOINT specs & test-plans stage)"
+**Story**: "1.5 — Switch the plan display to Premium on click — local Story ID (Tracker ID LOCAL)"
+**Output folder**: `spec/test-plans/story-1.5-switch-the-plan-display-to-premium-on-click/`
+**Verification Engineer branch / PR**: "none — workflow mode, files written on epic/HELIX-7344-premium-upgrade-demo-frontend-only and carried by the caller commit"
+**Test plans generated**: "Integration (3), E2E (4), Security (2) — N/A: API, Contract, Performance, Accessibility"
+**Coverage**: "5/5 acceptance criteria covered"
+**Approve / Request Changes checkpoint**: "Approved (automatic — workflow mode, no Verification Engineer review)"
+**Mode**: workflow (invoked by the STOP CHECKPOINT specs & test-plans stage) — no Verification Engineer approval, no Verification Engineer branch, no Verification Engineer PR
+**AI Response**: "Applicability table announced (not asked). Generated test-plan-summary.md and the applicable *-test-steps.md files in TC-[PLAN]-[nn] format with System Under Test blocks for a locally built epic branch. Black-box: derived from stories.md ACs, requirements.md and atlas-deep-dive.md Getting Started (ports, demo account); no application source or build configuration read for the plan content. Unknowns marked TO CONFIRM."
+**Context**: `/ve-implement` skill — Test Plan (`test-plan.md`)
+
+---
+
+## Test Plan (ve-implement skill)
+**Timestamp**: 2026-10-27T14:54:17Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(none - invoked in WORKFLOW MODE by the STOP CHECKPOINT specs & test-plans stage)"
+**Story**: "1.6 — Post-upgrade confirmation — local Story ID (Tracker ID LOCAL)"
+**Output folder**: `spec/test-plans/story-1.6-post-upgrade-confirmation/`
+**Verification Engineer branch / PR**: "none — workflow mode, files written on epic/HELIX-7344-premium-upgrade-demo-frontend-only and carried by the caller commit"
+**Test plans generated**: "E2E (5), Accessibility (2) — N/A: Integration, API, Contract, Security, Performance"
+**Coverage**: "5/5 acceptance criteria covered"
+**Approve / Request Changes checkpoint**: "Approved (automatic — workflow mode, no Verification Engineer review)"
+**Mode**: workflow (invoked by the STOP CHECKPOINT specs & test-plans stage) — no Verification Engineer approval, no Verification Engineer branch, no Verification Engineer PR
+**AI Response**: "Applicability table announced (not asked). Generated test-plan-summary.md and the applicable *-test-steps.md files in TC-[PLAN]-[nn] format with System Under Test blocks for a locally built epic branch. Black-box: derived from stories.md ACs, requirements.md and atlas-deep-dive.md Getting Started (ports, demo account); no application source or build configuration read for the plan content. Unknowns marked TO CONFIRM."
+**Context**: `/ve-implement` skill — Test Plan (`test-plan.md`)
+
+---
+
+## Behaviour Specs & Test Plans - Coverage Check and Approval Prompt
+**Timestamp**: 2026-10-27T14:54:17Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(approval prompt logged before presenting)"
+**AI Response**: "Blocking coverage check (specs-and-test-plans.md Section 4.1), scripted: every AC of every work unit has >=1 @AC-tagged scenario (24/24) AND >=1 manual test case tracing to it (24/24); all 6 work units have a .feature file and a test-plan folder; no section-sign characters in spec/ or tests/. Totals: 6 contracts, 30 scenarios; 6 test-plan folders, 46 test cases. Correction surfaced: the GATE 1 summary stated 22 ACs; the actual count is 24 (1.1:4, 1.2:4, 1.3:3, 1.4:3, 1.5:5, 1.6:5). Presenting the standardized 2-option completion message (Request Changes / Continue to Next Stage)."
+**Context**: IMPLEMENTATION - STOP CHECKPOINT, Step 1.7 Section 4 (approval gate)
+**AIRE VERSION**: "1.0"
+
+---
+
+## Behaviour Specs & Test Plans - Approval Response
+**Timestamp**: 2026-10-27T14:57:30Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "Continue to Next Stage"
+**AI Response**: "Behaviour contracts (6 files, 30 scenarios) and manual test plans (6 folders, 46 test cases) approved as design artifacts - scope approval, not Verification Engineer sign-off. Marked runtime-artifacts/aire-state.md: Design complete - awaiting dev-implement. Next: Atlas Artifact Sync pass, design commit and push on the epic branch (Step 3), smoke test skipped (Step 4, CI/CD opt-out), Development Handoff (Step 5), HALT."
+**Context**: IMPLEMENTATION - STOP CHECKPOINT, Step 1.7 Section 4 (approval received) and Step 2
+**AIRE VERSION**: "1.0"
+
+---
+
+## Atlas Artifact Sync — STOP CHECKPOINT design commit pass
+**Timestamp**: 2026-10-27T15:05:10Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(none - automatic, runs before every commit while Enabled: Yes)"
+**AI Response**: "File set from `git diff --cached --name-status -- spec runtime-artifacts reports`: 30 added spec files plus M runtime-artifacts/aire-state.md and M runtime-artifacts/audit.md (tests/.evals/** and .gitignore are staged in the same commit but are never synced). Created 6 deeper folder documents under spec/test-plans/ (7846-7851) when their first files were synced. Created 30 file documents: spec/plans/architecture.md 7852, spec/plans/executions.md 7856, spec/behavior.feature 7861, spec/behavior/story-1.1..1.6.feature 7862/7866/7867/7868/7869/7870 (gherkin fenced blocks), and 21 test-plan files 7853-7855, 7857-7860, 7863-7865, 7871-7881. All team visibility; for every document the Atlas total_lines equals the local body line count. Limitation recorded: line-count equality does not prove byte-identical whitespace; spec/behavior.feature (7861) has comment alignment runs of spaces that were not compared character by character. Replaced last: aire-state.md (7840) and audit.md (7841). Skipped: none. Pending: none. Non-blocking tool warnings: unverified tracked/file paths (local paths not in the Atlas-indexed Billing-Cycle repo, plus paths named inside test-plan text). Cycle Folder: HELIX-7344-premium-upgrade-demo-frontend-only (doc 7816)."
+**Context**: Atlas Artifact Sync (atlas-artifact-sync.md Section 5) - STOP CHECKPOINT Step 3, before the design commit
+**AIRE VERSION**: "1.0"
+
+---

@@ -1,0 +1,131 @@
+{
+  "evalFrameworkVersion": "1.0.0",
+  "scope": "changed-files",
+  "retryLimitForSelfRepair": 3,
+  "thresholds": {
+    "lintErrorsAllowedDelta": 0,
+    "typeErrorsAllowed": 0,
+    "semgrepFindingsAllowed": {
+      "critical": 0,
+      "high": 0,
+      "medium": 5
+    },
+    "dependencyVulnerabilitiesAllowed": {
+      "critical": 0,
+      "high": 0
+    },
+    "disallowedLicenses": [
+      "GPL-2.0",
+      "GPL-3.0",
+      "AGPL-3.0",
+      "SSPL-1.0"
+    ],
+    "maxCyclomaticComplexity": 12,
+    "secretFindingsAllowed": 0,
+    "unitTestCoverageMin": 90.0,
+    "behaviorScenarioPassRateMin": 100.0,
+    "llmJudgeArchitectureScoreMin": 0.85,
+    "llmJudgeSecurityScoreMin": 0.85,
+    "securityVulnerabilitiesAllowed": 0
+  },
+  "behavior": {
+    "containerRuntime": "podman",
+    "image": "aire-behavior:local",
+    "containerfile": "tests/.evals/behavior/Containerfile",
+    "entrypoint": "tests/.evals/behavior/run.sh",
+    "_comment": "Same image + command locally and in CI. A missing runtime degrades to native execution, recorded, never blocking."
+  },
+  "sonarqube": {
+    "enabled": false,
+    "_comment": "Set true when CI generation creates sonar-project.properties and the user answers proceed at the setup gate. Additive to semgrep, never a replacement."
+  },
+  "playwright": {
+    "enabled": false,
+    "startCommand": null,
+    "readinessUrl": null,
+    "testCommand": "npx playwright test tests/e2e/",
+    "backendStartCommand": null,
+    "backendReadinessUrl": null,
+    "_comment": "No implement workflow sets this: dev-implement, bug-fix-implement and enhancement-implement run NO Playwright automation. Set it true by hand only when the team wants CI to re-execute the specs the standalone /playwright-implement run committed under tests/e2e/."
+  },
+  "judge": {
+    "model": "claude-opus-5-5",
+    "rubricVersion": "1.0.0"
+  },
+  "ci": {
+    "baseBranch": "main",
+    "integrationBranchPrefixes": [
+      "epic",
+      "bug",
+      "enh",
+      "ci",
+      "story",
+      "ve"
+    ],
+    "manifestState": "resolved",
+    "roots": [
+      {
+        "root": "src/frontend",
+        "stack": "node",
+        "runtimeVersion": "22.14.0",
+        "markerFile": "package.json",
+        "installCommands": [
+          "npm ci"
+        ],
+        "buildCommand": "npm run build",
+        "coverageCommand": "npm run test:coverage",
+        "noTestsExitCode": 1,
+        "dependsOn": [],
+        "toolchainSetup": [],
+        "coverageReportPath": "coverage/lcov.info",
+        "coverageFormat": "lcov",
+        "sourcePaths": [
+          "src/frontend/src"
+        ],
+        "testPaths": [
+          "tests/unit/frontend"
+        ],
+        "tools": [],
+        "toolInstallCommands": {}
+      },
+      {
+        "root": "src/backend",
+        "stack": "python",
+        "runtimeVersion": "3.13",
+        "markerFile": "requirements.txt",
+        "installCommands": [
+          "pip install -r requirements.txt"
+        ],
+        "buildCommand": null,
+        "coverageCommand": null,
+        "dependsOn": [],
+        "toolchainSetup": [],
+        "coverageReportPath": null,
+        "coverageFormat": null,
+        "sourcePaths": [
+          "src/backend"
+        ],
+        "testPaths": [],
+        "tools": [],
+        "toolInstallCommands": {}
+      }
+    ],
+    "gates": [
+      "D1_lint",
+      "D2_types",
+      "D3_sast",
+      "D4_deps",
+      "D5_licenses",
+      "D6_complexity",
+      "D7_secrets",
+      "unitCoverage",
+      "behaviorB1",
+      "behaviorB2",
+      "behaviorB3",
+      "J1_architecture",
+      "J2_security"
+    ],
+    "_rootsComment": "Detected at the HELIX-7344 STOP CHECKPOINT. src/frontend: node (package.json), runtime pinned to the locally verified v22.14.0 (no .node-version in the repo); npm ci needs the lock file that Story 1.1 commits; coverage runs through the test:coverage script Story 1.1 adds (REQ-NF-05). src/backend: python 3.13 (from venv pyvenv.cfg); no test runner exists (Atlas: 0 tests), so coverageCommand is null and testPaths is empty; no work unit in this cycle touches it. tools and toolInstallCommands stay empty here and are resolved by the first work unit's tooling bootstrap (eval-framework.md Sections 2.3-2.4), never invented.",
+    "_comment": "CI SINGLE SOURCE OF TRUTH. The local gates read THIS block. No pipeline was generated: the user opted out of CI/CD at the STOP CHECKPOINT."
+  }
+}

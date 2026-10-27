@@ -1,0 +1,51 @@
+{
+  "rubricName": "Architectural Alignment — Billing-Cycle (StreamPlex) Premium Upgrade Demo",
+  "rubricVersion": "1.0.0",
+  "derivedFrom": [
+    "spec/plans/architecture.md#10-verifiable-constraints"
+  ],
+  "evalCriteria": [
+    {
+      "id": "ARCH-01",
+      "metric": "Frontend-only boundary",
+      "weight": 0.25,
+      "prompt": "The diff must not modify any file under `src/backend/`, and must not add any new `fetch(`, `XMLHttpRequest`, `axios` or other HTTP call, nor any new request URL, in `src/frontend/`. Score 0 if either occurs.",
+      "source": "spec/plans/requirements.md (REQ-NF-01, REQ-F-03)"
+    },
+    {
+      "id": "ARCH-02",
+      "metric": "Single Premium data source and rendering path",
+      "weight": 0.2,
+      "prompt": "In the diff, Premium values (\"$25/month\", \"4K Ultra HD + HDR\", \"Can watch on 4 devices at once\", \"Can download on 6 devices\", \"Dolby Atmos (select titles)\") appear only inside one constant object, never as JSX literals. No second, Premium-only copy of the plan-card, usage-card or perks markup is added. Score 0 if Premium values are hardcoded in markup or the markup is duplicated for Premium.",
+      "source": "spec/plans/requirements.md (REQ-NF-04)"
+    },
+    {
+      "id": "ARCH-03",
+      "metric": "Upgrade lives in component state only",
+      "weight": 0.2,
+      "prompt": "The diff must not write plan or upgrade state to `localStorage`, `sessionStorage`, `document.cookie` or IndexedDB, must not add it to `AuthContext` or another context or global store, and must not send it to the server. Score 0 if any of these occurs.",
+      "source": "spec/plans/requirements.md (REQ-F-11, REQ-NF-09)"
+    },
+    {
+      "id": "ARCH-04",
+      "metric": "Escaped output only",
+      "weight": 0.15,
+      "prompt": "The diff must not add `dangerouslySetInnerHTML`, `innerHTML`, `outerHTML` or `insertAdjacentHTML` anywhere under `src/frontend/`. Score 0 on any occurrence.",
+      "source": "spec/plans/requirements.md (REQ-NF-07)"
+    },
+    {
+      "id": "ARCH-05",
+      "metric": "Fail-safe billing fetch",
+      "weight": 0.1,
+      "prompt": "Any changed fetch chain in `Billing.jsx` must have a rejection handler (`.catch` or try/catch around `await`), and must check `response.ok` (or the status) before calling the data setter. No status code, response body or error message may be rendered to the user. Score 0 if the changed fetch lacks either guard or displays error internals.",
+      "source": "spec/plans/requirements.md (REQ-NF-08)"
+    },
+    {
+      "id": "ARCH-06",
+      "metric": "Dev-only, pinned test tooling",
+      "weight": 0.1,
+      "prompt": "Any test library (vitest, @testing-library/*, jsdom) added in the diff must appear under `devDependencies`, never `dependencies`. A diff that changes `src/frontend/package.json` dependencies must also include `src/frontend/package-lock.json`. Score 0 if a test library lands in `dependencies` or the lock file is missing from such a diff.",
+      "source": "spec/plans/requirements.md (REQ-NF-05, REQ-NF-06)"
+    }
+  ]
+}

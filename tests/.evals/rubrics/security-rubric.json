@@ -1,0 +1,75 @@
+{
+  "rubricName": "Security — OWASP Top 10:2025 — Billing-Cycle (StreamPlex)",
+  "rubricVersion": "1.0.0",
+  "derivedFrom": [
+    "OWASP Top 10:2025",
+    "spec/plans/architecture.md",
+    "spec/plans/atlas-deep-dive.md"
+  ],
+  "evalCriteria": [
+    {
+      "id": "SEC-01",
+      "owasp": "A01:2025",
+      "metric": "Broken Access Control",
+      "weight": 0.1,
+      "prompt": "Review every changed route, page guard and API handler in the diff. Score 0 if any change removes or bypasses ProtectedRoute for an authenticated page, adds an endpoint or page that returns user-owned data without checking the caller's identity, or treats a client-side plan value as an authorization or entitlement decision. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A01_2025-Broken_Access_Control/"
+    },
+    {
+      "id": "SEC-02",
+      "owasp": "A02:2025",
+      "metric": "Security Misconfiguration",
+      "weight": 0.05,
+      "prompt": "Review changed configuration (vite.config.js, vitest config, package.json scripts, FastAPI middleware, CORS settings). Score 0 if the diff widens CORS, disables a security setting, exposes a dev server or debug mode beyond localhost, or adds source maps or test tooling to the production build. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A02_2025-Security_Misconfiguration/"
+    },
+    {
+      "id": "SEC-03",
+      "owasp": "A03:2025",
+      "metric": "Software Supply Chain Failures",
+      "weight": 0.15,
+      "prompt": "Review every dependency change in the diff. Score 0 if a package is added from outside the official npm or PyPI registry (git URL, tarball, file path), if a version range is not pinned by a committed lock file in the same diff, if a test-only library is added to runtime dependencies, or if npm audit / pip-audit evidence reports a high or critical advisory for an added package. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A03_2025-Software_Supply_Chain_Failures/"
+    },
+    {
+      "id": "SEC-04",
+      "owasp": "A05:2025",
+      "metric": "Injection",
+      "weight": 0.2,
+      "prompt": "Check every changed rendering and request path. Score 0 if the diff adds dangerouslySetInnerHTML, innerHTML, outerHTML, insertAdjacentHTML or eval/new Function on any value, or builds a request URL or query by concatenating user-controlled input without encodeURIComponent or an equivalent encoder. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A05_2025-Injection/"
+    },
+    {
+      "id": "SEC-05",
+      "owasp": "A06:2025",
+      "metric": "Insecure Design",
+      "weight": 0.15,
+      "prompt": "Check the business-logic changes in the diff. Score 0 if a client-side upgrade or plan change is sent to the server, persisted, or used to unlock any capability beyond what is displayed, or if the change introduces a code path where a user can alter another user's plan or billing data. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A06_2025-Insecure_Design/"
+    },
+    {
+      "id": "SEC-06",
+      "owasp": "A07:2025",
+      "metric": "Authentication Failures",
+      "weight": 0.1,
+      "prompt": "Review changed authentication and session handling (AuthContext, login and register calls, token storage, /api/auth/* handlers). Score 0 if the diff weakens credential checks, logs or renders a password or token, stores a new credential in browser storage, or sends credentials in a URL. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A07_2025-Authentication_Failures/"
+    },
+    {
+      "id": "SEC-07",
+      "owasp": "A09:2025",
+      "metric": "Security Logging and Alerting Failures",
+      "weight": 0.1,
+      "prompt": "Review every changed log or console statement. Score 0 if the diff adds a console.log, console.error or server log call that outputs a token, email address, password, full API response body or error object containing user data. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A09_2025-Security_Logging_and_Alerting_Failures/"
+    },
+    {
+      "id": "SEC-08",
+      "owasp": "A10:2025",
+      "metric": "Mishandling of Exceptional Conditions",
+      "weight": 0.15,
+      "prompt": "Review every changed external call and error path. Score 0 if a changed fetch or async call has no rejection handling (no .catch or try/catch), if a non-OK HTTP response body is used as success data, or if a status code, stack trace, exception message or raw response body is rendered to the user. Cite the file and line.",
+      "source": "https://owasp.org/Top10/2025/A10_2025-Mishandling_of_Exceptional_Conditions/"
+    }
+  ]
+}
