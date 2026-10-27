@@ -3,7 +3,10 @@
 ## Project Information
 - **Project Type**: Brownfield
 - **Start Date**: 2026-10-27T13:49:14Z
-- **Current Stage**: PLANNING - Requirements Analysis
+- **Current Stage**: PLANNING - Workflow Planning
+- **team_size**: 2 (fixed default, not asked)
+- **story_creation_mode**: all-at-once (fixed default, not asked)
+- **target_story_count**: 6 (recommended, accepted)
 - **Workflow Type**: epic
 - **AIRE Framework Version**: 1.0
 
@@ -68,8 +71,12 @@
 | spec/plans/requirements.md | 7837 | 2026-10-27T14:11:50Z |
 | spec/spec-generation/requirement-verification-questions.md | 7838 | 2026-10-27T14:11:50Z |
 | spec/plans/atlas-deep-dive.md | 7839 | 2026-10-27T14:11:50Z |
-| runtime-artifacts/aire-state.md | 7840 | 2026-10-27T14:13:26Z |
-| runtime-artifacts/audit.md | 7841 | 2026-10-27T14:13:26Z |
+| runtime-artifacts/aire-state.md | 7840 | 2026-10-27T14:26:18Z |
+| runtime-artifacts/audit.md | 7841 | 2026-10-27T14:26:18Z |
+| spec/plans/stories.md | 7842 | 2026-10-27T14:23:50Z |
+| spec/plans/personas.md | 7843 | 2026-10-27T14:23:50Z |
+| spec/plans/dependency-graph.yml | 7844 | 2026-10-27T14:23:50Z |
+| spec/spec-generation/story-generation.md | 7845 | 2026-10-27T14:23:50Z |
 
 ### Pending
 | Path | Reason |
@@ -111,12 +118,60 @@
 - **Provided design path(s)**: —
 - **Decided At**: Requirements Analysis
 
+## Story Tracker
+
+| Story | Title | Requires | Tracker ID | Status | PR | Merged | Start | End | Recorded |
+|-------|-------|----------|------------|--------|----|--------|-------|-----|----------|
+| 1.1 | Frontend unit-test tooling | none | LOCAL | Ready for Development | — | — | | | 2026-10-27T14:19:58Z |
+| 1.2 | Plan text follows the current plan | 1.1 | LOCAL | Ready for Development | — | — | | | 2026-10-27T14:19:58Z |
+| 1.3 | Fail-safe billing fetch | 1.1 | LOCAL | Ready for Development | — | — | | | 2026-10-27T14:19:58Z |
+| 1.4 | Upgrade button on the Standard plan | 1.1 | LOCAL | Ready for Development | — | — | | | 2026-10-27T14:19:58Z |
+| 1.5 | Switch the plan display to Premium on click | 1.2, 1.4 | LOCAL | Ready for Development | — | — | | | 2026-10-27T14:19:58Z |
+| 1.6 | Post-upgrade confirmation | 1.5 | LOCAL | Ready for Development | — | — | | | 2026-10-27T14:19:58Z |
+
+## Dependency Graph
+
+Generated 2026-10-27T14:19:58Z (auto-generated, no approval gate). Source: `spec/plans/dependency-graph.yml`.
+
+```mermaid
+graph TD
+    S1_1["1.1 Frontend unit-test tooling"]
+    S1_2["1.2 Plan text follows the current plan"]
+    S1_3["1.3 Fail-safe billing fetch"]
+    S1_4["1.4 Upgrade button on the Standard plan"]
+    S1_5["1.5 Switch the plan display to Premium on click"]
+    S1_6["1.6 Post-upgrade confirmation"]
+    S1_1 --> S1_2
+    S1_1 --> S1_3
+    S1_1 --> S1_4
+    S1_2 --> S1_5
+    S1_4 --> S1_5
+    S1_5 --> S1_6
+```
+
+Text alternative: 1.1 first; then 1.2, 1.3 and 1.4 in parallel; 1.5 after 1.2 and 1.4; 1.6 after 1.5.
+
+**Ready now**: 1.1 (no prerequisites).
+**Blocked**: 1.2, 1.3, 1.4 by 1.1 | 1.5 by 1.2 and 1.4 | 1.6 by 1.5.
+**Parallelism**: once 1.1 merges, 3 stories (1.2, 1.3, 1.4) are available at once (>= team_size 2). Only one story is startable at the very beginning because 1.1 is the R1 seed for the test tooling.
+
+| Edge | Justification |
+|---|---|
+| 1.2 requires 1.1 | R1: its unit tests need the Vitest/RTL/jsdom setup 1.1 creates |
+| 1.3 requires 1.1 | R1: its unit tests need the Vitest/RTL/jsdom setup 1.1 creates |
+| 1.4 requires 1.1 | R1: its unit tests need the Vitest/RTL/jsdom setup 1.1 creates; reads plan_name directly, so no edge to 1.2 (R4) |
+| 1.5 requires 1.2 | R2: AC-1 relies at runtime on the plan-text rule from 1.2 |
+| 1.5 requires 1.4 | R2: the click handler is wired onto the button 1.4 renders |
+| 1.6 requires 1.5 | R2: banner and hidden button react to the post-upgrade state 1.5 introduces |
+
+**Shared files** (rebase before merge when built in parallel): src/frontend/src/pages/Billing.jsx, src/frontend/src/App.css, the Billing page unit test file.
+
 ## Stage Progress
 - [x] Workspace Detection — state check, tracker selection, Parent Epic capture (Helix), code scan, Helix MCP gate, Epic branch, context folders
 - [x] Workspace Detection — Atlas Artifact Sync opt-in (Yes), Context opt-in (1 no, 2 no), design reference guardrail loaded
 - [x] Reverse Engineering — SKIPPED (Atlas deep dive found and pulled)
 - [x] Requirements Analysis — depth Standard; spec/plans/requirements.md v1 (REQ-F-01..12, REQ-NF-01..09) approved 2026-10-27T14:04:48Z
-- [ ] User Stories
-- [ ] Dependency Graph
+- [x] User Stories — 6 stories (spec/plans/stories.md, personas.md); GATE 1 approved 2026-10-27T14:19:58Z; Part 3 push skipped by design (Type: LOCAL, Tracker ID LOCAL)
+- [x] Dependency Graph — spec/plans/dependency-graph.yml (auto, no gate)
 - [ ] Workflow Planning
 - [ ] Application Design (conditional)
