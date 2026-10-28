@@ -416,3 +416,33 @@
 **AIRE VERSION**: "1.0"
 
 ---
+
+## STOP CHECKPOINT - Design Commit and Push
+**Timestamp**: 2026-10-27T15:09:34Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(none - automatic, Step 3)"
+**AI Response**: "Atlas sync of state and audit: aire-state.md (7840) and audit.md (7841) replaced, version 3, team visibility, total_lines and content_length read back equal to the local bodies; Synced At refreshed in the state map. Committed f701edf 'docs(aire): STOP checkpoint design artifacts for HELIX-7344' on epic/HELIX-7344-premium-upgrade-demo-frontend-only (36 files: spec/behavior.feature, spec/behavior/story-1.1..1.6.feature, spec/plans/architecture.md, spec/plans/executions.md, 21 files under spec/test-plans/, tests/.evals/config.json, tests/.evals/rubrics/architecture-rubric.json, tests/.evals/rubrics/security-rubric.json, .gitignore, runtime-artifacts/aire-state.md, runtime-artifacts/audit.md) with trailer AIRE-Version: 1.0. git push origin succeeded (exit 0, f17d366..f701edf). The epic branch is on origin, so the Verification Engineer can start."
+**Context**: IMPLEMENTATION - STOP CHECKPOINT, Step 3
+**AIRE VERSION**: "1.0"
+
+---
+
+## STOP CHECKPOINT - Epic Smoke Test Skipped and Development Handoff
+**Timestamp**: 2026-10-27T15:09:34Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(none - automatic, Steps 4-6)"
+**AI Response**: "Step 4 epic-level pre-handoff smoke test SKIPPED (## CI/CD Configuration Enabled: No) and announced. Step 5: emitted the Development Handoff message from common/development-handoff.md with real values (6 stories, tracked locally; 1 story ready now (1.1); design stages Application/Functional/NFR Requirements/NFR Design/Infrastructure all skipped; behaviour specs + manual test plans 6 of 6; epic branch epic/HELIX-7344-premium-upgrade-demo-frontend-only at f701edf). Step 6: HALT - code generation starts only when the user types dev-implement."
+**Context**: IMPLEMENTATION - STOP CHECKPOINT, Steps 4, 5, 6
+**AIRE VERSION**: "1.0"
+
+---
+
+## Atlas Artifact Sync - Epic-branch bookkeeping pass (STOP CHECKPOINT handoff records)
+**Timestamp**: 2026-10-28T09:58:10Z
+**User Email**: shailendra.yadav@3pillarglobal.com
+**User Input**: "(none - automatic, runs before every commit while Enabled: Yes)"
+**AI Response**: "Before Story 1.1 work starts, the STOP CHECKPOINT handoff records left uncommitted after f701edf (aire-state.md stage checkbox; audit.md design-commit, smoke-test-skip and handoff entries) are committed on the epic branch, because a story-branch commit may never carry the shared bookkeeping files (common/parallel-work-state.md Section 5.5). File set from git diff --cached --name-status: M runtime-artifacts/aire-state.md, M runtime-artifacts/audit.md. Synced: 0 created, 0 replaced. The Helix MCP was unreachable: two targeted edits to aire-state.md (7840) and a read-back of 7840 and 7841 all failed with 'Request could not be completed'. Skipped: none. Pending: runtime-artifacts/aire-state.md, runtime-artifacts/audit.md (recorded in ### Pending; retried at the next pass on the epic branch). Per Section 5.5 the failure does not block the commit. Cycle Folder: HELIX-7344-premium-upgrade-demo-frontend-only (doc 7816)."
+**Context**: Atlas Artifact Sync (atlas-artifact-sync.md Section 5) - integration-branch writer, before the epic-branch bookkeeping commit
+**AIRE VERSION**: "1.0"
+
+---

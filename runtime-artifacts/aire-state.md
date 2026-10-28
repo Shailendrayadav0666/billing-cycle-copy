@@ -117,6 +117,8 @@
 ### Pending
 | Path | Reason |
 |------|--------|
+| runtime-artifacts/aire-state.md | Helix MCP unreachable at 2026-10-28T09:58:10Z (edit and read calls both returned 'Request could not be completed'); retry at next pass |
+| runtime-artifacts/audit.md | Helix MCP unreachable at 2026-10-28T09:58:10Z (edit and read calls both returned 'Request could not be completed'); retry at next pass |
 
 ## Context Project
 - **Existing Knowledge**: No
@@ -242,5 +244,5 @@ Text alternative: 1.1 first; then 1.2, 1.3 and 1.4 in parallel; 1.5 after 1.2 an
 - [x] NFR Requirements — SKIPPED (stack determined; NFRs already REQ-NF-01..09)
 - [x] NFR Design — SKIPPED (NFR Requirements skipped)
 - [x] Infrastructure Design — SKIPPED (no infrastructure changes)
-- [ ] STOP CHECKPOINT — 1.2 CI/CD opt-in (asked), 1.3 behavior.feature, 1.4 architecture.md, 1.5 rubrics, 1.6 CI pipeline (conditional), 1.7 behaviour specs + test plans (ONE approval), commit + push, Development Handoff
+- [x] STOP CHECKPOINT — CI/CD opt-out; behavior.feature, architecture.md v1.0.0, rubrics + config, 6 contracts + 6 test plans approved; design commit f701edf pushed; smoke test skipped (CI/CD opt-out); Development Handoff presented 2026-10-27T15:09:34Z
 - [ ] Code Generation — per story via dev-implement
