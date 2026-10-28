@@ -1,0 +1,313 @@
+{
+  "key": "story-1.1",
+  "trackerId": "LOCAL",
+  "evalFrameworkVersion": "1.0.0",
+  "rubricVersion": "1.0.0",
+  "judgeModel": "claude-opus-5-5",
+  "scope": "changed-files",
+  "changedFiles": 17,
+  "generated": "2026-10-28T10:36:19Z",
+  "bootstrap": {
+    "created": [
+      {
+        "check": "D6_complexity",
+        "path": "tests/.evals/oxlint-complexity.json",
+        "tool": "oxlint",
+        "preset": "complexity rule only, max 12"
+      },
+      {
+        "check": "D7_secrets",
+        "path": ".gitleaks.toml",
+        "tool": "gitleaks",
+        "preset": "default ruleset (useDefault)"
+      },
+      {
+        "check": "behavioural runner",
+        "path": "tests/.evals/behavior/ (Containerfile, run.sh, resolve-tier.cjs, package.json, package-lock.json) and .containerignore",
+        "tool": "@cucumber/cucumber 13.3.0 in Podman",
+        "preset": "minimal"
+      }
+    ],
+    "reused": [
+      {
+        "check": "D1_lint",
+        "path": "src/frontend/.oxlintrc.json",
+        "note": "repo's own config, used as-is"
+      }
+    ]
+  },
+  "toolchain": {
+    "node": "22.14.0",
+    "npm": "10.9.2",
+    "oxlint": "1.85.0",
+    "semgrep": "1.127.0",
+    "gitleaks": "8.21.2",
+    "license-checker": "25.0.1",
+    "vitest": "5.0.5",
+    "@vitest/coverage-v8": "5.0.5",
+    "@cucumber/cucumber": "13.3.0",
+    "podman": "5.8.7"
+  },
+  "gates": {
+    "D1_lint": {
+      "status": "PASS",
+      "newFindings": 0,
+      "baseline": 3,
+      "post": 3
+    },
+    "D2_types": {
+      "status": "N/A",
+      "reason": "the frontend is plain JavaScript (.jsx sources, no tsconfig or jsconfig, no TypeScript); no type checker applies to this stack (eval-framework.md Section 2.5.1 reason 1)"
+    },
+    "D3_sast": {
+      "status": "PASS",
+      "new": {
+        "critical": 0,
+        "high": 0,
+        "medium": 0
+      },
+      "sonarqube": {
+        "enabled": false
+      }
+    },
+    "D4_deps": {
+      "status": "PASS",
+      "new": {
+        "critical": 0,
+        "high": 0
+      },
+      "baselineHigh": 2,
+      "postHigh": 2
+    },
+    "D5_licenses": {
+      "status": "PASS",
+      "violations": [],
+      "packages": 113
+    },
+    "D6_complexity": {
+      "status": "PASS",
+      "newOverThreshold": 0,
+      "threshold": 12
+    },
+    "D7_secrets": {
+      "status": "PASS",
+      "findings": 0
+    },
+    "unitCoverage": {
+      "status": "PASS",
+      "value": 100.0,
+      "branchValue": 100.0,
+      "threshold": 90.0,
+      "changedExecutableLines": 0,
+      "tests": "4/4",
+      "note": "no changed executable lines: no application source under src/frontend/src changed"
+    },
+    "behaviorB1": {
+      "status": "PASS",
+      "scenarios": "5/5",
+      "acsCovered": "4/4",
+      "containerised": true,
+      "image": "localhost/aire-behavior:local@sha256:2cb23121b465d80125b826bbab81954b32e0af3c8e19ffa5563ff59db550b78d"
+    },
+    "behaviorB2": {
+      "status": "N/A",
+      "reason": "no other active feature file: story-1.2 to story-1.6 are Ready for Development and excluded by the activation rule (behavior-spec.md Section 6.0); the repo holds no feature file from an earlier cycle"
+    },
+    "behaviorB3": {
+      "status": "N/A",
+      "reason": "not the last work unit: 1.2, 1.3, 1.4, 1.5 and 1.6 have no merged PR (gh pr list against the epic branch returned no PRs)"
+    },
+    "apiContract": {
+      "status": "N/A",
+      "reason": "the plan has no API Layer Generation step; Story 1.1 adds test tooling and no endpoint"
+    },
+    "regression": {
+      "status": "PASS",
+      "newFailures": 0,
+      "baseline": "0 tests (no suite)",
+      "post": "4 passed, 0 failed"
+    },
+    "J1_architecture": {
+      "status": "PASS",
+      "score": 1.0,
+      "min": 0.85,
+      "rubricVersion": "1.0.0",
+      "judgeModel": "claude-opus-5-5",
+      "criteria": [
+        {
+          "id": "ARCH-01",
+          "metric": "Frontend-only boundary",
+          "weight": 0.25,
+          "score": 1.0,
+          "note": "No file under src/backend/ changes. The only file added under src/frontend/ with code is vitest.config.js (test configuration: file-system allow-list, dedupe, jsdom, coverage); it adds no fetch, XMLHttpRequest, axios or request URL. package.json adds scripts and devDependencies only.",
+          "renormalisedWeight": 0.5
+        },
+        {
+          "id": "ARCH-02",
+          "metric": "Single Premium data source and rendering path",
+          "weight": 0.2,
+          "score": "N/A",
+          "note": "The diff adds no Premium value, no plan constant and no plan-card, usage-card or perks markup (no application source under src/frontend/src changes); this criterion is exercised from Story 1.4 onward.",
+          "renormalisedWeight": null
+        },
+        {
+          "id": "ARCH-03",
+          "metric": "Upgrade lives in component state only",
+          "weight": 0.2,
+          "score": "N/A",
+          "note": "The diff adds no plan or upgrade state anywhere (no application source changes); nothing is stored, globalised or sent.",
+          "renormalisedWeight": null
+        },
+        {
+          "id": "ARCH-04",
+          "metric": "Escaped output only",
+          "weight": 0.15,
+          "score": 1.0,
+          "note": "None of dangerouslySetInnerHTML, innerHTML, outerHTML or insertAdjacentHTML appears in any file the diff adds or changes under src/frontend/ (package.json, package-lock.json, vitest.config.js, .gitignore, README.md).",
+          "renormalisedWeight": 0.3
+        },
+        {
+          "id": "ARCH-05",
+          "metric": "Fail-safe billing fetch",
+          "weight": 0.1,
+          "score": "N/A",
+          "note": "Billing.jsx is unchanged; the diff changes no fetch chain (Story 1.3 changes it).",
+          "renormalisedWeight": null
+        },
+        {
+          "id": "ARCH-06",
+          "metric": "Dev-only, pinned test tooling",
+          "weight": 0.1,
+          "score": 1.0,
+          "note": "vitest, @vitest/coverage-v8, jsdom, @testing-library/react and @testing-library/dom are added under devDependencies (src/frontend/package.json:20-29); dependencies (lines 14-18) are unchanged; src/frontend/package-lock.json is added in the same diff with every new entry resolved from registry.npmjs.org, sha512 integrity, dev true (package-lock.json:958, 978, 1088, 1442, 2302).",
+          "renormalisedWeight": 0.2
+        }
+      ],
+      "rubricSource": "architecture.md#10"
+    },
+    "J2_security": {
+      "status": "PASS",
+      "score": 1.0,
+      "min": 0.85,
+      "rubricVersion": "1.0.0",
+      "judgeModel": "claude-opus-5-5",
+      "criteria": [
+        {
+          "id": "SEC-01",
+          "metric": "Broken Access Control",
+          "weight": 0.1,
+          "score": "N/A",
+          "note": "The diff changes no route, page guard or API handler.",
+          "owasp": "A01:2025",
+          "renormalisedWeight": null
+        },
+        {
+          "id": "SEC-02",
+          "metric": "Security Misconfiguration",
+          "weight": 0.05,
+          "score": 1.0,
+          "note": "Changed configuration: package.json adds test scripts only (src/frontend/package.json:11-12); vite.config.js is unchanged, so the dev server, its /api proxy and the production build are untouched. The widened server.fs.allow (src/frontend/vitest.config.js:15) applies only to Vitest's own in-process server during test runs, which listens on no port. Test tooling is devDependencies only and is not part of the production build. No CORS, debug mode or source-map change.",
+          "owasp": "A02:2025",
+          "renormalisedWeight": 0.1667
+        },
+        {
+          "id": "SEC-03",
+          "metric": "Software Supply Chain Failures",
+          "weight": 0.15,
+          "score": 1.0,
+          "note": "The lock gains 127 entries over the baseline tree, 84 packages (the 5 direct dev dependencies and their transitive packages) plus 43 optional platform binaries of rolldown, lightningcss and oxlint, and all 155 lock entries resolve from https://registry.npmjs.org/ with sha512 integrity; the lock file is committed in the same diff; no test library is in dependencies; the npm audit evidence (reports/eval-evidence/story-1.1/npm-audit-install.json) reports no high or critical advisory reaching an added package. The two high advisories it lists (vite 8.3.0, source-map-js 1.2.1) are on packages that existed before this diff.",
+          "owasp": "A03:2025",
+          "renormalisedWeight": 0.5
+        },
+        {
+          "id": "SEC-04",
+          "metric": "Injection",
+          "weight": 0.2,
+          "score": "N/A",
+          "note": "The diff changes no rendering path or request path in application code (no file under src/frontend/src changes); the test file renders the unchanged Billing page against a stub.",
+          "owasp": "A05:2025",
+          "renormalisedWeight": null
+        },
+        {
+          "id": "SEC-05",
+          "metric": "Insecure Design",
+          "weight": 0.15,
+          "score": "N/A",
+          "note": "The diff contains no business-logic change, no plan change and no server call.",
+          "owasp": "A06:2025",
+          "renormalisedWeight": null
+        },
+        {
+          "id": "SEC-06",
+          "metric": "Authentication Failures",
+          "weight": 0.1,
+          "score": "N/A",
+          "note": "The diff changes no authentication or session handling; the unit test mocks useAuth with the demo account email and stores nothing.",
+          "owasp": "A07:2025",
+          "renormalisedWeight": null
+        },
+        {
+          "id": "SEC-07",
+          "metric": "Security Logging and Alerting Failures",
+          "weight": 0.1,
+          "score": 1.0,
+          "note": "The only new output statements are in tests/.evals/behavior/run.sh (lines printing the tier, unit key, tool versions and feature-file names) and the test runners' own reports; none prints a token, password, email from user data or an API response body. No console.log or console.error is added.",
+          "owasp": "A09:2025",
+          "renormalisedWeight": 0.3333
+        },
+        {
+          "id": "SEC-08",
+          "metric": "Mishandling of Exceptional Conditions",
+          "weight": 0.15,
+          "score": "N/A",
+          "note": "The diff adds no fetch or async external call in application code; Billing.jsx's existing fetch is unchanged (Story 1.3 changes it).",
+          "owasp": "A10:2025",
+          "renormalisedWeight": null
+        }
+      ]
+    }
+  },
+  "selfHealing": {
+    "SH-LOOP-1": {
+      "attempts": 0,
+      "budget": 3
+    },
+    "SH-LOOP-7": {
+      "attempts": 0,
+      "budget": 3
+    },
+    "SH-LOOP-8": {
+      "attempts": 0,
+      "budget": 3
+    },
+    "SH-LOOP-2": {
+      "attempts": 0,
+      "budget": 3
+    },
+    "SH-LOOP-12": {
+      "attempts": 0,
+      "budget": 3
+    },
+    "SH-LOOP-3": {
+      "attempts": 0,
+      "budget": 3
+    },
+    "SH-LOOP-4": {
+      "attempts": 0,
+      "budget": 3
+    },
+    "SH-LOOP-6": {
+      "attempts": 0,
+      "budget": 3
+    },
+    "SH-LOOP-5": {
+      "attempts": 0,
+      "budget": 3
+    },
+    "SH-LOOP-16": {
+      "attempts": 0,
+      "budget": 3
+    }
+  },
+  "verdict": "PASS"
+}

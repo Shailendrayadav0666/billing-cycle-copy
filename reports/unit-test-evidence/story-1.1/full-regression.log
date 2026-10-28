@@ -1,0 +1,29 @@
+# Full regression — story-1.1 — whole-repo test suite after the change
+# branch: story/1.1-frontend-unit-test-tooling @ 6c0f1a5 + story changes (staged/working tree)
+# captured: 2026-10-28T10:25:59Z
+
+$ (cd src/frontend) npm run test -- --reporter=verbose
+
+> frontend@0.0.0 test
+> vitest run --reporter=verbose
+
+
+ RUN  v5.0.5 C:/Users/shailendra.yadav/Desktop/projects/helix-aire-v1-demo1/billing-cycle-copy/src/frontend
+
+ ✓ ../../tests/unit/frontend/pages/Billing.test.jsx > Billing page smoke test > runs in the jsdom environment 2ms
+ ✓ ../../tests/unit/frontend/pages/Billing.test.jsx > Billing page smoke test > renders the Billing page against a mocked /api/billing response (plan_name "Standard", price "$20/month") and finds the "Plan & Billing" heading 177ms
+ ✓ ../../tests/unit/frontend/pages/Billing.test.jsx > Billing page smoke test > uses only the mocked /api/billing response and never calls the real endpoint 35ms
+ ✓ ../../tests/unit/frontend/pages/Billing.test.jsx > Billing page smoke test > shows the loading text until the billing response arrives 25ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  15:56:02
+   Duration  6.25s (environment 80%, import 15%, tests 4%, transform 1%)
+
+(exit=0)
+
+$ (cd src/backend) ./venv/Scripts/python -m pytest --version
+C:\Users\shailendra.yadav\Desktop\projects\helix-aire-v1-demo1\billing-cycle-copy\src\backend\venv\Scripts\python.exe: No module named pytest
+(exit=1; src/backend still has no test runner and no tests - unchanged by this story)
+
+DIFF vs baseline-regression.log: baseline 0 tests (no suite). Post-change: 4 tests in 1 file (tests/unit/frontend/pages/Billing.test.jsx), 4 passed, 0 failed. Tests green at baseline and red now: 0 (no baseline tests). NEW failures: 0.

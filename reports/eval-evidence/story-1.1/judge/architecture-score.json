@@ -1,0 +1,63 @@
+{
+  "gate": "J1_architecture",
+  "key": "story-1.1",
+  "scoredAt": "2026-10-28T10:36:19Z",
+  "judgeModel": "claude-opus-5-5",
+  "rubricVersion": "1.0.0",
+  "rubricFile": "tests/.evals/rubrics/architecture-rubric.json (derived from spec/plans/architecture.md Section 10, v1.0.0)",
+  "scoringPass": "Code Review v1 (single pass, not re-rolled)",
+  "applicableWeight": 0.5,
+  "score": 1.0,
+  "min": 0.85,
+  "status": "PASS",
+  "criteria": [
+    {
+      "id": "ARCH-01",
+      "metric": "Frontend-only boundary",
+      "weight": 0.25,
+      "score": 1.0,
+      "note": "No file under src/backend/ changes. The only file added under src/frontend/ with code is vitest.config.js (test configuration: file-system allow-list, dedupe, jsdom, coverage); it adds no fetch, XMLHttpRequest, axios or request URL. package.json adds scripts and devDependencies only.",
+      "renormalisedWeight": 0.5
+    },
+    {
+      "id": "ARCH-02",
+      "metric": "Single Premium data source and rendering path",
+      "weight": 0.2,
+      "score": "N/A",
+      "note": "The diff adds no Premium value, no plan constant and no plan-card, usage-card or perks markup (no application source under src/frontend/src changes); this criterion is exercised from Story 1.4 onward.",
+      "renormalisedWeight": null
+    },
+    {
+      "id": "ARCH-03",
+      "metric": "Upgrade lives in component state only",
+      "weight": 0.2,
+      "score": "N/A",
+      "note": "The diff adds no plan or upgrade state anywhere (no application source changes); nothing is stored, globalised or sent.",
+      "renormalisedWeight": null
+    },
+    {
+      "id": "ARCH-04",
+      "metric": "Escaped output only",
+      "weight": 0.15,
+      "score": 1.0,
+      "note": "None of dangerouslySetInnerHTML, innerHTML, outerHTML or insertAdjacentHTML appears in any file the diff adds or changes under src/frontend/ (package.json, package-lock.json, vitest.config.js, .gitignore, README.md).",
+      "renormalisedWeight": 0.3
+    },
+    {
+      "id": "ARCH-05",
+      "metric": "Fail-safe billing fetch",
+      "weight": 0.1,
+      "score": "N/A",
+      "note": "Billing.jsx is unchanged; the diff changes no fetch chain (Story 1.3 changes it).",
+      "renormalisedWeight": null
+    },
+    {
+      "id": "ARCH-06",
+      "metric": "Dev-only, pinned test tooling",
+      "weight": 0.1,
+      "score": 1.0,
+      "note": "vitest, @vitest/coverage-v8, jsdom, @testing-library/react and @testing-library/dom are added under devDependencies (src/frontend/package.json:20-29); dependencies (lines 14-18) are unchanged; src/frontend/package-lock.json is added in the same diff with every new entry resolved from registry.npmjs.org, sha512 integrity, dev true (package-lock.json:958, 978, 1088, 1442, 2302).",
+      "renormalisedWeight": 0.2
+    }
+  ]
+}
