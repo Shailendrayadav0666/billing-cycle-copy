@@ -1,0 +1,6 @@
+# Gitleaks configuration (D7 secret scan) - bootstrapped by AIRE for Story 1.1.
+# Uses the tool's own default ruleset unchanged; no allowlist, no suppressions.
+title = "billing-cycle gitleaks config"
+
+[extend]
+useDefault = true

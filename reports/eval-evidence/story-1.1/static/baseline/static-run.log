@@ -1,0 +1,9 @@
+mode=baseline started=2026-10-28T10:08:09Z head=6c0f1a5
+D1 cmd: (cd src/frontend) npx oxlint --format json . exit=0
+D6 cmd: (cd src/frontend) npx oxlint -c ../../tests/.evals/oxlint-complexity.json --format json src exit=0
+D4 cmd: (cd src/frontend) npm audit --json exit=1
+D5 cmd: (cd src/frontend) npx --yes license-checker@25.0.1 --json exit=0
+D3 cmd: semgrep scan --config auto --metrics on --json --quiet src/frontend exit=0
+D7 cmd: gitleaks git --no-banner --config .gitleaks.toml --report-format json (full history to HEAD) exit=0
+versions: node=v22.14.0 npm=10.9.2 oxlint=Version: 1.85.0 semgrep=1.127.0 gitleaks=8.21.2 license-checker=25.0.1
+finished=2026-10-28T10:08:54Z

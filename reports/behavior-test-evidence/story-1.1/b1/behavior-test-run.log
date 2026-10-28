@@ -1,0 +1,52 @@
+tier=b1 unit=story-1.1 started=2026-10-28T10:24:34Z node=v22.14.0 cucumber-js=13.3.0
+feature files:
+  spec/behavior/story-1.1.feature
+(node:22) ExperimentalWarning: glob is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+Feature: Frontend unit-test tooling
+
+  @AC-1
+  Scenario: Test libraries are added as development dependencies only                           # spec/behavior/story-1.1.feature:10
+    ✔ Given the frontend project in "src/frontend" with its package.json                        # tests/behavior/steps/frontend-tooling.steps.cjs:40
+    ✔ When the project's dependency manifest is inspected                                       # tests/behavior/steps/frontend-tooling.steps.cjs:47
+    ✔ Then "vitest", "@testing-library/react" and "jsdom" are listed under devDependencies      # tests/behavior/steps/frontend-tooling.steps.cjs:51
+    ✔ And none of them is listed under dependencies                                             # tests/behavior/steps/frontend-tooling.steps.cjs:59
+    ✔ And the dependencies section still lists only "react", "react-dom" and "react-router-dom" # tests/behavior/steps/frontend-tooling.steps.cjs:66
+
+  @AC-2
+  Scenario: The unit test command runs a passing Billing page smoke test                          # spec/behavior/story-1.1.feature:17
+    ✔ Given the frontend project in "src/frontend" with its package.json                          # tests/behavior/steps/frontend-tooling.steps.cjs:40
+    ✔ Given the "/api/billing" response is mocked with plan_name "Standard" and price "$20/month" # tests/behavior/steps/frontend-tooling.steps.cjs:72
+    ✔ When a developer runs "npm run test" in "src/frontend"                                      # tests/behavior/steps/frontend-tooling.steps.cjs:76
+    ✔ Then the tests run in a jsdom environment                                                   # tests/behavior/steps/frontend-tooling.steps.cjs:95
+    ✔ And a smoke test renders the Billing page and finds the "Plan & Billing" heading            # tests/behavior/steps/frontend-tooling.steps.cjs:100
+    ✔ And the command exits with status 0                                                         # tests/behavior/steps/frontend-tooling.steps.cjs:113
+    ✔ And no request reaches a real "/api/billing" endpoint                                       # tests/behavior/steps/frontend-tooling.steps.cjs:119
+
+  @AC-3
+  Scenario: The coverage command produces a report the coverage gate can read # spec/behavior/story-1.1.feature:26
+    ✔ Given the frontend project in "src/frontend" with its package.json      # tests/behavior/steps/frontend-tooling.steps.cjs:40
+    ✔ When a developer runs "npm run test:coverage" in "src/frontend"         # tests/behavior/steps/frontend-tooling.steps.cjs:76
+    ✔ Then a text coverage summary is printed                                 # tests/behavior/steps/frontend-tooling.steps.cjs:126
+    ✔ And an lcov report is written to "src/frontend/coverage/lcov.info"      # tests/behavior/steps/frontend-tooling.steps.cjs:132
+
+  @AC-4
+  Scenario: Exact versions are pinned in a committed lock file and audited                                                            # spec/behavior/story-1.1.feature:32
+    ✔ Given the frontend project in "src/frontend" with its package.json                                                              # tests/behavior/steps/frontend-tooling.steps.cjs:40
+    ✔ When the story's changes are committed                                                                                          # tests/behavior/steps/frontend-tooling.steps.cjs:143
+    ✔ Then "src/frontend/package-lock.json" is part of the commit and records the exact resolved versions of the new dev dependencies # tests/behavior/steps/frontend-tooling.steps.cjs:148
+    ✔ And "src/frontend/package-lock.json" is no longer ignored by "src/frontend/.gitignore"                                          # tests/behavior/steps/frontend-tooling.steps.cjs:164
+    ✔ And the "npm audit" result is saved in the story's evidence                                                                     # tests/behavior/steps/frontend-tooling.steps.cjs:171
+
+  @AC-4
+  Scenario: A high or critical advisory in a new dev dependency is not accepted                 # spec/behavior/story-1.1.feature:39
+    ✔ Given the frontend project in "src/frontend" with its package.json                        # tests/behavior/steps/frontend-tooling.steps.cjs:40
+    ✔ Given "npm audit" reports a high or critical advisory for a newly added dev dependency    # tests/behavior/steps/frontend-tooling.steps.cjs:184
+    ✔ When the story's evidence is reviewed                                                     # tests/behavior/steps/frontend-tooling.steps.cjs:204
+    ✔ Then the story is not complete until the advisory is resolved by a non-vulnerable version # tests/behavior/steps/frontend-tooling.steps.cjs:216
+
+5 scenarios (5 passed)
+25 steps (25 passed)
+0m 4.464s (0m 4.427s executing your code)
+run.sh: cucumber-js exit 0 finished=2026-10-28T10:24:39Z

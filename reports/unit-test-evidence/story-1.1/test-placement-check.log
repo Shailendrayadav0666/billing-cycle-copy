@@ -1,0 +1,26 @@
+# Test Placement Verification — story-1.1
+# generated: 2026-10-28T10:25:48Z
+# diff: git diff --name-only --diff-filter=ACMR 6c0f1a5 (tracked + staged) plus untracked files; reports/ and runtime-artifacts/ excluded (evidence, not code)
+# rules: common/directory-structure.md 4a/4b; implementation/code-generation.md Step 11a.6
+
+.containerignore                                             other      (not a unit/api test file)
+.gitleaks.toml                                               other      (not a unit/api test file)
+spec/spec-generation/story-1.1-code-generation.md            other      (not a unit/api test file)
+src/frontend/.gitignore                                      other      (not a unit/api test file)
+src/frontend/README.md                                       other      (not a unit/api test file)
+src/frontend/package-lock.json                               other      (not a unit/api test file)
+src/frontend/package.json                                    other      (not a unit/api test file)
+src/frontend/vitest.config.js                                other      (not a unit/api test file)
+tests/.evals/behavior/Containerfile                          other      (not a unit/api test file)
+tests/.evals/behavior/package-lock.json                      other      (not a unit/api test file)
+tests/.evals/behavior/package.json                           other      (not a unit/api test file)
+tests/.evals/behavior/resolve-tier.cjs                       other      (not a unit/api test file)
+tests/.evals/behavior/run.sh                                 other      (not a unit/api test file)
+tests/.evals/oxlint-complexity.json                          other      (not a unit/api test file)
+tests/behavior/steps/frontend-tooling.steps.cjs              other      (not a unit/api test file)
+tests/behavior/support/audit-review.cjs                      other      (not a unit/api test file)
+tests/unit/frontend/pages/Billing.test.jsx                   unit-test  OK (tests/unit/frontend/ mirrors src/frontend/; tests/unit/frontend/pages/Billing.test.jsx mirrors src/frontend/src/pages)
+
+VIOLATIONS: 0
+WARNINGS: 0
+VERDICT: PASS

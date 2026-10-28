@@ -1,0 +1,418 @@
+[
+  {
+    "description": "",
+    "elements": [
+      {
+        "description": "",
+        "id": "frontend-unit-test-tooling;test-libraries-are-added-as-development-dependencies-only",
+        "keyword": "Scenario",
+        "line": 10,
+        "name": "Test libraries are added as development dependencies only",
+        "steps": [
+          {
+            "result": {
+              "status": "passed",
+              "duration": 1884357
+            },
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "the frontend project in \"src/frontend\" with its package.json",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:40"
+            }
+          },
+          {
+            "result": {
+              "status": "passed",
+              "duration": 2527313
+            },
+            "arguments": [],
+            "keyword": "When ",
+            "line": 11,
+            "name": "the project's dependency manifest is inspected",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:47"
+            }
+          },
+          {
+            "result": {
+              "status": "passed",
+              "duration": 141106
+            },
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 12,
+            "name": "\"vitest\", \"@testing-library/react\" and \"jsdom\" are listed under devDependencies",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:51"
+            }
+          },
+          {
+            "result": {
+              "status": "passed",
+              "duration": 91927
+            },
+            "arguments": [],
+            "keyword": "And ",
+            "line": 13,
+            "name": "none of them is listed under dependencies",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:59"
+            }
+          },
+          {
+            "result": {
+              "status": "passed",
+              "duration": 1473416
+            },
+            "arguments": [],
+            "keyword": "And ",
+            "line": 14,
+            "name": "the dependencies section still lists only \"react\", \"react-dom\" and \"react-router-dom\"",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:66"
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@AC-1",
+            "line": 9
+          }
+        ],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "frontend-unit-test-tooling;the-unit-test-command-runs-a-passing-billing-page-smoke-test",
+        "keyword": "Scenario",
+        "line": 17,
+        "name": "The unit test command runs a passing Billing page smoke test",
+        "steps": [
+          {
+            "result": {
+              "status": "passed",
+              "duration": 1181986
+            },
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "the frontend project in \"src/frontend\" with its package.json",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:40"
+            }
+          },
+          {
+            "result": {
+              "status": "passed",
+              "duration": 173345
+            },
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 18,
+            "name": "the \"/api/billing\" response is mocked with plan_name \"Standard\" and price \"$20/month\"",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:72"
+            }
+          },
+          {
+            "result": {
+              "status": "passed",
+              "duration": 1379001982
+            },
+            "arguments": [],
+            "keyword": "When ",
+            "line": 19,
+            "name": "a developer runs \"npm run test\" in \"src/frontend\"",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:76"
+            }
+          },
+          {
+            "result": {
+              "status": "passed",
+              "duration": 233144
+            },
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 20,
+            "name": "the tests run in a jsdom environment",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:95"
+            }
+          },
+          {
+            "result": {
+              "status": "passed",
+              "duration": 204054
+            },
+            "arguments": [],
+            "keyword": "And ",
+            "line": 21,
+            "name": "a smoke test renders the Billing page and finds the \"Plan & Billing\" heading",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:100"
+            }
+          },
+          {
+            "result": {
+              "status": "passed",
+              "duration": 76391
+            },
+            "arguments": [],
+            "keyword": "And ",
+            "line": 22,
+            "name": "the command exits with status 0",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:113"
+            }
+          },
+          {
+            "result": {
+              "status": "passed",
+              "duration": 158051
+            },
+            "arguments": [],
+            "keyword": "And ",
+            "line": 23,
+            "name": "no request reaches a real \"/api/billing\" endpoint",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:119"
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@AC-2",
+            "line": 16
+          }
+        ],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "frontend-unit-test-tooling;the-coverage-command-produces-a-report-the-coverage-gate-can-read",
+        "keyword": "Scenario",
+        "line": 26,
+        "name": "The coverage command produces a report the coverage gate can read",
+        "steps": [
+          {
+            "result": {
+              "status": "passed",
+              "duration": 1257856
+            },
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "the frontend project in \"src/frontend\" with its package.json",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:40"
+            }
+          },
+          {
+            "result": {
+              "status": "passed",
+              "duration": 2801103169
+            },
+            "arguments": [],
+            "keyword": "When ",
+            "line": 27,
+            "name": "a developer runs \"npm run test:coverage\" in \"src/frontend\"",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:76"
+            }
+          },
+          {
+            "result": {
+              "status": "passed",
+              "duration": 296924
+            },
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 28,
+            "name": "a text coverage summary is printed",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:126"
+            }
+          },
+          {
+            "result": {
+              "status": "passed",
+              "duration": 8993973
+            },
+            "arguments": [],
+            "keyword": "And ",
+            "line": 29,
+            "name": "an lcov report is written to \"src/frontend/coverage/lcov.info\"",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:132"
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@AC-3",
+            "line": 25
+          }
+        ],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "frontend-unit-test-tooling;exact-versions-are-pinned-in-a-committed-lock-file-and-audited",
+        "keyword": "Scenario",
+        "line": 32,
+        "name": "Exact versions are pinned in a committed lock file and audited",
+        "steps": [
+          {
+            "result": {
+              "status": "passed",
+              "duration": 1105384
+            },
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "the frontend project in \"src/frontend\" with its package.json",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:40"
+            }
+          },
+          {
+            "result": {
+              "status": "passed",
+              "duration": 33143763
+            },
+            "arguments": [],
+            "keyword": "When ",
+            "line": 33,
+            "name": "the story's changes are committed",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:143"
+            }
+          },
+          {
+            "result": {
+              "status": "passed",
+              "duration": 78486824
+            },
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 34,
+            "name": "\"src/frontend/package-lock.json\" is part of the commit and records the exact resolved versions of the new dev dependencies",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:148"
+            }
+          },
+          {
+            "result": {
+              "status": "passed",
+              "duration": 67833521
+            },
+            "arguments": [],
+            "keyword": "And ",
+            "line": 35,
+            "name": "\"src/frontend/package-lock.json\" is no longer ignored by \"src/frontend/.gitignore\"",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:164"
+            }
+          },
+          {
+            "result": {
+              "status": "passed",
+              "duration": 22744149
+            },
+            "arguments": [],
+            "keyword": "And ",
+            "line": 36,
+            "name": "the \"npm audit\" result is saved in the story's evidence",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:171"
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@AC-4",
+            "line": 31
+          }
+        ],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "frontend-unit-test-tooling;a-high-or-critical-advisory-in-a-new-dev-dependency-is-not-accepted",
+        "keyword": "Scenario",
+        "line": 39,
+        "name": "A high or critical advisory in a new dev dependency is not accepted",
+        "steps": [
+          {
+            "result": {
+              "status": "passed",
+              "duration": 822098
+            },
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "the frontend project in \"src/frontend\" with its package.json",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:40"
+            }
+          },
+          {
+            "result": {
+              "status": "passed",
+              "duration": 196409
+            },
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 40,
+            "name": "\"npm audit\" reports a high or critical advisory for a newly added dev dependency",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:184"
+            }
+          },
+          {
+            "result": {
+              "status": "passed",
+              "duration": 24504863
+            },
+            "arguments": [],
+            "keyword": "When ",
+            "line": 41,
+            "name": "the story's evidence is reviewed",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:204"
+            }
+          },
+          {
+            "result": {
+              "status": "passed",
+              "duration": 193288
+            },
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 42,
+            "name": "the story is not complete until the advisory is resolved by a non-vulnerable version",
+            "match": {
+              "location": "tests/behavior/steps/frontend-tooling.steps.cjs:216"
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@AC-4",
+            "line": 38
+          }
+        ],
+        "type": "scenario"
+      }
+    ],
+    "id": "frontend-unit-test-tooling",
+    "line": 4,
+    "keyword": "Feature",
+    "name": "Frontend unit-test tooling",
+    "tags": [],
+    "uri": "spec/behavior/story-1.1.feature"
+  }
+]

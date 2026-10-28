@@ -1,0 +1,9 @@
+{
+  "$schema": "../../src/frontend/node_modules/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "off"
+  },
+  "rules": {
+    "complexity": ["error", { "max": 12 }]
+  }
+}

@@ -1,0 +1,22 @@
+# AIRE behavioural test image (aire-workflow/common/behavior-spec.md Section 5).
+# The same image and command run locally and in CI. Build from the repository root:
+#   podman build -t aire-behavior:local -f tests/.evals/behavior/Containerfile .
+# Node matches the src/frontend runtime pin in tests/.evals/config.json (22.14.0).
+FROM docker.io/library/node:22.14.0-bookworm
+
+# Gherkin runner, kept outside the app's own dependency tree. Step files under
+# tests/behavior/ reach it through NODE_PATH (behavior-spec.md Section 4.1a).
+COPY tests/.evals/behavior/package.json tests/.evals/behavior/package-lock.json /opt/behavior/
+RUN cd /opt/behavior && npm ci --no-audit --no-fund
+ENV NODE_PATH=/opt/behavior/node_modules
+ENV PATH=/opt/behavior/node_modules/.bin:$PATH
+
+# The frontend's dependencies, installed for Linux from its committed lock file.
+# At run time an anonymous volume keeps this copy in place of the host's node_modules.
+COPY src/frontend/package.json src/frontend/package-lock.json /work/src/frontend/
+RUN cd /work/src/frontend && npm ci --no-audit --no-fund
+
+# The repository is bind-mounted at /work at run time.
+RUN git config --system --add safe.directory /work
+WORKDIR /work
+ENTRYPOINT ["/bin/sh", "-c"]

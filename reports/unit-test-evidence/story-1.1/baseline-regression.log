@@ -1,0 +1,23 @@
+# Baseline regression — story-1.1 — whole-repo test suite before any code change
+# branch: story/1.1-frontend-unit-test-tooling @ 6c0f1a5 (cut from epic/HELIX-7344-premium-upgrade-demo-frontend-only)
+# captured: 2026-10-28T10:09:24Z
+
+$ git ls-files | grep -E -i "(^|/)tests?/|\.test\.|\.spec\.|(^|/)test_[^/]*\.py$|_test\.py$"
+tests/.evals/config.json
+tests/.evals/rubrics/architecture-rubric.json
+tests/.evals/rubrics/security-rubric.json
+(exit=0; matches above are eval config/rubric files only, not tests)
+
+$ (cd src/frontend) npm run test
+npm error Missing script: "test"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run
+npm error A complete log of this run can be found in: C:\Users\shailendra.yadav\AppData\Local\npm-cache\_logs\2026-10-28T10_09_26_526Z-debug-0.log
+(exit=1)
+
+$ (cd src/backend) ./venv/Scripts/python -m pytest --version
+C:\Users\shailendra.yadav\Desktop\projects\helix-aire-v1-demo1\billing-cycle-copy\src\backend\venv\Scripts\python.exe: No module named pytest
+(exit=1)
+
+RESULT: the repository has no test suite at this commit — src/frontend has no test script and no test runner in package.json; src/backend has no pytest and no test files (tests/.evals/config.json ci.roots: coverageCommand null). Baseline: 0 tests, 0 passed, 0 failed.

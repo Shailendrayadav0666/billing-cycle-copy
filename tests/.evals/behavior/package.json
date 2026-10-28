@@ -1,0 +1,8 @@
+{
+  "name": "aire-behavior-runner",
+  "private": true,
+  "description": "Gherkin runner for the AIRE behavioural gate. Installed only inside the behaviour image (Containerfile); step files reach it through NODE_PATH.",
+  "dependencies": {
+    "@cucumber/cucumber": "13.3.0"
+  }
+}
